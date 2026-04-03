@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \":*)",
+      "Bash(python \"C:/Users/GRRamya/AppData/Local/Programs/Python/Python311/python.exe\":*)",
+      "Bash(pip install:*)",
+      "Bash(python -:*)",
+      "Bash(cmd /c \"taskkill /F /IM EXCEL.EXE\")",
+      "Bash(cmd /c \"taskkill /F /IM EXCEL.EXE 2>&1\")",
+      "Bash(python -c \"import os; print\\(os.listdir\\(r''C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Automation\\\\JE''\\)\\)\")",
+      "Bash(python -m streamlit --version)",
+      "Bash(python -c \"import openpyxl; print\\(''openpyxl version:'', openpyxl.__version__\\)\")",
+      "Bash(python inspect_je.py)",
+      "Bash(python -c \":*)",
+      "Bash(if not:*)",
+      "Bash(cmd /c \"if not exist \"\"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Automation\\\\.streamlit\"\" mkdir \"\"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Automation\\\\.streamlit\"\"\")",
+      "Read(//c/Users/GRRamya/Downloads/**)",
+      "Bash(python3:*)",
+      "Bash(python compare_payroll.py)",
+      "Bash(cmd /c \"mkdir \"\"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Automation\\\\inputs\"\" 2>nul && echo created || echo exists\")",
+      "Bash(cmd /c \"dir \"\"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Automation\"\"\")",
+      "Bash(cmd /c \"mkdir \"\"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Automation\\\\inputs\"\"\")",
+      "Bash(cmd /c \"mkdir \"\"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Automation\\\\consolidated\"\" 2>nul && echo created || echo already exists\")",
+      "Bash(cmd /c \"del /f /q \"\"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Automation\\\\consolidated\\\\Consolidated_Payroll.xlsx\"\" \"\"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Automation\\\\consolidated\\\\Consolidated_Inputs.xlsx\"\" 2>nul && echo deleted || echo not found\")",
+      "Bash(cmd /c \"del /f /q \"\"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Automation\\\\consolidated\\\\Consolidated_Payroll.xlsx\"\" \"\"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Automation\\\\consolidated\\\\Consolidated_Inputs.xlsx\"\" 2>nul && echo deleted\")",
+      "Bash(if exist:*)",
+      "Bash(python -m streamlit version)",
+      "Bash(dir \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Automation\" /b)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Research Pipeline/stages\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Research Pipeline/evaluation\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Research Pipeline/data/historical_jes\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Research Pipeline/data/payroll_inputs\")",
+      "Bash(cp \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Automation\\\\JE/\"*.xlsx \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Research Pipeline/data/historical_jes/\")",
+      "Bash(cp \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Automation\\\\inputs/\"*.xlsx \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Research Pipeline/data/payroll_inputs/\")",
+      "Bash(\"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Research:*)",
+      "Bash(ls \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\Payroll Research Pipeline\\\\data\\\\historical_jes\"\" | wc -l && ls \"C:UsersGRRamyaDownloadsPayroll Research Pipelinedatahistorical_jes\"\")"
+    ]
+  }
+}

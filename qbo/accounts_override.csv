@@ -1,0 +1,90 @@
+Account ID,Account Name,Type,Sub-Type,Active,Balance
+1,Services,Income,ServiceFeeIncome,True,0.0
+2,Retained Earnings,Equity,RetainedEarnings,True,0.0
+3,Prepaid Expenses,Other Current Asset,PrepaidExpenses,True,0.0
+4,Undeposited Funds,Other Current Asset,UndepositedFunds,True,2062.52
+5,Fees Billed,Income,ServiceFeeIncome,True,0.0
+6,Refunds-Allowances,Income,DiscountsRefundsGiven,True,0.0
+7,Advertising,Expense,AdvertisingPromotional,True,0.0
+8,Bank Charges,Expense,BankCharges,True,0.0
+9,Commissions & fees,Expense,OtherMiscellaneousServiceCost,True,0.0
+10,Dues & Subscriptions,Expense,DuesSubscriptions,True,0.0
+11,Insurance,Expense,Insurance,True,0.0
+12,Legal & Professional Fees,Expense,LegalProfessionalFees,True,0.0
+13,Meals and Entertainment,Expense,EntertainmentMeals,True,0.0
+14,Miscellaneous,Other Expense,OtherMiscellaneousExpense,True,0.0
+15,Office Expenses,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
+16,Promotional,Expense,AdvertisingPromotional,True,0.0
+17,Rent or Lease,Expense,RentOrLeaseOfBuildings,True,0.0
+19,Stationery & Printing,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
+20,Supplies,Expense,SuppliesMaterials,True,0.0
+21,Taxes & Licenses,Expense,TaxesPaid,True,0.0
+22,Travel,Expense,Travel,True,0.0
+23,Travel Meals,Expense,TravelMeals,True,0.0
+24,Utilities,Expense,Utilities,True,0.0
+25,Interest Earned,Other Income,InterestEarned,True,0.0
+26,Other Portfolio Income,Other Income,OtherMiscellaneousIncome,True,0.0
+27,Penalties & Settlements,Other Expense,PenaltiesSettlements,True,0.0
+28,Disposal Fees,Expense,OtherMiscellaneousServiceCost,True,0.0
+29,Equipment Rental,Expense,EquipmentRental,True,0.0
+30,Uncategorized Income,Income,ServiceFeeIncome,True,0.0
+31,Uncategorized Expense,Expense,OtherMiscellaneousServiceCost,True,0.0
+32,Uncategorized Asset,Other Current Asset,OtherCurrentAssets,True,0.0
+33,Accounts Payable (A/P),Accounts Payable,AccountsPayable,True,-1602.67
+34,Opening Balance Equity,Equity,OpeningBalanceEquity,True,9337.5
+35,Checking,Bank,Checking,True,1201.0
+36,Savings,Bank,Savings,True,800.0
+37,Truck,Fixed Asset,Vehicles,True,0.0
+38,Original Cost,Fixed Asset,Vehicles,True,13495.0
+39,Depreciation,Fixed Asset,AccumulatedDepreciation,True,0.0
+40,Depreciation,Other Expense,Depreciation,True,0.0
+41,Mastercard,Credit Card,CreditCard,True,-157.72
+42,Visa,Credit Card,CreditCard,True,0.0
+43,Loan Payable,Other Current Liability,OtherCurrentLiabilities,True,-4000.0
+44,Notes Payable,Long Term Liability,OtherLongTermLiabilities,True,-25000.0
+45,Landscaping Services,Income,OtherPrimaryIncome,True,0.0
+46,Job Materials,Income,OtherPrimaryIncome,True,0.0
+47,Decks and Patios,Income,OtherPrimaryIncome,True,0.0
+48,Fountains and Garden Lighting,Income,OtherPrimaryIncome,True,0.0
+49,Plants and Soil,Income,OtherPrimaryIncome,True,0.0
+50,Sprinklers and Drip Systems,Income,OtherPrimaryIncome,True,0.0
+51,Labor,Income,OtherPrimaryIncome,True,0.0
+52,Installation,Income,OtherPrimaryIncome,True,0.0
+53,Maintenance and Repair,Income,OtherPrimaryIncome,True,0.0
+54,Pest Control Services,Income,OtherPrimaryIncome,True,0.0
+55,Automobile,Expense,Auto,True,0.0
+56,Fuel,Expense,Auto,True,0.0
+57,Workers Compensation,Expense,Insurance,True,0.0
+58,Job Expenses,Expense,OtherMiscellaneousServiceCost,True,0.0
+59,Cost of Labor,Expense,OtherMiscellaneousServiceCost,True,0.0
+60,Installation,Expense,OtherMiscellaneousServiceCost,True,0.0
+61,Maintenance and Repairs,Expense,OtherMiscellaneousServiceCost,True,0.0
+62,Equipment Rental,Expense,EquipmentRental,True,0.0
+63,Job Materials,Expense,SuppliesMaterials,True,0.0
+64,Decks and Patios,Expense,SuppliesMaterials,True,0.0
+65,Fountain and Garden Lighting,Expense,SuppliesMaterials,True,0.0
+66,Plants and Soil,Expense,SuppliesMaterials,True,0.0
+67,Sprinklers and Drip Systems,Expense,SuppliesMaterials,True,0.0
+68,Permits,Expense,OtherMiscellaneousServiceCost,True,0.0
+69,Accounting,Expense,LegalProfessionalFees,True,0.0
+70,Bookkeeper,Expense,LegalProfessionalFees,True,0.0
+71,Lawyer,Expense,LegalProfessionalFees,True,0.0
+72,Maintenance and Repair,Expense,RepairMaintenance,True,0.0
+73,Building Repairs,Expense,RepairMaintenance,True,0.0
+74,Computer Repairs,Expense,RepairMaintenance,True,0.0
+75,Equipment Repairs,Expense,RepairMaintenance,True,0.0
+76,Gas and Electric,Expense,Utilities,True,0.0
+77,Telephone,Expense,Utilities,True,0.0
+78,Purchases,Expense,SuppliesMaterials,True,0.0
+79,Sales of Product Income,Income,SalesOfProductIncome,True,0.0
+80,Cost of Goods Sold,Cost of Goods Sold,SuppliesMaterialsCogs,True,0.0
+81,Inventory Asset,Other Current Asset,Inventory,True,596.25
+82,Design income,Income,OtherPrimaryIncome,True,0.0
+83,Other Income,Income,OtherPrimaryIncome,True,0.0
+84,Accounts Receivable (A/R),Accounts Receivable,AccountsReceivable,True,5281.52
+85,Billable Expense Income,Income,ServiceFeeIncome,True,0.0
+86,Discounts given,Income,DiscountsRefundsGiven,True,0.0
+87,Unapplied Cash Payment Income,Income,UnappliedCashPaymentIncome,True,0.0
+88,Unapplied Cash Bill Payment Expense,Expense,UnappliedCashBillPaymentExpense,True,0.0
+89,Arizona Dept. of Revenue Payable,Other Current Liability,GlobalTaxPayable,True,0.0
+90,Board of Equalization Payable,Other Current Liability,GlobalTaxPayable,True,-370.94

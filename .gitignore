@@ -1,0 +1,41 @@
+# =============================================================================
+# .gitignore — Payroll JE Automation
+# =============================================================================
+
+# ── Sensitive credentials — NEVER commit ─────────────────────────────────────
+.env
+*.env
+qbo/tokens.json
+
+# ── Streamlit secrets (local dev copy) — keep example, not real ──────────────
+.streamlit/secrets.toml
+
+# ── Python bytecode ───────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ── Local data (uploaded payroll files, generated outputs) ────────────────────
+# These are runtime files; keep Mapping/ and qbo/accounts_override.csv in repo
+inputs/
+JE/
+consolidated/
+logs/
+
+# ── Temporary Excel lock files ────────────────────────────────────────────────
+~$*.xlsx
+
+# ── OS / editor ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+venv/
+.venv/
+env/
