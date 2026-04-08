@@ -344,6 +344,72 @@ class QBOClient:
         response = self._post("/journalentry", payload)
         return response.get("JournalEntry", response)
 
+    def attach_file_to_je(self, je_id: str, filename: str, file_bytes: bytes) -> dict:
+        """
+        Attach a file (e.g. the payroll input .xlsx) to an existing Journal Entry in QBO.
+
+        Uses the QBO Attachable API to upload the file and link it to the JE,
+        so auditors can open the JE in QBO and see the source payroll file attached.
+
+        Parameters
+        ----------
+        je_id      : str   — QBO Journal Entry ID (returned by create_journal_entry)
+        filename   : str   — original filename e.g. "Invoice_Supporting_Details-4.15.xlsx"
+        file_bytes : bytes — raw file content
+
+        Returns
+        -------
+        dict — the created Attachable object from QBO
+        """
+        import base64
+
+        # Step 1 — Upload the file bytes as a QBO Attachable
+        upload_url = self._base_url() + "/upload"
+
+        boundary = "PayrollAutomationBoundary"
+        # Build multipart/form-data body manually
+        body_parts = []
+        # Part 1: metadata JSON
+        metadata = {
+            "AttachableRef": [
+                {
+                    "EntityRef": {
+                        "type":  "JournalEntry",
+                        "value": str(je_id),
+                    },
+                    "IncludeOnSend": False,
+                }
+            ],
+            "FileName":    filename,
+            "ContentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        }
+        meta_json = json.dumps(metadata)
+        body_parts.append(
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="file_metadata_01"\r\n'
+            f"Content-Type: application/json\r\n\r\n"
+            f"{meta_json}\r\n"
+        )
+        # Part 2: file bytes
+        body_parts.append(
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name="file_content_01"; filename="{filename}"\r\n'
+            f"Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\r\n\r\n"
+        )
+        body_str   = "".join(body_parts).encode("utf-8")
+        body_end   = f"\r\n--{boundary}--\r\n".encode("utf-8")
+        body_bytes = body_str + file_bytes + body_end
+
+        headers = {
+            "Authorization":  f"Bearer {self._store.access_token}",
+            "Content-Type":   f"multipart/form-data; boundary={boundary}",
+            "Accept":         "application/json",
+        }
+
+        resp = requests.post(upload_url, headers=headers, data=body_bytes, timeout=60)
+        result = self._handle_response(resp)
+        return result.get("AttachableResponse", [{}])[0].get("Attachable", result)
+
     def get_journal_entry(self, je_id: str) -> dict:
         """
         Fetch an existing Journal Entry by its QBO ID.
