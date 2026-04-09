@@ -1,0 +1,57 @@
+import { useState } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { AppProvider } from './context/AppContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import AppHeader from './components/AppHeader'
+import Sidebar from './components/Sidebar'
+import Login from './pages/Login'
+import Step1Generate from './pages/Step1Generate'
+import Step2Preview from './pages/Step2Preview'
+import Step3Mapping from './pages/Step3Mapping'
+import Step4QuickBooks from './pages/Step4QuickBooks'
+import Step5ActivityLog from './pages/Step5ActivityLog'
+
+function ProtectedApp() {
+  const { isAuthenticated, user, logout } = useAuth()
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+
+  return (
+    <AppProvider>
+      <div className="app-shell">
+        <AppHeader user={user} onLogout={logout} />
+        <div className="app-body">
+          <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(v => !v)} />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<Navigate to="/step/1" replace />} />
+              <Route path="/step/1" element={<Step1Generate />} />
+              <Route path="/step/2" element={<Step2Preview />} />
+              <Route path="/step/3" element={<Step3Mapping />} />
+              <Route path="/step/4" element={<Step4QuickBooks />} />
+              <Route path="/step/5" element={<Navigate to="/activity-log" replace />} />
+              <Route path="/activity-log" element={<Step5ActivityLog />} />
+            </Routes>
+          </main>
+        </div>
+      </div>
+    </AppProvider>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/*" element={<ProtectedApp />} />
+      </Routes>
+    </AuthProvider>
+  )
+}
+
+function PublicRoute({ children }) {
+  const { isAuthenticated } = useAuth()
+  return isAuthenticated ? <Navigate to="/step/1" replace /> : children
+}
