@@ -6,8 +6,12 @@ export default function AppHeader({ user, onLogout }) {
 
       {user && (
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span className="material-icons-round" style={{ fontSize: 18, color: 'var(--p)', opacity: 0.7 }}>account_circle</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--p)' }}>{user.username}</span>
+          <span className="material-icons-round" style={{ fontSize: 18, color: 'var(--p)', opacity: 0.7 }}>
+            account_circle
+          </span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--p)' }}>
+            {user.username}
+          </span>
           <button
             onClick={onLogout}
             style={{

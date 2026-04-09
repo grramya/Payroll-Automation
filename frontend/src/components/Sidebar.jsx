@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import { useAuth } from '../context/AuthContext'
 import { downloadConsolidatedJEUrl, downloadConsolidatedInputsUrl } from '../api/api'
 
 const STEPS = [
@@ -11,6 +12,8 @@ const STEPS = [
 
 export default function Sidebar({ collapsed, onToggle }) {
   const { sessionId } = useApp()
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'admin'
   const c = collapsed
 
   const navItemStyle = (extra = {}) => ({
@@ -81,6 +84,23 @@ export default function Sidebar({ collapsed, onToggle }) {
             <span className="material-icons-round" style={styles.navIcon}>history</span>
             {!c && <span style={styles.navLabel}>Activity Log</span>}
           </NavLink>
+
+          {isAdmin && (
+            <>
+              <div style={styles.divider} />
+              <NavLink
+                to="/users"
+                title={c ? 'Manage Users' : undefined}
+                style={({ isActive }) => ({
+                  ...navItemStyle(),
+                  ...(isActive ? styles.navItemActive : {}),
+                })}
+              >
+                <span className="material-icons-round" style={styles.navIcon}>manage_accounts</span>
+                {!c && <span style={styles.navLabel}>Manage Users</span>}
+              </NavLink>
+            </>
+          )}
 
           <div style={styles.divider} />
 

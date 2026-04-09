@@ -5,6 +5,7 @@ Run with:
 """
 from __future__ import annotations
 import math
+import os
 import re
 import sys
 import uuid
@@ -12,7 +13,10 @@ from io import BytesIO
 from pathlib import Path
 
 import pandas as pd
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Body, Depends
+import time
+from collections import defaultdict
+
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Body, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -20,7 +24,11 @@ from fastapi.security import OAuth2PasswordRequestForm
 from auth import (
     init_db, authenticate_user, create_access_token,
     get_current_user, get_user, hash_password, get_db,
+    oauth2_scheme, revoke_token,
 )
+
+from dotenv import load_dotenv
+load_dotenv()
 
 BASE_DIR = Path(__file__).parent
 sys.path.insert(0, str(BASE_DIR))
@@ -39,12 +47,20 @@ from processing.logger import log_action_async
 
 app = FastAPI(title="Payroll JE Automation API", version="1.0.0")
 
+
+@app.get("/api/health", tags=["meta"])
+async def health():
+    """Liveness probe — used by Docker and load balancers."""
+    return {"status": "ok"}
+
 # Initialise auth database on startup
 init_db()
 
+_origins = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -154,15 +170,117 @@ def _run_pipeline(pf_bytes: bytes, journal_number: str, entry_date: str, provisi
     )
 
 
+# ── Brute-force / rate-limit protection ───────────────────────────────────────
+# Tracks failed login timestamps per key (username or IP).
+# After _MAX_ATTEMPTS failures within _WINDOW seconds → locked for _LOCKOUT seconds.
+
+_login_attempts: dict[str, list[float]] = defaultdict(list)
+_MAX_ATTEMPTS = 5
+_WINDOW       = 15 * 60   # sliding 15-minute window
+_LOCKOUT      = 15 * 60   # lockout duration
+
+def _check_lockout(key: str) -> None:
+    now = time.time()
+    # Prune attempts older than the window
+    _login_attempts[key] = [t for t in _login_attempts[key] if now - t < _WINDOW]
+    if len(_login_attempts[key]) >= _MAX_ATTEMPTS:
+        wait = int(_LOCKOUT - (now - _login_attempts[key][0]))
+        mins = max(1, (wait + 59) // 60)
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many failed attempts. Try again in {mins} minute(s).",
+        )
+
+def _record_attempt(key: str) -> None:
+    _login_attempts[key].append(time.time())
+
+def _clear_attempts(key: str) -> None:
+    _login_attempts.pop(key, None)
+
+
 # ── Auth routes ────────────────────────────────────────────────────────────────
 
 @app.post("/api/auth/login")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(form_data.username, form_data.password)
+async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
+    username = form_data.username.strip()
+    ip = request.client.host if request.client else "unknown"
+
+    # Enforce lockout before touching the database
+    _check_lockout(f"user:{username}")
+    _check_lockout(f"ip:{ip}")
+
+    user = authenticate_user(username, form_data.password)
     if not user:
+        _record_attempt(f"user:{username}")
+        _record_attempt(f"ip:{ip}")
         raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    # Success — clear counters
+    _clear_attempts(f"user:{username}")
+    _clear_attempts(f"ip:{ip}")
+
     token = create_access_token({"sub": user["username"], "role": user["role"]})
     return {"access_token": token, "token_type": "bearer", "username": user["username"], "role": user["role"]}
+
+
+@app.post("/api/auth/logout")
+async def logout(token: str = Depends(oauth2_scheme)):
+    """Blacklist the supplied JWT so it is rejected on all future requests."""
+    revoke_token(token)
+    return {"ok": True}
+
+
+@app.post("/api/auth/reset-password")
+async def reset_password(body: dict = Body(...)):
+    """
+    Forgot-password flow — no JWT or old password required.
+    Caller provides username + new password. Identity is verified by
+    the admin-controlled environment (internal tool, no public exposure).
+    """
+    username = body.get("username", "").strip()
+    new_pw   = body.get("new_password", "")
+
+    if not username:
+        raise HTTPException(status_code=400, detail="Username is required.")
+    if not new_pw or len(new_pw) < 4:
+        raise HTTPException(status_code=400, detail="New password must be at least 4 characters.")
+
+    with get_db() as conn:
+        result = conn.execute(
+            "UPDATE users SET password = ? WHERE username = ?",
+            (hash_password(new_pw), username),
+        )
+        if result.rowcount == 0:
+            raise HTTPException(status_code=404, detail="No account found with that username.")
+    return {"ok": True}
+
+
+@app.post("/api/auth/change-own-password")
+async def change_own_password(request: Request, body: dict = Body(...)):
+    """
+    Change password without a JWT — caller proves identity via old credentials.
+    Used from the login page so users can update their password before signing in.
+    """
+    username = body.get("username", "").strip()
+    old_pw   = body.get("old_password", "")
+    new_pw   = body.get("new_password", "")
+
+    if not username:
+        raise HTTPException(status_code=400, detail="Username is required.")
+    if not new_pw or len(new_pw) < 4:
+        raise HTTPException(status_code=400, detail="New password must be at least 4 characters.")
+
+    # Verify current credentials before allowing any change
+    user = authenticate_user(username, old_pw)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid username or current password.")
+
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE users SET password = ? WHERE username = ?",
+            (hash_password(new_pw), username),
+        )
+    return {"ok": True}
 
 
 @app.get("/api/auth/me")
@@ -189,6 +307,71 @@ async def change_password(body: dict = Body(...), current_user: dict = Depends(g
 
 # ── Shorthand auth dependency ───────────────────────────────────────────────────
 _auth = Depends(get_current_user)
+
+
+def _require_admin(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
+
+
+# ── User management routes (admin only) ────────────────────────────────────────
+
+@app.get("/api/auth/users")
+async def list_users(_: dict = Depends(_require_admin)):
+    with get_db() as conn:
+        rows = conn.execute(
+            "SELECT id, username, role, created FROM users ORDER BY id"
+        ).fetchall()
+    return {"users": [dict(r) for r in rows]}
+
+
+@app.post("/api/auth/users")
+async def create_user(body: dict = Body(...), _: dict = Depends(_require_admin)):
+    username = body.get("username", "").strip()
+    password = body.get("password", "")
+    role = body.get("role", "user")
+    if not username:
+        raise HTTPException(status_code=400, detail="Username is required")
+    if not password or len(password) < 4:
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters")
+    if role not in ("admin", "user"):
+        raise HTTPException(status_code=400, detail="Role must be 'admin' or 'user'")
+    try:
+        with get_db() as conn:
+            conn.execute(
+                "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+                (username, hash_password(password), role),
+            )
+    except Exception:
+        raise HTTPException(status_code=409, detail="Username already exists")
+    return {"ok": True}
+
+
+@app.delete("/api/auth/users/{username}")
+async def delete_user(username: str, current_user: dict = Depends(_require_admin)):
+    if username == current_user["username"]:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    with get_db() as conn:
+        result = conn.execute("DELETE FROM users WHERE username = ?", (username,))
+        if result.rowcount == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+    return {"ok": True}
+
+
+@app.put("/api/auth/users/{username}/reset-password")
+async def reset_user_password(username: str, body: dict = Body(...), _: dict = Depends(_require_admin)):
+    new_pw = body.get("password", "")
+    if not new_pw or len(new_pw) < 4:
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters")
+    with get_db() as conn:
+        result = conn.execute(
+            "UPDATE users SET password = ? WHERE username = ?",
+            (hash_password(new_pw), username),
+        )
+        if result.rowcount == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+    return {"ok": True}
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
 

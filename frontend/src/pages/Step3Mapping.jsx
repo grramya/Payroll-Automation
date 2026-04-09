@@ -231,7 +231,6 @@ export default function Step3Mapping() {
             onMouseLeave={e => e.currentTarget.style.background = 'none'}
             onClick={handleDeleteRow}
           >
-            <span className="material-icons-round" style={{ fontSize: 16 }}>delete</span>
             Delete Row
           </button>
           <button

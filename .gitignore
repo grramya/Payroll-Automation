@@ -1,41 +1,43 @@
-# =============================================================================
-# .gitignore — Payroll JE Automation
-# =============================================================================
-
-# ── Sensitive credentials — NEVER commit ─────────────────────────────────────
+# ── Secrets — NEVER commit ─────────────────────────────────────────────────────
 .env
 *.env
-qbo/tokens.json
+!.env.example
+backend/qbo/tokens.json
 
-# ── Streamlit secrets (local dev copy) — keep example, not real ──────────────
-.streamlit/secrets.toml
+# ── Database ────────────────────────────────────────────────────────────────────
+*.db
+*.sqlite3
 
-# ── Python bytecode ───────────────────────────────────────────────────────────
+# ── Python ─────────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 .Python
+*.egg-info/
+venv/
+.venv/
+env/
 
-# ── Local data (uploaded payroll files, generated outputs) ────────────────────
-# These are runtime files; keep Mapping/ and qbo/accounts_override.csv in repo
-inputs/
-JE/
-consolidated/
-logs/
+# ── Node / Frontend build ──────────────────────────────────────────────────────
+node_modules/
+frontend/dist/
+.vite/
 
-# ── Temporary Excel lock files ────────────────────────────────────────────────
+# ── Runtime data (user-generated, not source) ──────────────────────────────────
+backend/inputs/
+backend/logs/
+backend/JE/
+backend/consolidated/
+
+# ── Temporary Excel lock files ─────────────────────────────────────────────────
 ~$*.xlsx
 
-# ── OS / editor ───────────────────────────────────────────────────────────────
+# ── OS / editor ────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
+Desktop.ini
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# ── Virtual environments ──────────────────────────────────────────────────────
-venv/
-.venv/
-env/
