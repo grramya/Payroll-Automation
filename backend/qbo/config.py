@@ -21,20 +21,6 @@ load_dotenv(_PROJECT_ROOT / ".env")
 
 
 def _get_secret(key: str, default: str = "") -> str:
-    """
-    Read a config value — tries sources in priority order:
-      1. st.secrets       (Streamlit Community Cloud / local secrets.toml)
-      2. os.environ / .env (local development with .env file)
-      3. default          (fallback)
-    This lets the same code run unchanged on both local and cloud.
-    """
-    try:
-        import streamlit as st
-        val = st.secrets.get(key, "")
-        if val:
-            return str(val)
-    except Exception:
-        pass
     return os.environ.get(key, default)
 
 
@@ -91,8 +77,6 @@ _override_env = _get_secret("ACCOUNTS_OVERRIDE_PATH", "").strip()
 _default_override = _PROJECT_ROOT / "qbo" / "accounts_override.csv"
 if _override_env:
     _candidate = Path(_override_env)
-    # On Linux (Streamlit Cloud) a Windows path like C:\Users\... is invalid.
-    # Fall back to the default local path when the override path is not accessible.
     ACCOUNTS_OVERRIDE_PATH = _candidate if _candidate.exists() else _default_override
 else:
     ACCOUNTS_OVERRIDE_PATH = _default_override

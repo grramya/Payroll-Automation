@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import sqlite3
+import uuid
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -12,14 +13,28 @@ from fastapi.security import OAuth2PasswordBearer
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 import os
+from dotenv import load_dotenv
+load_dotenv()
 SECRET_KEY = os.environ.get("PJE_SECRET_KEY", "payroll-je-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = None  # No expiry — token is valid until logout
 
-DB_PATH = Path(__file__).parent / "auth.db"
+# When PJE_DATA_DIR is set (Docker), the database lives there so it can
+# be stored on a named volume separate from the application code.
+_data_dir = Path(os.environ.get("PJE_DATA_DIR", str(Path(__file__).parent)))
+DB_PATH   = _data_dir / "auth.db"
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+# ── Token blacklist — invalidated on logout ────────────────────────────────────
+# In-memory set; cleared on server restart (acceptable for internal tool).
+# Replace with Redis for multi-process / persistent revocation.
+_revoked_tokens: set[str] = set()
+
+def revoke_token(token: str) -> None:
+    """Add a JWT to the blacklist so it is rejected on every future request."""
+    _revoked_tokens.add(token)
 
 
 # ── Database ───────────────────────────────────────────────────────────────────
@@ -67,7 +82,9 @@ def hash_password(plain: str) -> str:
 # ── JWT helpers ────────────────────────────────────────────────────────────────
 def create_access_token(data: dict) -> str:
     payload = data.copy()
-    # No "exp" claim — token never expires; only logout clears it
+    # jti (JWT ID) makes every login produce a unique token,
+    # so revoking one session never affects a later login by the same user.
+    payload["jti"] = str(uuid.uuid4())
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
@@ -100,6 +117,12 @@ def authenticate_user(username: str, password: str) -> dict | None:
 
 # ── FastAPI dependency ─────────────────────────────────────────────────────────
 def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+    if token in _revoked_tokens:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Your session has expired. Please sign in again.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     payload = decode_token(token)
     username = payload.get("sub")
     if not username:

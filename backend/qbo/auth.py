@@ -68,15 +68,7 @@ class TokenStore:
         }
 
     def save(self) -> None:
-        """
-        Persist tokens in three places (best-effort — never raises):
-          1. qbo/tokens.json on disk   (works locally; ephemeral on cloud)
-          2. st.session_state          (survives re-runs within the same session)
-        After saving, display a 'Copy to Secrets' helper in the Streamlit UI
-        so the admin can paste the token JSON into Streamlit Cloud Secrets and
-        survive server restarts.
-        """
-        # 1. Disk (local dev + within-session on cloud)
+        """Persist tokens to qbo/tokens.json on disk (best-effort — never raises)."""
         try:
             config.TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
             config.TOKEN_FILE.write_text(
@@ -85,89 +77,37 @@ class TokenStore:
         except Exception:
             pass
 
-        # 2. Streamlit session state (cloud: survives re-runs within one session)
-        try:
-            import streamlit as st
-            st.session_state["_qbo_token_data"] = self.to_dict()
-        except Exception:
-            pass
-
     @classmethod
     def load(cls) -> Optional["TokenStore"]:
-        """
-        Load tokens — tries sources in priority order:
-          1. qbo/tokens.json on disk
-          2. st.session_state["_qbo_token_data"]   (same session, after auth/refresh)
-          3. st.secrets["QBO_TOKENS"]               (cloud: JSON string pasted by admin)
-        Returns None if no tokens are found anywhere.
-        """
-        # 1. Disk
+        """Load tokens from qbo/tokens.json. Returns None if not found."""
         if config.TOKEN_FILE.exists():
             try:
                 data = json.loads(config.TOKEN_FILE.read_text(encoding="utf-8"))
                 return cls(data)
             except Exception:
                 pass
-
-        # 2. Session state (already authenticated this session)
-        try:
-            import streamlit as st
-            cached = st.session_state.get("_qbo_token_data")
-            if cached:
-                return cls(cached)
-        except Exception:
-            pass
-
-        # 3. Streamlit Secrets (cloud deployment — admin pasted token JSON)
-        try:
-            import streamlit as st
-            token_json = st.secrets.get("QBO_TOKENS", "")
-            if token_json:
-                data = json.loads(str(token_json))
-                store = cls(data)
-                # Cache in session state and write to disk for this session
-                store.save()
-                return store
-        except Exception:
-            pass
-
         return None
 
     @classmethod
     def delete(cls) -> None:
-        """Delete tokens from disk and session state (used on logout)."""
+        """Delete tokens from disk (used on logout)."""
         config.TOKEN_FILE.unlink(missing_ok=True)
-        try:
-            import streamlit as st
-            st.session_state.pop("_qbo_token_data", None)
-        except Exception:
-            pass
 
 
 # =============================================================================
 # Step 1 — Build the authorization URL
 # =============================================================================
 
-def get_authorization_url() -> tuple[str, str]:
-    """
-    Construct the Intuit OAuth 2.0 authorization URL.
-
-    Returns
-    -------
-    (auth_url, state)
-        auth_url — open this in the browser
-        state    — random CSRF token to validate the callback
-    """
-    state = secrets.token_urlsafe(16)
+def get_authorization_url() -> str:
+    """Construct and return the Intuit OAuth 2.0 authorization URL."""
     params = {
         "client_id":     config.CLIENT_ID,
         "response_type": "code",
         "scope":         config.SCOPES,
         "redirect_uri":  config.REDIRECT_URI,
-        "state":         state,
+        "state":         secrets.token_urlsafe(16),
     }
-    url = config.AUTHORIZATION_URL + "?" + urllib.parse.urlencode(params)
-    return url, state
+    return config.AUTHORIZATION_URL + "?" + urllib.parse.urlencode(params)
 
 
 # =============================================================================
@@ -249,28 +189,10 @@ def _run_callback_server(timeout: int = 180) -> dict:
     return _callback_result.copy()
 
 
-# =============================================================================
-# Streamlit UI helper — exchange the pasted redirect URL for tokens
-# =============================================================================
-
-def exchange_redirect_url(redirect_url: str, expected_state: str) -> TokenStore:
+def exchange_redirect_url(redirect_url: str) -> TokenStore:
     """
-    Parse the redirect URL pasted by the user in the Streamlit UI and
+    Parse the redirect URL from the browser after Intuit authorization and
     exchange the authorization code for tokens.
-
-    This is the cloud-safe alternative to authenticate() — it does not use
-    webbrowser.open() or input(), so it works on Streamlit Community Cloud.
-
-    Parameters
-    ----------
-    redirect_url   : the full URL the user copied from their browser after
-                     completing Intuit authorization
-    expected_state : the state token from get_authorization_url() — stored
-                     in st.session_state["_qbo_auth_state"] by the UI
-
-    Returns
-    -------
-    TokenStore — saved to disk + session state
     """
     parsed = urllib.parse.urlparse(redirect_url.strip())
     qs     = urllib.parse.parse_qs(parsed.query)
@@ -280,15 +202,12 @@ def exchange_redirect_url(redirect_url: str, expected_state: str) -> TokenStore:
 
     code     = qs.get("code",    [""])[0]
     realm_id = qs.get("realmId", [""])[0]
-    state    = qs.get("state",   [""])[0]
 
     if not code:
         raise ValueError(
             "No authorization code found in the URL. "
             "Make sure you copied the full redirect URL from the browser."
         )
-    if expected_state and state != expected_state:
-        raise ValueError("OAuth state mismatch — possible CSRF. Authentication aborted.")
 
     return exchange_code_for_tokens(code, realm_id)
 
@@ -414,7 +333,7 @@ def authenticate() -> TokenStore:
     """
     config.validate_credentials()
 
-    auth_url, expected_state = get_authorization_url()
+    auth_url = get_authorization_url()
 
     print("\n  Opening browser for Intuit authorization...")
     print(f"\n  If the browser does not open, visit this URL manually:\n  {auth_url}\n")
@@ -425,26 +344,7 @@ def authenticate() -> TokenStore:
     print("  Copy the FULL URL from your browser address bar and paste it below.\n")
 
     redirect_url = input("  Paste the full redirect URL here: ").strip()
-
-    # Parse code, state, realmId from the pasted URL
-    parsed = urllib.parse.urlparse(redirect_url)
-    qs     = urllib.parse.parse_qs(parsed.query)
-
-    if "error" in qs:
-        raise PermissionError(f"Intuit returned an error: {qs['error'][0]}")
-
-    code     = qs.get("code",    [""])[0]
-    realm_id = qs.get("realmId", [""])[0]
-    state    = qs.get("state",   [""])[0]
-
-    if not code:
-        raise ValueError("No authorization code found in the URL. Make sure you copied the full URL.")
-
-    if state != expected_state:
-        raise ValueError("OAuth state mismatch — possible CSRF. Authentication aborted.")
-
-    store = exchange_code_for_tokens(code, realm_id)
-    return store
+    return exchange_redirect_url(redirect_url)
 
 
 # =============================================================================
