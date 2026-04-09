@@ -290,8 +290,16 @@ def render_progress_steps(current: int):
 
 def render_page_header(icon: str, title: str, subtitle: str = "",
                        back_step: int | None = None, back_label: str = "← Back"):
-    """Page header. back_step/back_label are accepted but ignored — sidebar handles navigation."""
-    _render_header_html(icon, title, subtitle)
+    """Page header with optional back button inline to the left of the header card."""
+    if back_step is not None:
+        btn_col, hdr_col = st.columns([1, 7], vertical_alignment="center")
+        with btn_col:
+            if st.button(back_label, key=f"_back_btn_{back_step}", type="secondary", use_container_width=True):
+                navigate_to_step(back_step)
+        with hdr_col:
+            _render_header_html(icon, title, subtitle)
+    else:
+        _render_header_html(icon, title, subtitle)
 
 
 def _render_header_html(icon: str, title: str, subtitle: str):
