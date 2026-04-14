@@ -1,6 +1,9 @@
+import type { CSSProperties } from 'react'
 import { useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+
+type ErrType = 'auth' | 'network' | 'lockout'
 
 export default function Login() {
   const { login } = useAuth()
@@ -9,14 +12,14 @@ export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPw,   setShowPw]   = useState(false)
-  const [errors,   setErrors]   = useState({})
+  const [errors,   setErrors]   = useState<Record<string, string>>({})
   const [formErr,  setFormErr]  = useState('')
-  const [errType,  setErrType]  = useState('auth')
+  const [errType,  setErrType]  = useState<ErrType>('auth')
   const [loading,  setLoading]  = useState(false)
-  const [focused,  setFocused]  = useState({})
+  const [focused,  setFocused]  = useState<Record<string, boolean>>({})
   const submitting = useRef(false)
 
-  function inputStyle(field) {
+  function inputStyle(field: string): CSSProperties {
     return {
       ...s.input,
       border: errors[field]
@@ -31,11 +34,11 @@ export default function Login() {
     }
   }
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (submitting.current) return
 
-    const errs = {}
+    const errs: Record<string, string> = {}
     if (!username.trim()) errs.username = 'User ID is required.'
     if (!password)        errs.password = 'Password is required.'
     if (Object.keys(errs).length) { setErrors(errs); return }
@@ -47,13 +50,14 @@ export default function Login() {
     try {
       await login(username.trim(), password)
       navigate('/step/1', { replace: true })
-    } catch (err) {
-      if (!err.response) {
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } }
+      if (!axiosErr.response) {
         setErrType('network')
         setFormErr('Could not reach the server. Check your connection and try again.')
-      } else if (err.response.status === 429) {
+      } else if (axiosErr.response.status === 429) {
         setErrType('lockout')
-        setFormErr(err.response.data?.detail ?? 'Too many failed attempts. Please wait.')
+        setFormErr(axiosErr.response.data?.detail ?? 'Too many failed attempts. Please wait.')
       } else {
         setErrType('auth')
         setFormErr('Invalid username or password.')
@@ -161,7 +165,7 @@ export default function Login() {
   )
 }
 
-const s = {
+const s: Record<string, CSSProperties> = {
   page: {
     minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
     background: 'linear-gradient(135deg, #f5eefa 0%, #ede7f6 100%)', padding: 24,

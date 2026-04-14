@@ -1,4 +1,11 @@
-export default function AppHeader({ user, onLogout }) {
+import type { User } from '../context/AuthContext'
+
+interface AppHeaderProps {
+  user: User | null
+  onLogout: () => void
+}
+
+export default function AppHeader({ user, onLogout }: AppHeaderProps) {
   return (
     <header className="app-header">
       <span className="material-icons-round app-header-logo">receipt_long</span>
@@ -21,8 +28,8 @@ export default function AppHeader({ user, onLogout }) {
               fontSize: 12, fontWeight: 600, color: 'var(--p)',
               cursor: 'pointer', fontFamily: 'inherit', transition: 'background .15s',
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'var(--p-light)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'none'}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--p-light)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
             title="Sign out"
           >
             <span className="material-icons-round" style={{ fontSize: 15 }}>logout</span>

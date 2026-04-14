@@ -6,36 +6,30 @@ import Alert from '../components/Alert'
 import { useApp } from '../context/AppContext'
 import { generateJE } from '../api/api'
 
-function todayStr() {
-  return new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
-}
-
 export default function Step1Generate() {
   const navigate = useNavigate()
   const { setJEData, setLoading, loading, loadingMsg } = useApp()
 
-  const [file, setFile] = useState(null)
+  const [file, setFile] = useState<File | null>(null)
   const [journalNumber, setJournalNumber] = useState('')
   const [entryDate, setEntryDate] = useState(new Date().toISOString().slice(0, 10))
   const [provisionDesc, setProvisionDesc] = useState('')
   const [dragOver, setDragOver] = useState(false)
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [apiError, setApiError] = useState('')
-  const fileInputRef = useRef()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Auto-fill journal number from file name heuristic
-  function handleFile(f) {
+  function handleFile(f: File) {
     setFile(f)
     setErrors((e) => ({ ...e, file: '' }))
-    // Try to extract invoice date from file name (fallback)
     const m = f.name.match(/\d{1,2}[._\-\/]\d{1,2}[._\-\/]\d{4}/)
     if (m && !journalNumber) {
       setJournalNumber(`Salary for ${m[0].replace(/[._\-]/g, '/')}`)
     }
   }
 
-  function validate() {
-    const errs = {}
+  function validate(): boolean {
+    const errs: Record<string, string> = {}
     if (!file) errs.file = 'A payroll file (.xlsx) is required'
     if (!journalNumber.trim()) errs.journalNumber = 'Journal Number is required'
     setErrors(errs)
@@ -43,11 +37,10 @@ export default function Step1Generate() {
   }
 
   async function handleGenerate() {
-    if (!validate()) return
+    if (!validate() || !file) return
     setApiError('')
     setLoading(true, 'Generating Journal Entry — please wait…')
     try {
-      // Format date as MM/DD/YYYY for backend
       const [y, m, d] = entryDate.split('-')
       const fmtDate = `${m}/${d}/${y}`
       const result = await generateJE(file, journalNumber.trim(), fmtDate, provisionDesc)
@@ -65,9 +58,10 @@ export default function Step1Generate() {
         warnings: result.warnings || [],
       })
       navigate('/step/2')
-    } catch (err) {
-      const detail = err.response?.data?.detail
-      if (detail?.errors) {
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: { errors?: string[] } | string } } }
+      const detail = axiosErr.response?.data?.detail
+      if (detail && typeof detail === 'object' && detail.errors) {
         setApiError(detail.errors.join('\n'))
       } else {
         setApiError(typeof detail === 'string' ? detail : 'An unexpected error occurred.')
@@ -120,7 +114,7 @@ export default function Step1Generate() {
             type="file"
             accept=".xlsx"
             style={{ display: 'none' }}
-            onChange={(e) => { if (e.target.files[0]) handleFile(e.target.files[0]) }}
+            onChange={(e) => { if (e.target.files?.[0]) handleFile(e.target.files[0]) }}
           />
           <span className="material-icons-round">upload_file</span>
           <div className="upload-zone-text">

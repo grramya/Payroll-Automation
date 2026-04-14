@@ -1,4 +1,8 @@
-export default function Spinner({ label = 'Processing…' }) {
+interface SpinnerProps {
+  label?: string
+}
+
+export default function Spinner({ label = 'Processing…' }: SpinnerProps) {
   return (
     <div className="spinner-overlay">
       <div className="spinner" />

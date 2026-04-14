@@ -1,16 +1,21 @@
+import type { CSSProperties } from 'react'
 import { useToast } from '../context/ToastContext'
+import type { ToastType } from '../context/ToastContext'
 
-const VARIANTS = {
+interface ToastVariant {
+  bg: string
+  border: string
+  color: string
+  icon: string
+}
+
+const VARIANTS: Record<ToastType, ToastVariant> = {
   success: { bg: '#e8f5e9', border: '#a5d6a7', color: '#1b5e20', icon: 'check_circle' },
   error:   { bg: '#ffebee', border: '#ef9a9a', color: '#b71c1c', icon: 'error'        },
   info:    { bg: '#e3f2fd', border: '#90caf9', color: '#0d47a1', icon: 'info'         },
   warning: { bg: '#fff8e1', border: '#ffe082', color: '#e65100', icon: 'warning'      },
 }
 
-/**
- * Renders all active toasts in a fixed top-right stack.
- * Place this once, at the root of the app, inside <ToastProvider>.
- */
 export default function Toaster() {
   const { toasts, dismiss } = useToast()
 
@@ -50,7 +55,7 @@ export default function Toaster() {
   )
 }
 
-const s = {
+const s: Record<string, CSSProperties> = {
   stack: {
     position: 'fixed',
     top: 20,

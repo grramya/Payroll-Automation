@@ -1,43 +1,58 @@
 import { createContext, useContext, useState, useCallback } from 'react'
+import type { ReactNode } from 'react'
 import axios from 'axios'
 import { logoutApi } from '../api/api'
 
-const AuthContext = createContext(null)
+export interface User {
+  username: string
+  role: string
+}
+
+interface LoginResponse {
+  access_token: string
+  username: string
+  role: string
+}
+
+interface AuthContextValue {
+  token: string | null
+  user: User | null
+  login: (username: string, password: string) => Promise<void>
+  logout: () => Promise<void>
+  isAuthenticated: boolean
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null)
 
 const TOKEN_KEY = 'pje_token'
 const USER_KEY  = 'pje_user'
 
-/**
- * Read a value from localStorage first, fall back to sessionStorage.
- * This covers both "remember me" (localStorage) and session-only (sessionStorage) logins.
- */
-function readStorage(key) {
+function readStorage(key: string): string | null {
   return localStorage.getItem(key) || sessionStorage.getItem(key) || null
 }
 
-/** Remove a key from both storages. */
-function clearStorage(key) {
+function clearStorage(key: string): void {
   localStorage.removeItem(key)
   sessionStorage.removeItem(key)
 }
 
-export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => readStorage(TOKEN_KEY))
-  const [user,  setUser]  = useState(() => {
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [token, setToken] = useState<string | null>(() => readStorage(TOKEN_KEY))
+  const [user,  setUser]  = useState<User | null>(() => {
     try {
       const raw = readStorage(USER_KEY)
-      return raw ? JSON.parse(raw) : null
+      return raw ? (JSON.parse(raw) as User) : null
     } catch {
       return null
     }
   })
 
-  const login = useCallback(async (username, password) => {
+  const login = useCallback(async (username: string, password: string) => {
     const form = new URLSearchParams()
     form.append('username', username)
     form.append('password', password)
 
-    const { data } = await axios.post('/api/auth/login', form, {
+    const { data } = await axios.post<LoginResponse>('/api/auth/login', form, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
 
@@ -48,12 +63,6 @@ export function AuthProvider({ children }) {
     setUser({ username: data.username, role: data.role })
   }, [])
 
-  /**
-   * Sign out:
-   *  1. Tell the backend to blacklist the token.
-   *  2. Wipe credentials from all storages regardless of API result.
-   *  3. Reset React state → app redirects to /login.
-   */
   const logout = useCallback(async () => {
     try {
       await logoutApi()
@@ -76,7 +85,7 @@ export function AuthProvider({ children }) {
   )
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used within <AuthProvider>')
   return ctx

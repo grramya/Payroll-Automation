@@ -1,13 +1,15 @@
 import { useState, useEffect, useMemo } from 'react'
 import { AgGridReact } from 'ag-grid-react'
+import type { ColDef } from 'ag-grid-community'
 import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import Alert from '../components/Alert'
+import type { JERow } from '../api/api'
 import { getActivityLog, downloadActivityLogUrl } from '../api/api'
 
 export default function Step5ActivityLog() {
-  const [rows, setRows] = useState([])
-  const [columns, setColumns] = useState([])
+  const [rows, setRows] = useState<JERow[]>([])
+  const [columns, setColumns] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -21,14 +23,14 @@ export default function Step5ActivityLog() {
       const data = await getActivityLog()
       setRows(data.rows || [])
       setColumns(data.columns || [])
-    } catch (err) {
+    } catch {
       setError('Could not load Activity Log.')
     } finally {
       setLoading(false)
     }
   }
 
-  const colDefs = useMemo(() => {
+  const colDefs = useMemo((): ColDef<JERow>[] => {
     if (!columns.length) return []
     return columns.map((col) => ({
       field: col,
@@ -45,14 +47,13 @@ export default function Step5ActivityLog() {
     cellStyle: { fontSize: '13px' },
   }), [])
 
-  // Compute metrics
   const total = rows.length
   const actionCol = columns.find((c) => c.toLowerCase().includes('action'))
   const generated = actionCol
-    ? rows.filter((r) => /Generated|Regenerated/i.test(r[actionCol] || '')).length
+    ? rows.filter((r) => /Generated|Regenerated/i.test(String(r[actionCol] ?? ''))).length
     : 0
   const posted = actionCol
-    ? rows.filter((r) => /Posted/i.test(r[actionCol] || '')).length
+    ? rows.filter((r) => /Posted/i.test(String(r[actionCol] ?? ''))).length
     : 0
 
   return (
@@ -97,7 +98,7 @@ export default function Step5ActivityLog() {
 
           {/* Table */}
           <div className="ag-theme-alpine" style={{ height: 520, width: '100%', marginBottom: 20 }}>
-            <AgGridReact
+            <AgGridReact<JERow>
               rowData={rows}
               columnDefs={colDefs}
               defaultColDef={defaultColDef}

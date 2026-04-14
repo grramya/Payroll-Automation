@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { resetPassword } from '../api/api'
@@ -10,14 +11,14 @@ export default function ForgotPassword() {
   const [confirmPw, setConfirmPw] = useState('')
   const [showNew,   setShowNew]   = useState(false)
   const [showConf,  setShowConf]  = useState(false)
-  const [errors,    setErrors]    = useState({})
+  const [errors,    setErrors]    = useState<Record<string, string>>({})
   const [formErr,   setFormErr]   = useState('')
   const [success,   setSuccess]   = useState(false)
   const [loading,   setLoading]   = useState(false)
-  const [focused,   setFocused]   = useState({})
+  const [focused,   setFocused]   = useState<Record<string, boolean>>({})
   const submitting = useRef(false)
 
-  function inputStyle(field) {
+  function inputStyle(field: string): CSSProperties {
     return {
       ...s.input,
       border: errors[field]
@@ -32,11 +33,11 @@ export default function ForgotPassword() {
     }
   }
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (submitting.current) return
 
-    const errs = {}
+    const errs: Record<string, string> = {}
     if (!username.trim())     errs.username  = 'User ID is required.'
     if (newPw.length < 4)     errs.newPw     = 'Password must be at least 4 characters.'
     if (!confirmPw)           errs.confirmPw = 'Please confirm your new password.'
@@ -50,8 +51,9 @@ export default function ForgotPassword() {
     try {
       await resetPassword(username.trim(), newPw)
       setSuccess(true)
-    } catch (err) {
-      setFormErr(err.response?.data?.detail || 'Could not reset password. Please try again.')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } }
+      setFormErr(axiosErr.response?.data?.detail || 'Could not reset password. Please try again.')
     } finally {
       setLoading(false)
       submitting.current = false
@@ -190,7 +192,7 @@ export default function ForgotPassword() {
   )
 }
 
-const s = {
+const s: Record<string, CSSProperties> = {
   page: {
     minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
     background: 'linear-gradient(135deg, #f5eefa 0%, #ede7f6 100%)', padding: 24,
