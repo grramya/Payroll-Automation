@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { ToastProvider } from './context/ToastContext'
 import { AppProvider } from './context/AppContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import type { User } from './context/AuthContext'
 import Toaster from './components/Toaster'
 import AppHeader from './components/AppHeader'
 import Sidebar from './components/Sidebar'
@@ -61,11 +63,11 @@ export default function App() {
   )
 }
 
-function PublicRoute({ children }) {
+function PublicRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth()
-  return isAuthenticated ? <Navigate to="/step/1" replace /> : children
+  return isAuthenticated ? <Navigate to="/step/1" replace /> : <>{children}</>
 }
 
-function AdminRoute({ user, children }) {
-  return user?.role === 'admin' ? children : <Navigate to="/step/1" replace />
+function AdminRoute({ user, children }: { user: User | null; children: ReactNode }) {
+  return user?.role === 'admin' ? <>{children}</> : <Navigate to="/step/1" replace />
 }

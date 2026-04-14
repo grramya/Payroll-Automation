@@ -13,6 +13,7 @@ from io import BytesIO
 from pathlib import Path
 
 import pandas as pd
+import threading
 import time
 from collections import defaultdict
 
@@ -114,9 +115,8 @@ def _detect_unmapped(
     return unmapped, na_mapped
 
 
-def _run_pipeline(pf_bytes: bytes, journal_number: str, entry_date: str, provision_desc: str):
-    """Parse, map, aggregate, build, validate — returns (je_df, metrics, context)."""
-    raw_df = pd.read_excel(BytesIO(pf_bytes), sheet_name=0, header=None, dtype=object)
+def _run_pipeline_from_raw(raw_df: pd.DataFrame, journal_number: str, entry_date: str, provision_desc: str):
+    """Run the full pipeline from a pre-parsed raw DataFrame (header=None)."""
     df, full_df, invoice_df, payroll_grand_total = parse_all_from_raw(raw_df)
 
     pay_item_map, dept_allocation, known_items, pay_item_id_map = load_mapping(str(_MAP_PATH))
@@ -168,6 +168,20 @@ def _run_pipeline(pf_bytes: bytes, journal_number: str, entry_date: str, provisi
             "map_warnings": map_warnings,
         },
     )
+
+
+def _run_pipeline(pf_bytes: bytes, journal_number: str, entry_date: str, provision_desc: str):
+    """Convenience wrapper: read Excel bytes then run the pipeline."""
+    raw_df = pd.read_excel(BytesIO(pf_bytes), sheet_name=0, header=None, dtype=object)
+    return _run_pipeline_from_raw(raw_df, journal_number, entry_date, provision_desc)
+
+
+def _safe_append_input(file_bytes: bytes, journal_number: str) -> None:
+    """Background-safe wrapper for append_input_to_consolidated (errors suppressed)."""
+    try:
+        append_input_to_consolidated(file_bytes, journal_number)
+    except Exception:
+        pass
 
 
 # ── Brute-force / rate-limit protection ───────────────────────────────────────
@@ -386,13 +400,14 @@ async def generate_je(
     file_bytes = await file.read()
     filename = file.filename or "payroll.xlsx"
 
-    issues = validate_payroll_df(
-        pd.read_excel(BytesIO(file_bytes), sheet_name=0, header=5), filename
-    )
+    # Single Excel read — validate on the already-parsed result instead of re-reading
+    raw_df = pd.read_excel(BytesIO(file_bytes), sheet_name=0, header=None, dtype=object)
+    df_check, _, _, _ = parse_all_from_raw(raw_df)
+    issues = validate_payroll_df(df_check, filename)
     if issues:
         raise HTTPException(status_code=422, detail={"errors": issues})
 
-    je_df, summary, ctx = _run_pipeline(file_bytes, journal_number, entry_date, provision_desc)
+    je_df, summary, ctx = _run_pipeline_from_raw(raw_df, journal_number, entry_date, provision_desc)
 
     clean_stem = re.sub(
         r"^Invoice_Supporting_Details[\s_\-]*", "",
@@ -418,14 +433,18 @@ async def generate_je(
         "pf_name": filename,
     }
 
-    # Persist input file + append to consolidated
+    # Persist input file synchronously (needed for audit trail)
     inputs_dir = BASE_DIR / "inputs"
     inputs_dir.mkdir(exist_ok=True)
     (inputs_dir / filename).write_bytes(file_bytes)
-    try:
-        append_input_to_consolidated(file_bytes, journal_number)
-    except Exception:
-        pass
+
+    # Append to consolidated inputs in the background — slow openpyxl cell-copy
+    # does not need to block the HTTP response
+    threading.Thread(
+        target=_safe_append_input,
+        args=(file_bytes, journal_number),
+        daemon=True,
+    ).start()
 
     log_action_async(
         action="JE Generated",

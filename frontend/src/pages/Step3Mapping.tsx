@@ -1,10 +1,13 @@
+import type { CSSProperties } from 'react'
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AgGridReact } from 'ag-grid-react'
+import type { ColDef, CellContextMenuEvent, IRowNode } from 'ag-grid-community'
 import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import Alert from '../components/Alert'
 import { useApp } from '../context/AppContext'
+import type { JERow } from '../api/api'
 import { getMapping, saveMapping, regenerateJE } from '../api/api'
 
 const MAP_COLUMNS = [
@@ -12,20 +15,26 @@ const MAP_COLUMNS = [
   'COGS ID', 'Indirect ID', '_col5', 'Department', 'Allocation', 'Notes',
 ]
 
+interface CtxMenu {
+  x: number
+  y: number
+  node: IRowNode<JERow>
+}
+
 export default function Step3Mapping() {
   const navigate = useNavigate()
   const {
     sessionId, unmappedCols, setJEData, setLoading, loading, loadingMsg,
   } = useApp()
 
-  const [rows, setRows] = useState([])
-  const [columns, setColumns] = useState([])
+  const [rows, setRows] = useState<JERow[]>([])
+  const [columns, setColumns] = useState<string[]>([])
   const [loadErr, setLoadErr] = useState('')
   const [saveMsg, setSaveMsg] = useState('')
   const [apiError, setApiError] = useState('')
   const [fullscreen, setFullscreen] = useState(false)
-  const [ctxMenu, setCtxMenu] = useState(null) // { x, y, node }
-  const gridRef = useRef()
+  const [ctxMenu, setCtxMenu] = useState<CtxMenu | null>(null)
+  const gridRef = useRef<AgGridReact<JERow>>(null)
 
   // Close context menu on any outside click
   useEffect(() => {
@@ -44,16 +53,17 @@ export default function Step3Mapping() {
       const data = await getMapping()
       setRows(data.rows || [])
       setColumns(data.columns || MAP_COLUMNS)
-    } catch (err) {
-      setLoadErr(err.response?.data?.detail || 'Failed to load mapping file.')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } }
+      setLoadErr(axiosErr.response?.data?.detail || 'Failed to load mapping file.')
     } finally {
       setLoading(false)
     }
   }
 
-  const colDefs = useMemo(() => {
+  const colDefs = useMemo((): ColDef<JERow>[] => {
     if (!columns.length) return []
-    const dataCols = columns.map((col) => ({
+    return columns.map((col) => ({
       field: col,
       headerName: col === '_col5' ? '' : col,
       editable: true,
@@ -61,7 +71,6 @@ export default function Step3Mapping() {
       minWidth: col === '_col5' ? 60 : col.length > 20 ? 180 : 140,
       flex: col === 'Pay Item' || col.includes('GL Account') ? 1 : undefined,
     }))
-    return dataCols
   }, [columns])
 
   const defaultColDef = useMemo(() => ({
@@ -70,8 +79,8 @@ export default function Step3Mapping() {
 
   async function handleSave() {
     if (!gridRef.current) return
-    const currentRows = []
-    gridRef.current.api.forEachNode((node) => currentRows.push(node.data))
+    const currentRows: JERow[] = []
+    gridRef.current.api.forEachNode((node) => { if (node.data) currentRows.push(node.data) })
     setLoading(true, 'Saving mapping…')
     setApiError('')
     try {
@@ -79,8 +88,9 @@ export default function Step3Mapping() {
       setRows(currentRows)
       setSaveMsg('Mapping saved. Click "Regenerate JE" to apply the updated mapping.')
       setTimeout(() => setSaveMsg(''), 5000)
-    } catch (err) {
-      setApiError(err.response?.data?.detail || 'Failed to save mapping.')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } }
+      setApiError(axiosErr.response?.data?.detail || 'Failed to save mapping.')
     } finally {
       setLoading(false)
     }
@@ -104,8 +114,9 @@ export default function Step3Mapping() {
         naMappedCols: result.na_mapped_cols || [],
       })
       navigate('/step/2')
-    } catch (err) {
-      setApiError(err.response?.data?.detail || 'Regeneration failed.')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } }
+      setApiError(axiosErr.response?.data?.detail || 'Regeneration failed.')
     } finally {
       setLoading(false)
     }
@@ -118,13 +129,15 @@ export default function Step3Mapping() {
     }
   }
 
-  function handleCellContextMenu(params) {
-    params.event.preventDefault()
-    setCtxMenu({ x: params.event.clientX, y: params.event.clientY, node: params.node })
-  }
+  const handleCellContextMenu = useCallback((params: CellContextMenuEvent<JERow>) => {
+    const e = params.event as MouseEvent | null
+    if (!e) return
+    e.preventDefault()
+    setCtxMenu({ x: e.clientX, y: e.clientY, node: params.node })
+  }, [])
 
   function handleDeleteRow() {
-    if (ctxMenu?.node && gridRef.current) {
+    if (ctxMenu?.node.data && gridRef.current) {
       gridRef.current.api.applyTransaction({ remove: [ctxMenu.node.data] })
     }
     setCtxMenu(null)
@@ -182,7 +195,7 @@ export default function Step3Mapping() {
             )}
           </div>
           <div className="ag-theme-alpine" style={{ height: fullscreen ? '100%' : 500, width: '100%', flex: fullscreen ? 1 : undefined }}>
-            <AgGridReact
+            <AgGridReact<JERow>
               ref={gridRef}
               rowData={rows}
               columnDefs={colDefs}
@@ -208,6 +221,7 @@ export default function Step3Mapping() {
           )}
         </div>
       </div>
+
       {/* Right-click context menu */}
       {ctxMenu && (
         <div
@@ -227,16 +241,16 @@ export default function Step3Mapping() {
         >
           <button
             style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13.5, color: '#b71c1c', fontFamily: 'inherit' }}
-            onMouseEnter={e => e.currentTarget.style.background = '#ffebee'}
-            onMouseLeave={e => e.currentTarget.style.background = 'none'}
+            onMouseEnter={e => (e.currentTarget.style.background = '#ffebee')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
             onClick={handleDeleteRow}
           >
             Delete Row
           </button>
           <button
             style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13.5, color: 'var(--text)', fontFamily: 'inherit' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'var(--p-light)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'none'}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--p-light)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
             onClick={() => { handleAddRow(); setCtxMenu(null) }}
           >
             <span className="material-icons-round" style={{ fontSize: 16 }}>add</span>
@@ -248,7 +262,7 @@ export default function Step3Mapping() {
   )
 }
 
-const fsStyles = {
+const fsStyles: Record<string, CSSProperties> = {
   overlay: {
     position: 'fixed',
     inset: 0,

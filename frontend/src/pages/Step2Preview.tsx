@@ -1,10 +1,13 @@
+import type { CSSProperties } from 'react'
 import { useState, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AgGridReact } from 'ag-grid-react'
+import type { ColDef } from 'ag-grid-community'
 import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import Alert from '../components/Alert'
 import { useApp } from '../context/AppContext'
+import type { JERow, QBOPostResult } from '../api/api'
 import { saveJE, downloadJEUrl, postToQBO } from '../api/api'
 
 export default function Step2Preview() {
@@ -18,13 +21,12 @@ export default function Step2Preview() {
 
   const [apiError, setApiError] = useState('')
   const [saveMsg, setSaveMsg] = useState('')
-  const [qboResult, setQboResult] = useState(null)
+  const [qboResult, setQboResult] = useState<QBOPostResult | null>(null)
   const [showDeptSummary, setShowDeptSummary] = useState(false)
   const [showNaMapped, setShowNaMapped] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
-  const gridRef = useRef()
+  const gridRef = useRef<AgGridReact<JERow>>(null)
 
-  // If no session yet, redirect to step 1
   if (!sessionId) {
     return (
       <div>
@@ -35,7 +37,7 @@ export default function Step2Preview() {
   }
 
   // ── Column definitions ────────────────────────────────────────────────────
-  const colDefs = useMemo(() => {
+  const colDefs = useMemo((): ColDef<JERow>[] => {
     if (!jeColumns.length) return []
     const NON_EDITABLE = new Set(['Post?', 'Journal Number', 'Entry Date'])
     return jeColumns.map((col) => ({
@@ -57,8 +59,8 @@ export default function Step2Preview() {
   // ── Save edits ────────────────────────────────────────────────────────────
   async function handleSave() {
     if (!gridRef.current) return
-    const rows = []
-    gridRef.current.api.forEachNode((node) => rows.push(node.data))
+    const rows: JERow[] = []
+    gridRef.current.api.forEachNode((node) => { if (node.data) rows.push(node.data) })
     setLoading(true, 'Saving edits…')
     try {
       const result = await saveJE(sessionId, rows)
@@ -66,8 +68,9 @@ export default function Step2Preview() {
       if (result.je_provision != null) updateProvision(result.je_provision)
       setSaveMsg('Changes saved.')
       setTimeout(() => setSaveMsg(''), 3000)
-    } catch (err) {
-      setApiError(err.response?.data?.detail || 'Save failed.')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } }
+      setApiError(axiosErr.response?.data?.detail || 'Save failed.')
     } finally {
       setLoading(false)
     }
@@ -86,9 +89,10 @@ export default function Step2Preview() {
     try {
       const result = await postToQBO(sessionId)
       setQboResult(result)
-    } catch (err) {
-      const detail = err.response?.data?.detail
-      if (err.response?.status === 401) {
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } }
+      const detail = axiosErr.response?.data?.detail
+      if (axiosErr.response?.status === 401) {
         setApiError('Not authenticated with QuickBooks. Go to Step 4 to connect.')
       } else {
         setApiError(typeof detail === 'string' ? detail : 'Failed to post to QuickBooks.')
@@ -98,7 +102,7 @@ export default function Step2Preview() {
     }
   }
 
-  const diff = payrollGt != null ? Math.abs(payrollGt - jeProvision) : null
+  const diff = payrollGt != null ? Math.abs(payrollGt - (jeProvision ?? 0)) : null
 
   return (
     <div>
@@ -125,7 +129,7 @@ export default function Step2Preview() {
 
       {/* Grand total validation */}
       {payrollGt != null && (
-        diff < 0.02 ? (
+        diff != null && diff < 0.02 ? (
           <Alert type="success">
             Grand total matched — Payroll: {payrollGt.toLocaleString('en-US', { minimumFractionDigits: 2 })}&nbsp;
             | JE Provision: {jeProvision?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -143,7 +147,9 @@ export default function Step2Preview() {
       {unmappedCols.length > 0 && (
         <Alert type="warn">
           <strong>{unmappedCols.length} column(s)</strong> in the payroll file have no mapping and were skipped:{' '}
-          {unmappedCols.map((c) => <code key={c} style={{ background: '#fff3e0', padding: '0 4px', borderRadius: 3 }}>{c}</code>).reduce((a, b) => [a, ', ', b])}
+          {unmappedCols.map((c, i) => (
+            <span key={c}>{i > 0 && ', '}<code style={{ background: '#fff3e0', padding: '0 4px', borderRadius: 3 }}>{c}</code></span>
+          ))}
           <br />
           <button
             className="btn btn-sm btn-secondary"
@@ -196,7 +202,7 @@ export default function Step2Preview() {
                 {deptSummary.map((row, i) => (
                   <tr key={i} style={{ borderTop: '1px solid var(--border)' }}>
                     {Object.values(row).map((v, j) => (
-                      <td key={j} style={{ padding: '6px 10px' }}>{v ?? ''}</td>
+                      <td key={j} style={{ padding: '6px 10px' }}>{v != null ? String(v) : ''}</td>
                     ))}
                   </tr>
                 ))}
@@ -235,7 +241,7 @@ export default function Step2Preview() {
             )}
           </div>
           <div className="ag-theme-alpine" style={{ height: fullscreen ? '100%' : 520, width: '100%', flex: fullscreen ? 1 : undefined }}>
-            <AgGridReact
+            <AgGridReact<JERow>
               ref={gridRef}
               rowData={jeRows}
               columnDefs={colDefs}
@@ -278,7 +284,7 @@ export default function Step2Preview() {
   )
 }
 
-const fsStyles = {
+const fsStyles: Record<string, CSSProperties> = {
   overlay: {
     position: 'fixed',
     inset: 0,

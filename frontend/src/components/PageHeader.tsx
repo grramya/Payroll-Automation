@@ -1,6 +1,14 @@
 import { useNavigate } from 'react-router-dom'
 
-export default function PageHeader({ icon, title, subtitle, backStep, backLabel }) {
+interface PageHeaderProps {
+  icon: string
+  title: string
+  subtitle?: string
+  backStep?: number
+  backLabel?: string
+}
+
+export default function PageHeader({ icon, title, subtitle, backStep, backLabel }: PageHeaderProps) {
   const navigate = useNavigate()
   return (
     <div>

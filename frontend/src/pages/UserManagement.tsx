@@ -1,11 +1,13 @@
+import type { CSSProperties } from 'react'
 import { useState, useEffect } from 'react'
 import PageHeader from '../components/PageHeader'
 import Alert from '../components/Alert'
 import Spinner from '../components/Spinner'
+import type { UserRecord } from '../api/api'
 import { listUsers, createUser, deleteUser, resetUserPassword } from '../api/api'
 
 export default function UserManagement() {
-  const [users, setUsers] = useState([])
+  const [users, setUsers] = useState<UserRecord[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -19,7 +21,7 @@ export default function UserManagement() {
   const [addError, setAddError] = useState('')
 
   // Reset password modal
-  const [resetTarget, setResetTarget] = useState(null)
+  const [resetTarget, setResetTarget] = useState<string | null>(null)
   const [resetPw, setResetPw] = useState('')
   const [showResetPw, setShowResetPw] = useState(false)
   const [resetting, setResetting] = useState(false)
@@ -40,7 +42,7 @@ export default function UserManagement() {
     }
   }
 
-  async function handleAdd(e) {
+  async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
     setAddError('')
     if (!newUsername.trim()) { setAddError('Username is required.'); return }
@@ -53,37 +55,41 @@ export default function UserManagement() {
       setNewPassword('')
       setNewRole('user')
       fetchUsers()
-    } catch (err) {
-      setAddError(err.response?.data?.detail || 'Failed to create user.')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } }
+      setAddError(axiosErr.response?.data?.detail || 'Failed to create user.')
     } finally {
       setAdding(false)
     }
   }
 
-  async function handleDelete(username) {
+  async function handleDelete(username: string) {
     if (!confirm(`Delete user "${username}"? This cannot be undone.`)) return
     setError('')
     try {
       await deleteUser(username)
       setSuccess(`User "${username}" deleted.`)
       fetchUsers()
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to delete user.')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } }
+      setError(axiosErr.response?.data?.detail || 'Failed to delete user.')
     }
   }
 
-  async function handleResetPassword(e) {
+  async function handleResetPassword(e: React.FormEvent) {
     e.preventDefault()
     setResetError('')
     if (resetPw.length < 4) { setResetError('Password must be at least 4 characters.'); return }
+    if (!resetTarget) return
     setResetting(true)
     try {
       await resetUserPassword(resetTarget, resetPw)
       setSuccess(`Password reset for "${resetTarget}".`)
       setResetTarget(null)
       setResetPw('')
-    } catch (err) {
-      setResetError(err.response?.data?.detail || 'Failed to reset password.')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } }
+      setResetError(axiosErr.response?.data?.detail || 'Failed to reset password.')
     } finally {
       setResetting(false)
     }
@@ -283,7 +289,7 @@ export default function UserManagement() {
   )
 }
 
-const s = {
+const s: Record<string, CSSProperties> = {
   card: {
     background: '#fff',
     border: '1px solid #e8d5f7',
@@ -300,10 +306,7 @@ const s = {
     color: '#400f61',
     marginBottom: 18,
   },
-  cardTitleIcon: {
-    fontSize: 20,
-    color: '#400f61',
-  },
+  cardTitleIcon: { fontSize: 20, color: '#400f61' },
   badge: {
     background: '#f5eefa',
     color: '#400f61',
@@ -313,197 +316,73 @@ const s = {
     padding: '1px 9px',
     marginLeft: 4,
   },
-  form: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 12,
-  },
-  formRow: {
-    display: 'flex',
-    gap: 16,
-    alignItems: 'flex-end',
-    flexWrap: 'wrap',
-  },
-  field: {
-    flex: 1,
-    minWidth: 160,
-  },
-  label: {
-    display: 'block',
-    fontSize: 12,
-    fontWeight: 600,
-    color: '#555',
-    marginBottom: 5,
-  },
-  inputWrap: {
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-  },
+  form: { display: 'flex', flexDirection: 'column', gap: 12 },
+  formRow: { display: 'flex', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap' },
+  field: { flex: 1, minWidth: 160 },
+  label: { display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 5 },
+  inputWrap: { position: 'relative', display: 'flex', alignItems: 'center' },
   inputIcon: {
-    position: 'absolute',
-    left: 10,
-    fontSize: 16,
-    color: '#400f61',
-    opacity: 0.55,
-    pointerEvents: 'none',
+    position: 'absolute', left: 10, fontSize: 16,
+    color: '#400f61', opacity: 0.55, pointerEvents: 'none',
   },
   input: {
-    width: '100%',
-    padding: '9px 10px 9px 34px',
-    border: '1.5px solid #d4d0da',
-    borderRadius: 8,
-    fontSize: 13,
-    fontFamily: 'inherit',
-    outline: 'none',
-    color: '#1a1a1a',
-    background: '#fafafa',
-    boxSizing: 'border-box',
+    width: '100%', padding: '9px 10px 9px 34px',
+    border: '1.5px solid #d4d0da', borderRadius: 8, fontSize: 13,
+    fontFamily: 'inherit', outline: 'none', color: '#1a1a1a',
+    background: '#fafafa', boxSizing: 'border-box',
   },
   eyeBtn: {
-    position: 'absolute',
-    right: 8,
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    padding: 2,
+    position: 'absolute', right: 8, background: 'none', border: 'none',
+    cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 2,
   },
   addBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6,
-    padding: '9px 18px',
-    background: '#400f61',
-    color: '#fff',
-    border: 'none',
-    borderRadius: 8,
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    whiteSpace: 'nowrap',
+    display: 'flex', alignItems: 'center', gap: 6,
+    padding: '9px 18px', background: '#400f61', color: '#fff',
+    border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600,
+    cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
   },
   cancelBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6,
-    padding: '9px 18px',
-    background: '#f5f5f5',
-    color: '#555',
-    border: '1.5px solid #ddd',
-    borderRadius: 8,
-    fontSize: 13,
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
+    display: 'flex', alignItems: 'center', gap: 6,
+    padding: '9px 18px', background: '#f5f5f5', color: '#555',
+    border: '1.5px solid #ddd', borderRadius: 8, fontSize: 13,
+    fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
   },
   inlineError: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6,
-    color: '#b71c1c',
-    fontSize: 12,
-    background: '#ffebee',
-    border: '1px solid #ef9a9a',
-    borderRadius: 6,
-    padding: '6px 10px',
-    marginTop: 4,
+    display: 'flex', alignItems: 'center', gap: 6, color: '#b71c1c',
+    fontSize: 12, background: '#ffebee', border: '1px solid #ef9a9a',
+    borderRadius: 6, padding: '6px 10px', marginTop: 4,
   },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: 13,
-  },
+  table: { width: '100%', borderCollapse: 'collapse', fontSize: 13 },
   th: {
-    textAlign: 'left',
-    padding: '8px 12px',
-    fontSize: 11,
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: '0.06em',
-    color: '#888',
-    borderBottom: '2px solid #f0e8f7',
+    textAlign: 'left', padding: '8px 12px', fontSize: 11, fontWeight: 700,
+    textTransform: 'uppercase', letterSpacing: '0.06em',
+    color: '#888', borderBottom: '2px solid #f0e8f7',
   },
-  tr: {
-    borderBottom: '1px solid #f5f0fa',
-  },
-  td: {
-    padding: '11px 12px',
-    color: '#222',
-    verticalAlign: 'middle',
-  },
+  tr: { borderBottom: '1px solid #f5f0fa' },
+  td: { padding: '11px 12px', color: '#222', verticalAlign: 'middle' },
   roleBadge: {
-    display: 'inline-block',
-    padding: '2px 10px',
-    borderRadius: 20,
-    fontSize: 11,
-    fontWeight: 700,
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
+    display: 'inline-block', padding: '2px 10px', borderRadius: 20,
+    fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
   },
-  roleAdmin: {
-    background: '#f5eefa',
-    color: '#400f61',
-  },
-  roleUser: {
-    background: '#f0f4ff',
-    color: '#3949ab',
-  },
+  roleAdmin: { background: '#f5eefa', color: '#400f61' },
+  roleUser:  { background: '#f0f4ff', color: '#3949ab' },
   actionBtn: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '5px 12px',
-    marginLeft: 8,
-    background: '#f5eefa',
-    color: '#400f61',
-    border: '1px solid #d4b8f0',
-    borderRadius: 6,
-    fontSize: 12,
-    fontWeight: 600,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
+    display: 'inline-flex', alignItems: 'center', padding: '5px 12px', marginLeft: 8,
+    background: '#f5eefa', color: '#400f61', border: '1px solid #d4b8f0',
+    borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
   },
-  deleteBtn: {
-    background: '#fff5f5',
-    color: '#b71c1c',
-    border: '1px solid #f5c6c6',
-  },
-  spinner: {
-    width: 13,
-    height: 13,
-    border: '2px solid rgba(255,255,255,.3)',
-    borderTopColor: '#fff',
-    borderRadius: '50%',
-    display: 'inline-block',
-    animation: 'spin .7s linear infinite',
-  },
+  deleteBtn: { background: '#fff5f5', color: '#b71c1c', border: '1px solid #f5c6c6' },
   overlay: {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,.35)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,.35)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
   },
   modal: {
-    background: '#fff',
-    borderRadius: 14,
-    padding: '28px 28px 24px',
-    width: '100%',
-    maxWidth: 400,
-    boxShadow: '0 12px 48px rgba(64,15,97,.18)',
-    border: '1px solid #e8d5f7',
+    background: '#fff', borderRadius: 14, padding: '28px 28px 24px',
+    width: '100%', maxWidth: 400,
+    boxShadow: '0 12px 48px rgba(64,15,97,.18)', border: '1px solid #e8d5f7',
   },
   modalTitle: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    fontSize: 15,
-    fontWeight: 700,
-    color: '#400f61',
-    marginBottom: 20,
+    display: 'flex', alignItems: 'center', gap: 10,
+    fontSize: 15, fontWeight: 700, color: '#400f61', marginBottom: 20,
   },
 }

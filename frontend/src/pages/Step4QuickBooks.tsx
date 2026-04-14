@@ -4,13 +4,14 @@ import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import Alert from '../components/Alert'
 import { useApp } from '../context/AppContext'
+import type { QBOStatus } from '../api/api'
 import { getQBOStatus, startQBOAuth, completeQBOAuth, disconnectQBO } from '../api/api'
 
 export default function Step4QuickBooks() {
   const navigate = useNavigate()
   const { sessionId, setLoading, loading, loadingMsg } = useApp()
 
-  const [status, setStatus] = useState(null)
+  const [status, setStatus] = useState<QBOStatus | null>(null)
   const [loadErr, setLoadErr] = useState('')
   const [apiError, setApiError] = useState('')
   const [msg, setMsg] = useState('')
@@ -26,7 +27,7 @@ export default function Step4QuickBooks() {
     try {
       const data = await getQBOStatus()
       setStatus(data)
-    } catch (err) {
+    } catch {
       setLoadErr('Could not check QuickBooks status.')
     } finally {
       setLoading(false)
@@ -38,12 +39,12 @@ export default function Step4QuickBooks() {
     setLoading(true, 'Starting QuickBooks authorization…')
     try {
       const data = await startQBOAuth()
-      // Open auth URL in new tab; user must copy the redirect URL back
       window.open(data.auth_url, '_blank', 'noopener,noreferrer')
       setShowExchange(true)
       setMsg('Authorization page opened. Complete sign-in, then paste the redirect URL below.')
-    } catch (err) {
-      setApiError(err.response?.data?.detail || 'Failed to start authorization.')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } }
+      setApiError(axiosErr.response?.data?.detail || 'Failed to start authorization.')
     } finally {
       setLoading(false)
     }
@@ -62,8 +63,9 @@ export default function Step4QuickBooks() {
       setShowExchange(false)
       setRedirectUrl('')
       await fetchStatus()
-    } catch (err) {
-      setApiError(err.response?.data?.detail || 'Token exchange failed. Check the URL and try again.')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } }
+      setApiError(axiosErr.response?.data?.detail || 'Token exchange failed. Check the URL and try again.')
     } finally {
       setLoading(false)
     }
@@ -77,8 +79,9 @@ export default function Step4QuickBooks() {
       await disconnectQBO()
       setMsg('Disconnected from QuickBooks.')
       await fetchStatus()
-    } catch (err) {
-      setApiError(err.response?.data?.detail || 'Disconnect failed.')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } }
+      setApiError(axiosErr.response?.data?.detail || 'Disconnect failed.')
     } finally {
       setLoading(false)
     }

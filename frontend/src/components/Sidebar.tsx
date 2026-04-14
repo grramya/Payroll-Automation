@@ -1,22 +1,28 @@
+import type { CSSProperties } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
 import { downloadConsolidatedJEUrl, downloadConsolidatedInputsUrl } from '../api/api'
 
+interface SidebarProps {
+  collapsed: boolean
+  onToggle: () => void
+}
+
 const STEPS = [
-  { n: 1, icon: 'upload_file', label: 'Generate JE' },
-  { n: 2, icon: 'table_view',  label: 'JE Preview' },
-  { n: 3, icon: 'edit_note',   label: 'Edit Mapping' },
-  { n: 4, icon: 'cloud_sync',  label: 'QuickBooks' },
+  { n: 1, icon: 'upload_file', label: 'Step 1: Generate JE' },
+  { n: 2, icon: 'table_view',  label: 'Step 2: JE Preview' },
+  { n: 3, icon: 'edit_note',   label: 'Step 3: Edit Mapping' },
+  { n: 4, icon: 'cloud_sync',  label: 'Step 4: QuickBooks' },
 ]
 
-export default function Sidebar({ collapsed, onToggle }) {
+export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { sessionId } = useApp()
   const { user } = useAuth()
   const isAdmin = user?.role === 'admin'
   const c = collapsed
 
-  const navItemStyle = (extra = {}) => ({
+  const navItemStyle = (extra: CSSProperties = {}): CSSProperties => ({
     ...styles.navItem,
     justifyContent: c ? 'center' : 'flex-start',
     padding: c ? '10px 0' : '10px 12px',
@@ -49,6 +55,8 @@ export default function Sidebar({ collapsed, onToggle }) {
         {/* Nav */}
         <nav style={styles.nav}>
 
+          {!c && <div style={styles.sectionLabel}>JE Processing</div>}
+
           {STEPS.map(({ n, icon, label }) => {
             const locked = n === 2 && !sessionId
             return (
@@ -63,7 +71,6 @@ export default function Sidebar({ collapsed, onToggle }) {
                   ...(locked ? styles.navItemLocked : {}),
                 })}
               >
-                {!c && <span style={styles.stepNum}>{n}</span>}
                 <span className="material-icons-round" style={styles.navIcon}>{icon}</span>
                 {!c && <span style={styles.navLabel}>{label}</span>}
                 {!c && locked && <span className="material-icons-round" style={styles.lockIcon}>lock</span>}
@@ -72,6 +79,8 @@ export default function Sidebar({ collapsed, onToggle }) {
           })}
 
           <div style={styles.divider} />
+
+          {!c && <div style={styles.sectionLabel}>Logs</div>}
 
           <NavLink
             to="/activity-log"
@@ -88,6 +97,7 @@ export default function Sidebar({ collapsed, onToggle }) {
           {isAdmin && (
             <>
               <div style={styles.divider} />
+              {!c && <div style={styles.sectionLabel}>Admin</div>}
               <NavLink
                 to="/users"
                 title={c ? 'Manage Users' : undefined}
@@ -104,7 +114,7 @@ export default function Sidebar({ collapsed, onToggle }) {
 
           <div style={styles.divider} />
 
-          {!c && <div style={styles.sectionLabel}>Downloads</div>}
+          {!c && <div style={styles.sectionLabel}>Download History</div>}
 
           <a
             href={downloadConsolidatedJEUrl()}
@@ -141,7 +151,7 @@ export default function Sidebar({ collapsed, onToggle }) {
   )
 }
 
-const styles = {
+const styles: Record<string, CSSProperties> = {
   aside: {
     height: '100%',
     background: 'linear-gradient(180deg, #400f61 0%, #2d0a45 100%)',
@@ -228,19 +238,6 @@ const styles = {
   navItemLocked: {
     opacity: 0.45,
     cursor: 'not-allowed',
-  },
-  stepNum: {
-    width: 20,
-    height: 20,
-    borderRadius: '50%',
-    background: 'rgba(255,255,255,.2)',
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: 700,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
   },
   navIcon: {
     fontSize: 18,
