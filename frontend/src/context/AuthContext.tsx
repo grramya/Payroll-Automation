@@ -6,12 +6,16 @@ import { logoutApi } from '../api/api'
 export interface User {
   username: string
   role: string
+  can_access_payroll: boolean
+  can_access_fpa: boolean
 }
 
 interface LoginResponse {
   access_token: string
   username: string
   role: string
+  can_access_payroll: boolean
+  can_access_fpa: boolean
 }
 
 interface AuthContextValue {
@@ -57,10 +61,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     localStorage.setItem(TOKEN_KEY, data.access_token)
-    localStorage.setItem(USER_KEY,  JSON.stringify({ username: data.username, role: data.role }))
+    localStorage.setItem(USER_KEY,  JSON.stringify({
+      username: data.username,
+      role: data.role,
+      can_access_payroll: data.can_access_payroll,
+      can_access_fpa: data.can_access_fpa,
+    }))
 
     setToken(data.access_token)
-    setUser({ username: data.username, role: data.role })
+    setUser({
+      username: data.username,
+      role: data.role,
+      can_access_payroll: data.can_access_payroll,
+      can_access_fpa: data.can_access_fpa,
+    })
   }, [])
 
   const logout = useCallback(async () => {

@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 const http = axios.create({ baseURL: '/api' })
+export { http as apiClient }
 
 // ── Request interceptor — attach JWT from whichever storage holds it ──────────
 http.interceptors.request.use((config) => {
@@ -77,6 +78,8 @@ export interface UserRecord {
   username: string
   role: string
   created?: string
+  can_access_payroll: number
+  can_access_fpa: number
 }
 
 export interface UsersData {
@@ -192,6 +195,53 @@ export async function disconnectQBO(): Promise<void> {
   await http.post('/qbo/disconnect')
 }
 
+export interface QBOTableData {
+  rows: JERow[]
+  columns: string[]
+}
+
+export async function getQBOAccounts(): Promise<QBOTableData> {
+  const { data } = await http.get<QBOTableData>('/qbo/accounts')
+  return data
+}
+
+export async function saveQBOAccounts(rows: JERow[]): Promise<void> {
+  await http.put('/qbo/accounts', { rows })
+}
+
+export async function syncQBOAccounts(): Promise<QBOTableData> {
+  const { data } = await http.post<QBOTableData>('/qbo/accounts/sync')
+  return data
+}
+
+export async function getQBOVendors(): Promise<QBOTableData> {
+  const { data } = await http.get<QBOTableData>('/qbo/vendors')
+  return data
+}
+
+export async function saveQBOVendors(rows: JERow[]): Promise<void> {
+  await http.put('/qbo/vendors', { rows })
+}
+
+export async function syncQBOVendors(): Promise<QBOTableData> {
+  const { data } = await http.post<QBOTableData>('/qbo/vendors/sync')
+  return data
+}
+
+export async function getQBOClasses(): Promise<QBOTableData> {
+  const { data } = await http.get<QBOTableData>('/qbo/classes')
+  return data
+}
+
+export async function saveQBOClasses(rows: JERow[]): Promise<void> {
+  await http.put('/qbo/classes', { rows })
+}
+
+export async function syncQBOClasses(): Promise<QBOTableData> {
+  const { data } = await http.post<QBOTableData>('/qbo/classes/sync')
+  return data
+}
+
 // ── Activity log ───────────────────────────────────────────────────────────────
 
 export async function getActivityLog(): Promise<ActivityLogData> {
@@ -223,9 +273,11 @@ export async function listUsers(): Promise<UsersData> {
 export async function createUser(
   username: string,
   password: string,
-  role: string
+  role: string,
+  can_access_payroll = false,
+  can_access_fpa = false,
 ): Promise<void> {
-  await http.post('/auth/users', { username, password, role })
+  await http.post('/auth/users', { username, password, role, can_access_payroll, can_access_fpa })
 }
 
 export async function deleteUser(username: string): Promise<void> {
@@ -234,4 +286,45 @@ export async function deleteUser(username: string): Promise<void> {
 
 export async function resetUserPassword(username: string, password: string): Promise<void> {
   await http.put(`/auth/users/${username}/reset-password`, { password })
+}
+
+export async function updateUserPermissions(
+  username: string,
+  can_access_payroll: boolean,
+  can_access_fpa: boolean,
+): Promise<void> {
+  await http.put(`/auth/users/${username}/permissions`, { can_access_payroll, can_access_fpa })
+}
+
+// ── FP&A ───────────────────────────────────────────────────────────────────────
+
+export interface FpaTransformResponse {
+  summary: Record<string, unknown>
+  preview: Record<string, unknown>[]
+  excel_b64: string
+  bs_excel_b64: string
+  bs_preview: Record<string, unknown>
+  bsi_excel_b64: string
+  bsi_preview: Record<string, unknown>
+  pl_excel_b64: string
+  pl_preview: Record<string, unknown>
+  comp_pl_excel_b64: string
+  comp_pl_preview: Record<string, unknown>
+  comp_pl_bd_excel_b64: string
+  comp_pl_bd_preview: Record<string, unknown>
+}
+
+export async function fpaGetMeta(file: File): Promise<{ company_name: string }> {
+  const form = new FormData()
+  form.append('input_file', file)
+  const { data } = await http.post<{ company_name: string }>('/fpa/meta', form)
+  return data
+}
+
+export async function fpaTransform(file: File, companyName: string): Promise<FpaTransformResponse> {
+  const form = new FormData()
+  form.append('input_file', file)
+  form.append('company_name', companyName)
+  const { data } = await http.post<FpaTransformResponse>('/fpa/transform', form)
+  return data
 }

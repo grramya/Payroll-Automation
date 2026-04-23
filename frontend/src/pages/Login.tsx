@@ -49,7 +49,7 @@ export default function Login() {
 
     try {
       await login(username.trim(), password)
-      navigate('/step/1', { replace: true })
+      navigate('/', { replace: true })
     } catch (err: unknown) {
       const axiosErr = err as { response?: { status?: number; data?: { detail?: string } } }
       if (!axiosErr.response) {
@@ -82,11 +82,11 @@ export default function Login() {
         <div style={s.logoRow}>
           <div style={s.logoIcon}>
             <span className="material-icons-round" style={{ fontSize: 36, color: '#400f61' }}>
-              receipt_long
+              apps
             </span>
           </div>
           <div>
-            <div style={s.appName}>Payroll JE Automation</div>
+            <div style={s.appName}>Finance Suite</div>
             <div style={s.appSub}>Sign in to your account</div>
           </div>
         </div>

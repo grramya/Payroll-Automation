@@ -203,6 +203,7 @@ export default function Step3Mapping() {
               rowSelection="multiple"
               stopEditingWhenCellsLoseFocus
               animateRows
+              preventDefaultOnContextMenu
               onCellContextMenu={handleCellContextMenu}
             />
           </div>

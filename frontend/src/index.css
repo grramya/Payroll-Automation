@@ -23,6 +23,37 @@
   --shadow:  0 1px 4px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
 }
 
+/* ── Dark mode tokens ───────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --p:       #c084fc;
+  --p-dark:  #a855f7;
+  --p-light: #2d1b45;
+  --p-ring:  rgba(192, 132, 252, 0.25);
+  --border:  #3a3a4a;
+  --text:    #e8e8f0;
+  --muted:   #a0a0b8;
+  --surface: #1e1e2e;
+  --bg:      #13131f;
+  --ok:      #86efac;
+  --ok-bg:   #14532d;
+  --warn:    #fcd34d;
+  --warn-bg: #78350f;
+  --err:     #fca5a5;
+  --err-bg:  #7f1d1d;
+  --info:    #93c5fd;
+  --info-bg: #1e3a5f;
+  --shadow:  0 1px 4px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+}
+
+[data-theme="dark"] .app-header {
+  background: #1e1e2e;
+  border-bottom-color: #3a3a4a;
+}
+
+[data-theme="dark"] .spinner-overlay {
+  background: rgba(19,19,31,.75);
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {

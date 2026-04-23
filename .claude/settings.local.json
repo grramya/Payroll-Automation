@@ -118,7 +118,12 @@
       "Bash(python \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\generate_sequence_diagram.py\")",
       "Bash(python \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\generate_table_graph.py\")",
       "Bash(python \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\generate_table_only.py\")",
-      "Bash(python \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\generate_graph_only.py\")"
+      "Bash(python \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\generate_graph_only.py\")",
+      "Bash(node -e \"require\\('docx'\\); console.log\\('ok'\\)\")",
+      "Bash(node -e \"require\\('C:/Users/GRRamya/AppData/Roaming/npm/node_modules/docx'\\); console.log\\('ok'\\)\")",
+      "Bash(node \"C:/Users/GRRamya/Downloads/generate_ieee_paper.js\")",
+      "Bash(pandoc \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\conference-template-letter.docx\" -o \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\template_extracted.md\")",
+      "Bash(python scripts/office/unpack.py \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\conference-template-letter.docx\" \"C:\\\\Users\\\\GRRamya\\\\Downloads\\\\template_unpacked/\")"
     ]
   }
 }

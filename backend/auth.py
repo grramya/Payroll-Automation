@@ -54,19 +54,33 @@ def init_db():
     with get_db() as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
-                id       INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT    UNIQUE NOT NULL,
-                password TEXT    NOT NULL,
-                role     TEXT    NOT NULL DEFAULT 'user',
-                created  TEXT    NOT NULL DEFAULT (datetime('now'))
+                id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+                username            TEXT    UNIQUE NOT NULL,
+                password            TEXT    NOT NULL,
+                role                TEXT    NOT NULL DEFAULT 'user',
+                created             TEXT    NOT NULL DEFAULT (datetime('now')),
+                can_access_payroll  INTEGER NOT NULL DEFAULT 0,
+                can_access_fpa      INTEGER NOT NULL DEFAULT 0
             )
         """)
+        # Migrate existing DB: add permission columns if they don't exist yet
+        existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
+        if "can_access_payroll" not in existing_cols:
+            conn.execute("ALTER TABLE users ADD COLUMN can_access_payroll INTEGER NOT NULL DEFAULT 0")
+        if "can_access_fpa" not in existing_cols:
+            conn.execute("ALTER TABLE users ADD COLUMN can_access_fpa INTEGER NOT NULL DEFAULT 0")
+
         # Create default admin if no users exist
         existing = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
         if existing == 0:
             conn.execute(
-                "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+                "INSERT INTO users (username, password, role, can_access_payroll, can_access_fpa) VALUES (?, ?, ?, 1, 1)",
                 ("admin", pwd_context.hash("admin123"), "admin"),
+            )
+        else:
+            # Ensure existing admin has full access
+            conn.execute(
+                "UPDATE users SET can_access_payroll=1, can_access_fpa=1 WHERE role='admin' AND (can_access_payroll=0 AND can_access_fpa=0)"
             )
 
 
