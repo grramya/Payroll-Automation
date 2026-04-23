@@ -29,6 +29,7 @@ backend/inputs/
 backend/logs/
 backend/JE/
 backend/consolidated/
+*_output.xlsx
 
 # ── Temporary Excel lock files ─────────────────────────────────────────────────
 ~$*.xlsx
