@@ -28,6 +28,9 @@ from auth import (
     oauth2_scheme, revoke_token,
 )
 
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).parent / "fpa"))
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -126,12 +129,16 @@ def _run_pipeline_from_raw(raw_df: pd.DataFrame, journal_number: str, entry_date
     company_lines = aggregate_company_wide(df, pay_item_map, invoice_df, pay_item_id_map)
     special_lines = process_special_columns(df, pay_item_map, dept_allocation, pay_item_id_map)
 
+    prov_id_entry = pay_item_id_map.get("Provision for date", {})
+    provision_account_id = prov_id_entry.get("COGS") or prov_id_entry.get("Indirect") or ""
+
     je_df = build_je(
         regular_lines=regular_lines + company_lines,
         special_lines=special_lines,
         journal_number=journal_number,
         entry_date=entry_date,
         provision_description=provision_desc,
+        provision_account_id=provision_account_id,
     )
     validate_je(je_df)
 
@@ -234,7 +241,12 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
     _clear_attempts(f"ip:{ip}")
 
     token = create_access_token({"sub": user["username"], "role": user["role"]})
-    return {"access_token": token, "token_type": "bearer", "username": user["username"], "role": user["role"]}
+    return {
+        "access_token": token, "token_type": "bearer",
+        "username": user["username"], "role": user["role"],
+        "can_access_payroll": bool(user.get("can_access_payroll", 0)),
+        "can_access_fpa": bool(user.get("can_access_fpa", 0)),
+    }
 
 
 @app.post("/api/auth/logout")
@@ -299,7 +311,12 @@ async def change_own_password(request: Request, body: dict = Body(...)):
 
 @app.get("/api/auth/me")
 async def me(current_user: dict = Depends(get_current_user)):
-    return {"username": current_user["username"], "role": current_user["role"]}
+    return {
+        "username": current_user["username"],
+        "role": current_user["role"],
+        "can_access_payroll": bool(current_user.get("can_access_payroll", 0)),
+        "can_access_fpa": bool(current_user.get("can_access_fpa", 0)),
+    }
 
 
 @app.post("/api/auth/change-password")
@@ -335,7 +352,7 @@ def _require_admin(current_user: dict = Depends(get_current_user)):
 async def list_users(_: dict = Depends(_require_admin)):
     with get_db() as conn:
         rows = conn.execute(
-            "SELECT id, username, role, created FROM users ORDER BY id"
+            "SELECT id, username, role, created, can_access_payroll, can_access_fpa FROM users ORDER BY id"
         ).fetchall()
     return {"users": [dict(r) for r in rows]}
 
@@ -345,6 +362,8 @@ async def create_user(body: dict = Body(...), _: dict = Depends(_require_admin))
     username = body.get("username", "").strip()
     password = body.get("password", "")
     role = body.get("role", "user")
+    can_payroll = 1 if body.get("can_access_payroll") else 0
+    can_fpa     = 1 if body.get("can_access_fpa") else 0
     if not username:
         raise HTTPException(status_code=400, detail="Username is required")
     if not password or len(password) < 4:
@@ -354,8 +373,8 @@ async def create_user(body: dict = Body(...), _: dict = Depends(_require_admin))
     try:
         with get_db() as conn:
             conn.execute(
-                "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-                (username, hash_password(password), role),
+                "INSERT INTO users (username, password, role, can_access_payroll, can_access_fpa) VALUES (?, ?, ?, ?, ?)",
+                (username, hash_password(password), role, can_payroll, can_fpa),
             )
     except Exception:
         raise HTTPException(status_code=409, detail="Username already exists")
@@ -386,6 +405,79 @@ async def reset_user_password(username: str, body: dict = Body(...), _: dict = D
         if result.rowcount == 0:
             raise HTTPException(status_code=404, detail="User not found")
     return {"ok": True}
+
+
+@app.put("/api/auth/users/{username}/permissions")
+async def update_user_permissions(username: str, body: dict = Body(...), _: dict = Depends(_require_admin)):
+    can_payroll = 1 if body.get("can_access_payroll") else 0
+    can_fpa     = 1 if body.get("can_access_fpa") else 0
+    with get_db() as conn:
+        result = conn.execute(
+            "UPDATE users SET can_access_payroll = ?, can_access_fpa = ? WHERE username = ?",
+            (can_payroll, can_fpa, username),
+        )
+        if result.rowcount == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+    return {"ok": True}
+
+
+# ── FP&A Routes ────────────────────────────────────────────────────────────────
+
+def _require_fpa(current_user: dict = Depends(get_current_user)):
+    if not current_user.get("can_access_fpa") and current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="FP&A access not granted")
+    return current_user
+
+
+@app.post("/api/fpa/meta")
+async def fpa_meta(input_file: UploadFile = File(...), _: dict = Depends(get_current_user)):
+    try:
+        from fpa.transform import get_file_meta
+        input_bytes = await input_file.read()
+        return get_file_meta(input_bytes)
+    except Exception:
+        return {"company_name": ""}
+
+
+@app.post("/api/fpa/transform")
+async def fpa_transform(
+    input_file:   UploadFile = File(...),
+    company_name: str        = Form(default="Acme Corp, Inc."),
+    _: dict = Depends(_require_fpa),
+):
+    import base64 as _b64
+    try:
+        input_bytes = await input_file.read()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"File read error: {e}")
+    try:
+        from fpa.transform import run_transform
+        (
+            excel_bytes, summary, preview,
+            bs_bytes, bs_preview,
+            bsi_bytes, bsi_preview,
+            pl_bytes, pl_preview,
+            comp_pl_bytes, comp_pl_preview,
+            comp_pl_bd_bytes, comp_pl_bd_preview,
+        ) = run_transform(input_bytes, company_name)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Transform error: {e}")
+    return {
+        "summary":              summary,
+        "preview":              preview,
+        "excel_b64":            _b64.b64encode(excel_bytes).decode(),
+        "bs_excel_b64":         _b64.b64encode(bs_bytes).decode(),
+        "bs_preview":           bs_preview,
+        "bsi_excel_b64":        _b64.b64encode(bsi_bytes).decode(),
+        "bsi_preview":          bsi_preview,
+        "pl_excel_b64":         _b64.b64encode(pl_bytes).decode(),
+        "pl_preview":           pl_preview,
+        "comp_pl_excel_b64":    _b64.b64encode(comp_pl_bytes).decode(),
+        "comp_pl_preview":      comp_pl_preview,
+        "comp_pl_bd_excel_b64": _b64.b64encode(comp_pl_bd_bytes).decode(),
+        "comp_pl_bd_preview":   comp_pl_bd_preview,
+    }
+
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
@@ -434,9 +526,13 @@ async def generate_je(
     }
 
     # Persist input file synchronously (needed for audit trail)
+    # If the file is open in another program (e.g. Excel), skip silently.
     inputs_dir = BASE_DIR / "inputs"
     inputs_dir.mkdir(exist_ok=True)
-    (inputs_dir / filename).write_bytes(file_bytes)
+    try:
+        (inputs_dir / filename).write_bytes(file_bytes)
+    except PermissionError:
+        pass
 
     # Append to consolidated inputs in the background — slow openpyxl cell-copy
     # does not need to block the HTTP response
@@ -617,17 +713,36 @@ async def save_mapping(body: dict = Body(...), _: dict = _auth):
 
 @app.post("/api/je/{session_id}/post-qbo")
 async def post_to_qbo(session_id: str, _: dict = _auth):
+    import asyncio
+    from qbo.api import QBOClient
+
     s = _get_session(session_id)
     je_df = s["je_df"]
-    try:
-        from qbo.auth import is_authenticated, TokenStore
-        from qbo.api import QBOClient
 
-        if not is_authenticated():
+    def _do_post():
+        try:
+            client = QBOClient()
+        except FileNotFoundError:
             raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
-        store = TokenStore.load()
-        client = QBOClient(store)
-        result = client.create_journal_entry(je_df)
+
+        # All three maps read from local CSVs — no parallel threads needed
+        account_map = client.fetch_account_map()
+        class_map   = client.fetch_class_map()
+        vendor_map  = client.fetch_vendor_map()
+
+        payload = QBOClient.build_je_payload(
+            je_df,
+            journal_number=s.get("journal_number", ""),
+            txn_date=s.get("entry_date", ""),
+            private_note=s.get("provision_desc", ""),
+            account_map=account_map,
+            class_map=class_map,
+            vendor_map=vendor_map,
+        )
+        return client.create_journal_entry(payload)
+
+    try:
+        result = await asyncio.get_event_loop().run_in_executor(None, _do_post)
         log_action_async(
             action="JE Posted to QBO",
             input_file=s.get("pf_name", ""),
@@ -691,6 +806,109 @@ async def qbo_disconnect(_: dict = _auth):
         from qbo.auth import revoke_tokens
         revoke_tokens()
         return {"ok": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+_QBO_ACCOUNTS_CSV = BASE_DIR / "qbo" / "accounts_override.csv"
+_QBO_VENDORS_CSV  = BASE_DIR / "qbo" / "vendors_override.csv"
+
+
+def _read_qbo_csv(path: Path) -> dict:
+    if path.exists():
+        df = pd.read_csv(str(path), dtype=str).fillna("")
+        return {"rows": _df_to_records(df), "columns": list(df.columns), "source": "local"}
+    return {"rows": [], "columns": [], "source": "none"}
+
+
+def _save_qbo_csv(path: Path, rows: list) -> None:
+    path.parent.mkdir(exist_ok=True)
+    pd.DataFrame(rows).to_csv(str(path), index=False)
+
+
+@app.get("/api/qbo/accounts")
+async def qbo_accounts(_: dict = _auth):
+    return _read_qbo_csv(_QBO_ACCOUNTS_CSV)
+
+
+@app.put("/api/qbo/accounts")
+async def save_qbo_accounts(body: dict = Body(...), _: dict = _auth):
+    _save_qbo_csv(_QBO_ACCOUNTS_CSV, body.get("rows", []))
+    return {"ok": True}
+
+
+@app.post("/api/qbo/accounts/sync")
+async def sync_qbo_accounts(_: dict = _auth):
+    try:
+        from qbo.auth import is_authenticated
+        from qbo.api import QBOClient
+        if not is_authenticated():
+            raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
+        client = QBOClient()
+        df = client.get_accounts_dataframe()
+        _save_qbo_csv(_QBO_ACCOUNTS_CSV, _df_to_records(df))
+        return {"rows": _df_to_records(df), "columns": list(df.columns), "source": "qbo"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/qbo/vendors")
+async def qbo_vendors(_: dict = _auth):
+    return _read_qbo_csv(_QBO_VENDORS_CSV)
+
+
+@app.put("/api/qbo/vendors")
+async def save_qbo_vendors(body: dict = Body(...), _: dict = _auth):
+    _save_qbo_csv(_QBO_VENDORS_CSV, body.get("rows", []))
+    return {"ok": True}
+
+
+@app.post("/api/qbo/vendors/sync")
+async def sync_qbo_vendors(_: dict = _auth):
+    try:
+        from qbo.auth import is_authenticated
+        from qbo.api import QBOClient
+        if not is_authenticated():
+            raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
+        client = QBOClient()
+        df = client.get_vendors_dataframe()
+        _save_qbo_csv(_QBO_VENDORS_CSV, _df_to_records(df))
+        return {"rows": _df_to_records(df), "columns": list(df.columns), "source": "qbo"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+_QBO_CLASSES_CSV = BASE_DIR / "qbo" / "classes_override.csv"
+
+
+@app.get("/api/qbo/classes")
+async def qbo_classes(_: dict = _auth):
+    return _read_qbo_csv(_QBO_CLASSES_CSV)
+
+
+@app.put("/api/qbo/classes")
+async def save_qbo_classes(body: dict = Body(...), _: dict = _auth):
+    _save_qbo_csv(_QBO_CLASSES_CSV, body.get("rows", []))
+    return {"ok": True}
+
+
+@app.post("/api/qbo/classes/sync")
+async def sync_qbo_classes(_: dict = _auth):
+    try:
+        from qbo.auth import is_authenticated
+        from qbo.api import QBOClient
+        if not is_authenticated():
+            raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
+        client = QBOClient()
+        df = client.get_classes_dataframe()
+        _save_qbo_csv(_QBO_CLASSES_CSV, _df_to_records(df))
+        return {"rows": _df_to_records(df), "columns": list(df.columns), "source": "qbo"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

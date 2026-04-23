@@ -4,7 +4,7 @@ import PageHeader from '../components/PageHeader'
 import Alert from '../components/Alert'
 import Spinner from '../components/Spinner'
 import type { UserRecord } from '../api/api'
-import { listUsers, createUser, deleteUser, resetUserPassword } from '../api/api'
+import { listUsers, createUser, deleteUser, resetUserPassword, updateUserPermissions } from '../api/api'
 
 export default function UserManagement() {
   const [users, setUsers] = useState<UserRecord[]>([])
@@ -16,9 +16,14 @@ export default function UserManagement() {
   const [newUsername, setNewUsername] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [newRole, setNewRole] = useState('user')
+  const [newCanPayroll, setNewCanPayroll] = useState(false)
+  const [newCanFpa, setNewCanFpa]         = useState(false)
   const [showNewPw, setShowNewPw] = useState(false)
   const [adding, setAdding] = useState(false)
   const [addError, setAddError] = useState('')
+
+  // Permission editing state
+  const [permSaving, setPermSaving] = useState<string | null>(null)
 
   // Reset password modal
   const [resetTarget, setResetTarget] = useState<string | null>(null)
@@ -49,11 +54,13 @@ export default function UserManagement() {
     if (newPassword.length < 4) { setAddError('Password must be at least 4 characters.'); return }
     setAdding(true)
     try {
-      await createUser(newUsername.trim(), newPassword, newRole)
+      await createUser(newUsername.trim(), newPassword, newRole, newCanPayroll, newCanFpa)
       setSuccess(`User "${newUsername.trim()}" created successfully.`)
       setNewUsername('')
       setNewPassword('')
       setNewRole('user')
+      setNewCanPayroll(false)
+      setNewCanFpa(false)
       fetchUsers()
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string } } }
@@ -73,6 +80,23 @@ export default function UserManagement() {
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string } } }
       setError(axiosErr.response?.data?.detail || 'Failed to delete user.')
+    }
+  }
+
+  async function handleTogglePermission(username: string, field: 'payroll' | 'fpa', current: number) {
+    const u = users.find(x => x.username === username)
+    if (!u) return
+    setPermSaving(username + field)
+    try {
+      const payroll = field === 'payroll' ? !current : Boolean(u.can_access_payroll)
+      const fpa     = field === 'fpa'     ? !current : Boolean(u.can_access_fpa)
+      await updateUserPermissions(username, payroll, fpa)
+      setSuccess(`Permissions updated for "${username}".`)
+      fetchUsers()
+    } catch {
+      setError('Failed to update permissions.')
+    } finally {
+      setPermSaving(null)
     }
   }
 
@@ -166,6 +190,20 @@ export default function UserManagement() {
               </div>
             </div>
 
+            <div style={s.field}>
+              <label style={s.label}>App Access</label>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center', paddingTop: 10 }}>
+                <label style={s.checkLabel}>
+                  <input type="checkbox" checked={newCanPayroll} onChange={e => setNewCanPayroll(e.target.checked)} style={s.checkbox} />
+                  Payroll JE
+                </label>
+                <label style={s.checkLabel}>
+                  <input type="checkbox" checked={newCanFpa} onChange={e => setNewCanFpa(e.target.checked)} style={s.checkbox} />
+                  FP&amp;A
+                </label>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', alignItems: 'flex-end' }}>
               <button type="submit" style={s.addBtn} disabled={adding}>
                 {adding ? 'Adding…' : 'Add User'}
@@ -198,41 +236,78 @@ export default function UserManagement() {
               <tr>
                 <th style={s.th}>Username</th>
                 <th style={s.th}>Role</th>
+                <th style={{ ...s.th, textAlign: 'center' }}>Payroll JE</th>
+                <th style={{ ...s.th, textAlign: 'center' }}>FP&amp;A</th>
                 <th style={s.th}>Created</th>
                 <th style={{ ...s.th, textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {users.map(u => (
-                <tr key={u.id} style={s.tr}>
-                  <td style={s.td}>
-                    <span className="material-icons-round" style={{ fontSize: 15, color: '#400f61', verticalAlign: 'middle', marginRight: 6 }}>account_circle</span>
-                    {u.username}
-                  </td>
-                  <td style={s.td}>
-                    <span style={{ ...s.roleBadge, ...(u.role === 'admin' ? s.roleAdmin : s.roleUser) }}>
-                      {u.role}
-                    </span>
-                  </td>
-                  <td style={{ ...s.td, color: '#777', fontSize: 12 }}>
-                    {u.created ? new Date(u.created).toLocaleString() : '—'}
-                  </td>
-                  <td style={{ ...s.td, textAlign: 'right' }}>
-                    <button
-                      style={s.actionBtn}
-                      onClick={() => { setResetTarget(u.username); setResetPw(''); setResetError(''); setShowResetPw(false) }}
-                    >
-                      Reset Password
-                    </button>
-                    <button
-                      style={{ ...s.actionBtn, ...s.deleteBtn }}
-                      onClick={() => handleDelete(u.username)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {users.map(u => {
+                const isAdmin = u.role === 'admin'
+                const savingP = permSaving === u.username + 'payroll'
+                const savingF = permSaving === u.username + 'fpa'
+                return (
+                  <tr key={u.id} style={s.tr}>
+                    <td style={s.td}>
+                      <span className="material-icons-round" style={{ fontSize: 15, color: '#400f61', verticalAlign: 'middle', marginRight: 6 }}>account_circle</span>
+                      {u.username}
+                    </td>
+                    <td style={s.td}>
+                      <span style={{ ...s.roleBadge, ...(isAdmin ? s.roleAdmin : s.roleUser) }}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td style={{ ...s.td, textAlign: 'center' }}>
+                      {isAdmin
+                        ? <span style={s.adminBadge}>Always</span>
+                        : (
+                          <button
+                            style={{ ...s.toggleBtn, ...(u.can_access_payroll ? s.toggleOn : s.toggleOff) }}
+                            onClick={() => handleTogglePermission(u.username, 'payroll', u.can_access_payroll)}
+                            disabled={!!savingP}
+                            title={u.can_access_payroll ? 'Revoke Payroll access' : 'Grant Payroll access'}
+                          >
+                            {savingP ? '…' : u.can_access_payroll ? '✓ On' : 'Off'}
+                          </button>
+                        )
+                      }
+                    </td>
+                    <td style={{ ...s.td, textAlign: 'center' }}>
+                      {isAdmin
+                        ? <span style={s.adminBadge}>Always</span>
+                        : (
+                          <button
+                            style={{ ...s.toggleBtn, ...(u.can_access_fpa ? s.toggleOn : s.toggleOff) }}
+                            onClick={() => handleTogglePermission(u.username, 'fpa', u.can_access_fpa)}
+                            disabled={!!savingF}
+                            title={u.can_access_fpa ? 'Revoke FP&A access' : 'Grant FP&A access'}
+                          >
+                            {savingF ? '…' : u.can_access_fpa ? '✓ On' : 'Off'}
+                          </button>
+                        )
+                      }
+                    </td>
+                    <td style={{ ...s.td, color: '#777', fontSize: 12 }}>
+                      {u.created ? new Date(u.created).toLocaleString() : '—'}
+                    </td>
+                    <td style={{ ...s.td, textAlign: 'right' }}>
+                      <button
+                        style={s.actionBtn}
+                        onClick={() => { setResetTarget(u.username); setResetPw(''); setResetError(''); setShowResetPw(false) }}
+                      >
+                        Reset Password
+                      </button>
+                      <button
+                        style={{ ...s.actionBtn, ...s.deleteBtn }}
+                        onClick={() => handleDelete(u.username)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}
@@ -372,6 +447,24 @@ const s: Record<string, CSSProperties> = {
     borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
   },
   deleteBtn: { background: '#fff5f5', color: '#b71c1c', border: '1px solid #f5c6c6' },
+  toggleBtn: {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    padding: '3px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+    cursor: 'pointer', border: 'none', fontFamily: 'inherit', minWidth: 52,
+    transition: 'background .15s',
+  },
+  toggleOn:  { background: '#e8f5e9', color: '#2e7d32' },
+  toggleOff: { background: '#f5f5f5', color: '#888' },
+  adminBadge: {
+    display: 'inline-block', fontSize: 11, fontWeight: 600,
+    color: '#400f61', background: '#f5eefa', borderRadius: 20,
+    padding: '2px 10px',
+  },
+  checkLabel: {
+    display: 'flex', alignItems: 'center', gap: 6,
+    fontSize: 13, color: '#444', fontWeight: 500, cursor: 'pointer',
+  },
+  checkbox: { width: 15, height: 15, cursor: 'pointer', accentColor: '#400f61' },
   overlay: {
     position: 'fixed', inset: 0, background: 'rgba(0,0,0,.35)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,

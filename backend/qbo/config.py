@@ -87,6 +87,11 @@ else:
 VENDORS_OVERRIDE_PATH = _PROJECT_ROOT / "qbo" / "vendors_override.csv"
 
 # ---------------------------------------------------------------------------
+# Class list local override file
+# ---------------------------------------------------------------------------
+CLASSES_OVERRIDE_PATH = _PROJECT_ROOT / "qbo" / "classes_override.csv"
+
+# ---------------------------------------------------------------------------
 # Local OAuth callback server settings
 # ---------------------------------------------------------------------------
 CALLBACK_HOST = "localhost"

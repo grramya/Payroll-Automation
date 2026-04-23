@@ -22,9 +22,21 @@ export default function Step1Generate() {
   function handleFile(f: File) {
     setFile(f)
     setErrors((e) => ({ ...e, file: '' }))
-    const m = f.name.match(/\d{1,2}[._\-\/]\d{1,2}[._\-\/]\d{4}/)
-    if (m && !journalNumber) {
-      setJournalNumber(`Salary for ${m[0].replace(/[._\-]/g, '/')}`)
+    if (journalNumber) return
+
+    const name = f.name
+
+    // Full date with year: 1.30.2026, 01-30-2026, 01/30/2026
+    const full = name.match(/(\d{1,2})[._\-\/](\d{1,2})[._\-\/](\d{4})/)
+    if (full) {
+      setJournalNumber(`Salary for ${full[1]}/${full[2]}/${full[3]}`)
+      return
+    }
+
+    // Month.Day only: "Payroll 1.30.xlsx" → "Salary for 1/30/2026"
+    const partial = name.match(/(\d{1,2})[._\-](\d{1,2})(?:\.\w+)?$/)
+    if (partial) {
+      setJournalNumber(`Salary for ${partial[1]}/${partial[2]}/${new Date().getFullYear()}`)
     }
   }
 

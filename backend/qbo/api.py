@@ -121,22 +121,31 @@ class QBOClient:
 
         # Extract the Intuit fault detail if present
         fault   = body.get("Fault", {})
-        errors  = fault.get("Error", [{}])
-        # Include full Detail field so the real missing param is visible
+        errors  = fault.get("Error", [])
         if errors:
             msg_parts = []
             for err in errors:
-                part = err.get("Message", "")
+                part   = err.get("Message", "")
                 detail = err.get("Detail", "")
                 code   = err.get("code", "")
                 if detail:
                     part += f" | Detail: {detail}"
                 if code:
                     part += f" | Code: {code}"
-                msg_parts.append(part)
-            message = " | ".join(msg_parts)
+                if part:
+                    msg_parts.append(part)
+            message = " | ".join(msg_parts) if msg_parts else resp.text
         else:
             message = resp.text
+
+        # Special-case 403: add a hint about the most common cause
+        if resp.status_code == 403 and not message.strip():
+            message = (
+                "Access denied (403). Most likely cause: the stored tokens were obtained "
+                "via the OAuth Playground (sandbox) but the app is pointed at the production "
+                "QBO API. Set QBO_USE_SANDBOX=true in .env, or re-authenticate against "
+                "the production environment."
+            )
 
         raise QBOError(resp.status_code, message, fault)
 
@@ -211,16 +220,21 @@ class QBOClient:
         accounts = self.get_accounts(active_only=False)
         if not accounts:
             return pd.DataFrame()
-        df = pd.DataFrame(accounts)[
-            ["Id", "Name", "AccountType", "AccountSubType", "Active", "CurrentBalance"]
-        ]
+        raw = pd.DataFrame(accounts)
+        # FullyQualifiedName may be absent for some QBO accounts — fill with Name
+        if "FullyQualifiedName" not in raw.columns:
+            raw["FullyQualifiedName"] = raw["Name"]
+        else:
+            raw["FullyQualifiedName"] = raw["FullyQualifiedName"].fillna(raw["Name"])
+        df = raw[["Id", "Name", "FullyQualifiedName", "AccountType", "AccountSubType", "Active", "CurrentBalance"]]
         df = df.rename(columns={
-            "Id":             "Account ID",
-            "Name":           "Account Name",
-            "AccountType":    "Type",
-            "AccountSubType": "Sub-Type",
-            "Active":         "Active",
-            "CurrentBalance": "Balance",
+            "Id":                  "Account ID",
+            "Name":                "Account Name",
+            "FullyQualifiedName":  "Full Name",
+            "AccountType":         "Type",
+            "AccountSubType":      "Sub-Type",
+            "Active":              "Active",
+            "CurrentBalance":      "Balance",
         })
         return df.reset_index(drop=True)
 
@@ -533,16 +547,24 @@ class QBOClient:
             else:
                 continue   # zero-amount lines are ignored
 
-            account_name = str(row.get("Account", "")).strip()
+            _raw_acct = row.get("Account", "")
+            account_name = "" if _is_empty(_raw_acct) else str(_raw_acct).strip()
             # Name lookup is primary — uses FullyQualifiedName from fetch_account_map()
             # so hierarchical names like "Cost of Goods Sold:COS - Staff:COS - Salary/Fixed"
             # always resolve to the correct QBO ID regardless of what is in Mapping.xlsx.
             # Fall back to the Account ID stored in the JE row only when no name match found.
             account_id_from_map = account_map.get(account_name.lower(), "")
-            account_id_from_row = str(row.get("Account ID", "") or "").strip()
+            # Fallback: if the full qualified name isn't in the map (old CSV without
+            # "Full Name" column), try just the last segment after the last ":"
+            if not account_id_from_map and ":" in account_name:
+                last_segment = account_name.rsplit(":", 1)[-1].strip()
+                account_id_from_map = account_map.get(last_segment.lower(), "")
+            _raw_id = row.get("Account ID", "")
+            account_id_from_row = "" if _is_empty(_raw_id) else str(_raw_id).strip()
             account_id = account_id_from_map if account_id_from_map else account_id_from_row
 
-            description  = str(row.get("Journal Description", "")).strip()
+            _raw_desc = row.get("Journal Description", "")
+            description  = "" if _is_empty(_raw_desc) else str(_raw_desc).strip()
             class_val    = row.get("Class")
             vendor_val   = row.get("Vendor")
 
@@ -599,22 +621,38 @@ class QBOClient:
     def fetch_account_map(self) -> dict[str, str]:
         """
         Return a dict mapping lower-cased account names → QBO account IDs.
-        Indexes both short Name and FullyQualifiedName so hierarchical account
-        names like "Cost of Goods Sold:COS - Staff:COS - Salary/Fixed" resolve
-        to the correct ID.
 
-        FullyQualifiedName takes priority over short Name when both are added.
+        Uses the locally saved accounts_override.csv when available (faster —
+        no QBO API call needed). Falls back to a live QBO fetch otherwise.
         """
+        override = config.ACCOUNTS_OVERRIDE_PATH
+        if override.exists():
+            import csv
+            result: dict[str, str] = {}
+            with open(override, newline="", encoding="utf-8") as f:
+                for row in csv.DictReader(f):
+                    acct_id        = str(row.get("Account ID", "")).strip()
+                    acct_name      = str(row.get("Account Name", "")).strip()
+                    full_name      = str(row.get("Full Name", "")).strip()
+                    if not acct_id:
+                        continue
+                    if acct_name:
+                        result[acct_name.lower()] = acct_id
+                    # Full Name (FullyQualifiedName) takes priority — overwrite short name
+                    # so hierarchical names like "Accrued Expenses:Accrued Payroll" resolve
+                    if full_name and full_name != acct_name:
+                        result[full_name.lower()] = acct_id
+            return result
+
+        # No local file — fetch live from QBO
         accounts = self.get_accounts(active_only=False)
         result: dict[str, str] = {}
         for acct in accounts:
             if "Id" not in acct:
                 continue
             acct_id = str(acct["Id"])
-            # Index by short name first (lower priority)
             if "Name" in acct:
                 result[acct["Name"].strip().lower()] = acct_id
-            # Index by FullyQualifiedName (higher priority — overwrites short name)
             if "FullyQualifiedName" in acct:
                 result[acct["FullyQualifiedName"].strip().lower()] = acct_id
         return result
@@ -622,11 +660,23 @@ class QBOClient:
     def fetch_vendor_map(self) -> dict[str, str]:
         """
         Return a dict mapping lower-cased vendor display names → QBO vendor IDs.
-        Used to resolve EntityRef.value for Reimbursement / AP lines.
 
-        QBO requires EntityRef.value (vendor ID) when the line account is
-        Accounts Payable type — passing only the name causes Error 6000.
+        Uses the locally saved vendors_override.csv when available (faster —
+        no QBO API call needed). Falls back to a live QBO fetch otherwise.
         """
+        override = config.VENDORS_OVERRIDE_PATH
+        if override.exists():
+            import csv
+            result: dict[str, str] = {}
+            with open(override, newline="", encoding="utf-8") as f:
+                for row in csv.DictReader(f):
+                    vendor_id   = str(row.get("Vendor ID", "")).strip()
+                    vendor_name = str(row.get("Display Name", "")).strip()
+                    if vendor_id and vendor_name:
+                        result[vendor_name.lower()] = vendor_id
+            return result
+
+        # No local file — fetch live from QBO
         all_vendors: list[dict] = []
         page_size = 1000
         start     = 1
@@ -659,9 +709,30 @@ class QBOClient:
         Indexes both short Name and FullyQualifiedName so hierarchical class
         names like "COGS:Procurement" resolve to the correct ID.
 
+        Uses the locally saved classes_override.csv when available (faster —
+        no QBO API call needed). Falls back to a live QBO fetch otherwise.
+
         Required so that ClassRef.value can be included when posting JEs
         (QBO API rejects ClassRef if it only has 'name' without 'value').
         """
+        override = config.CLASSES_OVERRIDE_PATH
+        if override.exists():
+            import csv
+            result: dict[str, str] = {}
+            with open(override, newline="", encoding="utf-8") as f:
+                for row in csv.DictReader(f):
+                    cls_id        = str(row.get("Class ID", "")).strip()
+                    cls_name      = str(row.get("Class Name", "")).strip()
+                    full_name     = str(row.get("Full Name", "")).strip()
+                    if not cls_id:
+                        continue
+                    if cls_name:
+                        result[cls_name.lower()] = cls_id
+                    if full_name and full_name != cls_name:
+                        result[full_name.lower()] = cls_id
+            return result
+
+        # No local file — fetch live from QBO
         all_classes: list[dict] = []
         page_size = 1000
         start     = 1
@@ -680,13 +751,46 @@ class QBOClient:
             if "Id" not in cls:
                 continue
             cls_id = str(cls["Id"])
-            # Index by short name first (lower priority)
             if "Name" in cls:
                 result[cls["Name"].strip().lower()] = cls_id
-            # Index by FullyQualifiedName (higher priority — handles nested classes)
             if "FullyQualifiedName" in cls:
                 result[cls["FullyQualifiedName"].strip().lower()] = cls_id
         return result
+
+    def get_classes_dataframe(self) -> pd.DataFrame:
+        """
+        Return the Class list as a pandas DataFrame for display and local caching.
+        """
+        all_classes: list[dict] = []
+        page_size = 1000
+        start     = 1
+
+        while True:
+            query = f"SELECT * FROM Class STARTPOSITION {start} MAXRESULTS {page_size}"
+            data  = self._get("/query", params={"query": query, "minorversion": 65})
+            page  = data.get("QueryResponse", {}).get("Class", [])
+            all_classes.extend(page)
+            if len(page) < page_size:
+                break
+            start += page_size
+
+        if not all_classes:
+            return pd.DataFrame()
+
+        raw = pd.DataFrame(all_classes)
+        if "FullyQualifiedName" not in raw.columns:
+            raw["FullyQualifiedName"] = raw["Name"]
+        else:
+            raw["FullyQualifiedName"] = raw["FullyQualifiedName"].fillna(raw["Name"])
+
+        df = raw[["Id", "Name", "FullyQualifiedName", "Active"]].copy()
+        df = df.rename(columns={
+            "Id":                 "Class ID",
+            "Name":               "Class Name",
+            "FullyQualifiedName": "Full Name",
+            "Active":             "Active",
+        })
+        return df.reset_index(drop=True)
 
 
 # =============================================================================

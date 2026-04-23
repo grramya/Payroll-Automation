@@ -126,6 +126,7 @@ def build_je(
     journal_number: str,
     entry_date: str,
     provision_description: str = "",
+    provision_account_id: str = "",
     company_name: str = "Concertiv, Inc.",
 ) -> pd.DataFrame:
     """
@@ -214,7 +215,7 @@ def build_je(
             "Entry Date":          entry_date,
             "Journal Description": prov_label,
             "Account":             _ACCRUED_PAYROLL_ACCOUNT,
-            "Account ID":          None,
+            "Account ID":          provision_account_id or None,
             "Customer":            None,
             "Vendor":              None,
             "Employee":            None,
