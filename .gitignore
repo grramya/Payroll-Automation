@@ -33,6 +33,9 @@ backend/consolidated/
 # ── Temporary Excel lock files ─────────────────────────────────────────────────
 ~$*.xlsx
 
+# ── Claude Code (local settings are machine-specific) ──────────────────────────
+.claude/settings.local.json
+
 # ── OS / editor ────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
