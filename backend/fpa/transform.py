@@ -1,5 +1,7 @@
 import io
 import pandas as pd
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
@@ -20,6 +22,18 @@ for dept_key in list(DEPT_MAP.keys()):
         new_key = (_ACME, dept_key[1])
         if new_key not in DEPT_MAP:
             DEPT_MAP[new_key] = DEPT_MAP[dept_key]
+
+# Pre-flatten ACCOUNT_MAP: one dict per field avoids double .get() on every row
+_FIN_MAP   = {k: v.get("Financial Statement")         for k, v in ACCOUNT_MAP.items()}
+_MAIN_MAP  = {k: v.get("Main Grouping")               for k, v in ACCOUNT_MAP.items()}
+_SEC_MAP   = {k: v.get("Secondary Grouping")          for k, v in ACCOUNT_MAP.items()}
+_CLASS_MAP = {k: v.get("Classification (Line Item)")  for k, v in ACCOUNT_MAP.items()}
+
+# Pre-build reverse index: account → [(dept, vals)] so dept fallback is O(matches)
+# instead of O(entire DEPT_MAP) per row
+_DEPT_BY_ACCT: dict = defaultdict(list)
+for (_d_acct, _d_dept), _d_vals in DEPT_MAP.items():
+    _DEPT_BY_ACCT[_d_acct].append((_d_dept, _d_vals))
 
 # ── Class (QuickBooks hierarchy) → Department (Class) ────────────────────────
 CLASS_TO_DEPT = {
@@ -106,8 +120,10 @@ def run_transform(input_bytes: bytes, company_name: str = "Acme Corp, Inc.") -> 
             "Could not find an 'Account' column in the uploaded file. "
             "Please upload a QuickBooks Transaction Detail report exported as .xlsx."
         )
-    df = pd.read_excel(io.BytesIO(input_bytes), header=header_row)
-    df.columns = df.columns.str.strip()
+    # Slice from the already-read raw frame instead of re-reading the file
+    df = raw.iloc[header_row + 1:].copy()
+    df.columns = raw.iloc[header_row].values
+    df.columns = df.columns.astype(str).str.strip()
 
     # Drop any fully-empty rows that sometimes follow the header in QB exports
     df.dropna(how="all", inplace=True)
@@ -135,31 +151,36 @@ def run_transform(input_bytes: bytes, company_name: str = "Acme Corp, Inc.") -> 
     )
 
     # ── Account-only lookups (Financials / Grouping / Classification 1) ───────
-    df["_Financials"]         = df["Account"].map(lambda a: ACCOUNT_MAP.get(a, {}).get("Financial Statement"))
-    df["_MainGrouping"]       = df["Account"].map(lambda a: ACCOUNT_MAP.get(a, {}).get("Main Grouping"))
-    df["_SecondaryGrouping"]  = df["Account"].map(lambda a: ACCOUNT_MAP.get(a, {}).get("Secondary Grouping"))
-    df["_Classification"]     = df["Account"].map(lambda a: ACCOUNT_MAP.get(a, {}).get("Classification (Line Item)"))
+    df["_Financials"]        = df["Account"].map(_FIN_MAP)
+    df["_MainGrouping"]      = df["Account"].map(_MAIN_MAP)
+    df["_SecondaryGrouping"] = df["Account"].map(_SEC_MAP)
+    df["_Classification"]    = df["Account"].map(_CLASS_MAP)
 
     # ── Composite (account, dept_class) lookups ───────────────────────────────
-    def dept_lookup(row, field):
+    # Single pass over rows; reverse index makes the fallback O(acct entries) not O(DEPT_MAP)
+    _DEPT_FIELDS = ["Classification 2", "Classification 3", "Department (Class)", "Department Group (BD)"]
+
+    def dept_lookup_all(row):
         acct = row["Account"]
         dept = row["_DeptClass"]
+        results = [None, None, None, None]
+        for i, field in enumerate(_DEPT_FIELDS):
+            val = DEPT_MAP.get((acct, dept), {}).get(field)
+            if val is None:
+                val = DEPT_MAP.get((acct, None), {}).get(field)
+            if val is None:
+                for _, vals in _DEPT_BY_ACCT.get(acct, []):
+                    if vals.get(field) is not None:
+                        val = vals[field]
+                        break
+            results[i] = val
+        return results
 
-        val = DEPT_MAP.get((acct, dept), {}).get(field)
-        if val is not None:
-            return val
-        val = DEPT_MAP.get((acct, None), {}).get(field)
-        if val is not None:
-            return val
-        for key, vals in DEPT_MAP.items():
-            if key[0] == acct and vals.get(field) is not None:
-                return vals[field]
-        return None
-
-    df["_Classification2"] = df.apply(lambda r: dept_lookup(r, "Classification 2"), axis=1)
-    df["_Classification3"] = df.apply(lambda r: dept_lookup(r, "Classification 3"), axis=1)
-    df["_DeptClassOut"]    = df.apply(lambda r: dept_lookup(r, "Department (Class)"), axis=1)
-    df["_DeptGroupBD"]     = df.apply(lambda r: dept_lookup(r, "Department Group (BD)"), axis=1)
+    dept_cols = df.apply(dept_lookup_all, axis=1, result_type="expand")
+    df["_Classification2"] = dept_cols[0]
+    df["_Classification3"] = dept_cols[1]
+    df["_DeptClassOut"]    = dept_cols[2]
+    df["_DeptGroupBD"]     = dept_cols[3]
 
     def clean_id(v):
         if pd.isna(v): return None
@@ -327,25 +348,24 @@ def run_transform(input_bytes: bytes, company_name: str = "Acme Corp, Inc.") -> 
         "date_range":              date_range,
     }
 
-    # ── Base BS ───────────────────────────────────────────────────────────────
-    bs_bytes   = run_base_bs(df, company_name)
-    bs_preview = get_bs_preview(df)
+    # ── Generate all 5 reports in parallel (none depend on each other) ───────
+    with ThreadPoolExecutor(max_workers=10) as ex:
+        f_bs        = ex.submit(run_base_bs,                   df, company_name)
+        f_bs_p      = ex.submit(get_bs_preview,                df)
+        f_bsi       = ex.submit(run_bs_individual,             df, company_name)
+        f_bsi_p     = ex.submit(get_bs_individual_preview,     df)
+        f_pl        = ex.submit(run_pl_individual,             df, company_name)
+        f_pl_p      = ex.submit(get_pl_individual_preview,     df, company_name)
+        f_comp      = ex.submit(run_comparative_pl,            df, company_name)
+        f_comp_p    = ex.submit(get_comparative_pl_preview,    df, company_name)
+        f_comp_bd   = ex.submit(run_comparative_pl_bd,         df, company_name)
+        f_comp_bd_p = ex.submit(get_comparative_pl_bd_preview, df, company_name)
 
-    # ── BS (Individual) ───────────────────────────────────────────────────────
-    bsi_bytes   = run_bs_individual(df, company_name)
-    bsi_preview = get_bs_individual_preview(df)
-
-    # ── Base P&L (Class) (Individual) ─────────────────────────────────────────
-    pl_bytes   = run_pl_individual(df, company_name)
-    pl_preview = get_pl_individual_preview(df, company_name)
-
-    # ── Comparative P&L (Class) ───────────────────────────────────────────────
-    comp_pl_bytes   = run_comparative_pl(df, company_name)
-    comp_pl_preview = get_comparative_pl_preview(df, company_name)
-
-    # ── Comparative P&L (BD) ─────────────────────────────────────────────────
-    comp_pl_bd_bytes   = run_comparative_pl_bd(df, company_name)
-    comp_pl_bd_preview = get_comparative_pl_bd_preview(df, company_name)
+    bs_bytes,         bs_preview         = f_bs.result(),      f_bs_p.result()
+    bsi_bytes,        bsi_preview        = f_bsi.result(),     f_bsi_p.result()
+    pl_bytes,         pl_preview         = f_pl.result(),      f_pl_p.result()
+    comp_pl_bytes,    comp_pl_preview    = f_comp.result(),    f_comp_p.result()
+    comp_pl_bd_bytes, comp_pl_bd_preview = f_comp_bd.result(), f_comp_bd_p.result()
 
     return (
         buf.getvalue(), summary, preview,

@@ -74,33 +74,28 @@ export default function BSIndividualPage() {
               {/* Month selector */}
               {months.length > 0 && (
                 <FormControl size="small" sx={{ minWidth: 130 }}>
-                  <InputLabel id="bs-month-label" sx={{ fontSize: "0.8rem" }}>
-                    As of
-                  </InputLabel>
+                  <InputLabel id="bs-month-label">As of</InputLabel>
                   <Select
                     labelId="bs-month-label"
                     value={selectedMonth}
                     label="As of"
                     onChange={(e) => setSelectedMonth(e.target.value)}
-                    sx={{ fontSize: "0.82rem" }}
                   >
                     {months.map((m) => (
-                      <MenuItem key={m} value={m} sx={{ fontSize: "0.82rem" }}>
-                        {m}
-                      </MenuItem>
+                      <MenuItem key={m} value={m}>{m}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               )}
 
-
               {bsiBlob && (
                 <Button
+                  size="small"
                   variant="contained"
                   startIcon={<AccountBalanceWalletIcon aria-hidden="true" />}
                   onClick={handleDownload}
                   aria-label={`Download ${companyName}_bs_individual.xlsx`}
-                  sx={{ background: "linear-gradient(135deg,#7C3AED,#6D28D9)" }}
+                  sx={{ background: "linear-gradient(135deg,#7C3AED,#6D28D9)", height: 40 }}
                 >
                   Download .xlsx
                 </Button>

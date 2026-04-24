@@ -3,6 +3,8 @@ import {
   Box, Container, Typography, Button,
   Select, MenuItem, FormControl, InputLabel,
 } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
 import DownloadIcon    from "@mui/icons-material/Download";
 
 import { useFpaResult } from "../../context/FpaResultContext";
@@ -122,13 +124,13 @@ export default function ComparativePLPage() {
 
   const [selectedQuarter, setSelectedQuarter] = useState(defaultQuarter);
   const [selectedYear,    setSelectedYear]    = useState(defaultYear);
-  const [fromDate,        setFromDate]        = useState(`${firstYear}-01-01`);
-  const [toDate,          setToDate]          = useState(`${lastYear}-12-31`);
+  const [fromDate,        setFromDate]        = useState(dayjs(`${firstYear}-01-01`));
+  const [toDate,          setToDate]          = useState(dayjs(`${lastYear}-12-31`));
 
   // ── Filter quarters by date range ────────────────────────────────────────
   const filteredQuarters = useMemo(() => {
-    const fromYM = fromDate ? fromDate.slice(0, 7) : null;
-    const toYM   = toDate   ? toDate.slice(0, 7)   : null;
+    const fromYM = fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
+    const toYM   = toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
     return quarters.filter((q) => {
       const [qPart, yr] = q.split("-");
       const qNum   = parseInt(qPart.slice(1));
@@ -146,8 +148,8 @@ export default function ComparativePLPage() {
 
   // ── Filter months by date range ───────────────────────────────────────────
   const filteredMonths = useMemo(() => {
-    const fromYM = fromDate ? fromDate.slice(0, 7) : null;
-    const toYM   = toDate   ? toDate.slice(0, 7)   : null;
+    const fromYM = fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
+    const toYM   = toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
     return months.filter((m) => {
       const ym = monthStrToYYYYMM(m);
       if (fromYM && ym < fromYM) return false;
@@ -208,54 +210,33 @@ export default function ComparativePLPage() {
               </Box>
             </Box>
 
-            <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1.5, flexWrap: "wrap" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
 
               {/* ── Date range filter ── */}
-              {["From", "To"].map((label) => {
-                const value    = label === "From" ? fromDate : toDate;
-                const onChange = label === "From" ? setFromDate : setToDate;
-                return (
-                  <Box key={label}>
-                    <Typography variant="caption" color="text.secondary"
-                      sx={{ display: "block", mb: 0.5, fontSize: "0.72rem" }}
-                    >
-                      {label}
-                    </Typography>
-                    <Box
-                      sx={{
-                        border: "1px solid #CBD5E1", borderRadius: 1.5,
-                        display: "flex", alignItems: "center",
-                        px: 1.5, py: 0.6, bgcolor: "#fff", minWidth: 150,
-                        "&:focus-within": { borderColor: "#D97706", boxShadow: "0 0 0 2px rgba(217,119,6,0.12)" },
-                      }}
-                    >
-                      <input
-                        type="date"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        style={{
-                          border: "none", outline: "none",
-                          fontSize: "0.82rem", color: "#334155",
-                          background: "transparent", width: "100%", cursor: "pointer",
-                        }}
-                      />
-                    </Box>
-                  </Box>
-                );
-              })}
+              <DatePicker
+                label="From"
+                value={fromDate}
+                onChange={(v) => setFromDate(v)}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
+              />
+              <DatePicker
+                label="To"
+                value={toDate}
+                onChange={(v) => setToDate(v)}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
+              />
 
               {/* Quarter selector — shows all available quarters; selects the "ending" quarter */}
               {filteredQuarters.length > 0 && (
                 <FormControl size="small" sx={{ minWidth: 130 }}>
-                  <InputLabel sx={{ fontSize: "0.8rem" }}>Quarter</InputLabel>
+                  <InputLabel>Quarter</InputLabel>
                   <Select
                     value={effectiveQuarter}
                     label="Quarter"
                     onChange={(e) => setSelectedQuarter(e.target.value)}
-                    sx={{ fontSize: "0.82rem" }}
                   >
                     {filteredQuarters.map((q) => (
-                      <MenuItem key={q} value={q} sx={{ fontSize: "0.82rem" }}>{q}</MenuItem>
+                      <MenuItem key={q} value={q}>{q}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -264,15 +245,14 @@ export default function ComparativePLPage() {
               {/* Year selector */}
               {years.length > 0 && (
                 <FormControl size="small" sx={{ minWidth: 110 }}>
-                  <InputLabel sx={{ fontSize: "0.8rem" }}>Year</InputLabel>
+                  <InputLabel>Year</InputLabel>
                   <Select
                     value={selectedYear}
                     label="Year"
                     onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    sx={{ fontSize: "0.82rem" }}
                   >
                     {years.map((y) => (
-                      <MenuItem key={y} value={y} sx={{ fontSize: "0.82rem" }}>{y}</MenuItem>
+                      <MenuItem key={y} value={y}>{y}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
@@ -280,10 +260,11 @@ export default function ComparativePLPage() {
 
               {compPlBlob && (
                 <Button
+                  size="small"
                   variant="contained"
                   startIcon={<DownloadIcon />}
                   onClick={handleDownload}
-                  sx={{ background: "linear-gradient(135deg,#D97706,#B45309)", whiteSpace: "nowrap" }}
+                  sx={{ background: "linear-gradient(135deg,#D97706,#B45309)", whiteSpace: "nowrap", height: 40 }}
                 >
                   Download .xlsx
                 </Button>
