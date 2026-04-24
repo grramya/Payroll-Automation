@@ -2,6 +2,8 @@ import { useState, useMemo } from "react";
 import {
   Box, Container, Typography, Button, Chip,
 } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import dayjs from "dayjs";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
@@ -37,13 +39,13 @@ export default function BaseBSPage() {
   const firstYear = months.length ? toFullYear(months[0].split("-")[1])                 : String(new Date().getFullYear());
   const lastYear  = months.length ? toFullYear(months[months.length - 1].split("-")[1]) : String(new Date().getFullYear());
 
-  const [fromDate, setFromDate] = useState(`${firstYear}-01-01`);
-  const [toDate,   setToDate]   = useState(`${lastYear}-12-31`);
+  const [fromDate, setFromDate] = useState(dayjs(`${firstYear}-01-01`));
+  const [toDate,   setToDate]   = useState(dayjs(`${lastYear}-12-31`));
 
   // ── Filtered months ────────────────────────────────────────────────────────
   const filteredIndices = useMemo(() => {
-    const fromYM = fromDate ? fromDate.slice(0, 7) : null;
-    const toYM   = toDate   ? toDate.slice(0, 7)   : null;
+    const fromYM = fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
+    const toYM   = toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
     return months.reduce((acc, m, i) => {
       const ym = monthStrToYYYYMM(m);
       if (fromYM && ym < fromYM) return acc;
@@ -96,40 +98,20 @@ export default function BaseBSPage() {
               </Typography>
             </Box>
 
-            <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1.5, flexWrap: "wrap" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
               {/* ── Date range filter ── */}
-              {["From", "To"].map((label) => {
-                const value    = label === "From" ? fromDate : toDate;
-                const onChange = label === "From" ? setFromDate : setToDate;
-                return (
-                  <Box key={label}>
-                    <Typography variant="caption" color="text.secondary"
-                      sx={{ display: "block", mb: 0.5, fontSize: "0.72rem" }}
-                    >
-                      {label}
-                    </Typography>
-                    <Box
-                      sx={{
-                        border: "1px solid #CBD5E1", borderRadius: 1.5,
-                        display: "flex", alignItems: "center",
-                        px: 1.5, py: 0.6, bgcolor: "#fff", minWidth: 150,
-                        "&:focus-within": { borderColor: "#2563EB", boxShadow: "0 0 0 2px rgba(37,99,235,0.12)" },
-                      }}
-                    >
-                      <input
-                        type="date"
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        style={{
-                          border: "none", outline: "none",
-                          fontSize: "0.82rem", color: "#334155",
-                          background: "transparent", width: "100%", cursor: "pointer",
-                        }}
-                      />
-                    </Box>
-                  </Box>
-                );
-              })}
+              <DatePicker
+                label="From"
+                value={fromDate}
+                onChange={(v) => setFromDate(v)}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
+              />
+              <DatePicker
+                label="To"
+                value={toDate}
+                onChange={(v) => setToDate(v)}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
+              />
 
               <Chip
                 icon={isBalanced
@@ -143,11 +125,12 @@ export default function BaseBSPage() {
               />
               {bsBlob && (
                 <Button
+                  size="small"
                   variant="contained"
                   startIcon={<AccountBalanceIcon aria-hidden="true" />}
                   onClick={handleDownload}
                   aria-label={`Download ${companyName}_base_bs.xlsx`}
-                  sx={{ background: "linear-gradient(135deg,#059669,#047857)" }}
+                  sx={{ background: "linear-gradient(135deg,#059669,#047857)", height: 40 }}
                 >
                   Download .xlsx
                 </Button>

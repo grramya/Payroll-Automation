@@ -11,12 +11,10 @@
 
 import { useState } from "react";
 import {
-  Box, Container, Typography, Button, Chip, Paper, alpha,
+  Box, Container, Typography, Button,
   Select, MenuItem, FormControl, InputLabel,
 } from "@mui/material";
-import TrendingUpIcon    from "@mui/icons-material/TrendingUp";
-import TrendingDownIcon  from "@mui/icons-material/TrendingDown";
-import DownloadIcon      from "@mui/icons-material/Download";
+import DownloadIcon from "@mui/icons-material/Download";
 
 import PLIndividualTable from "../../components/fpa/PLIndividualTable";
 import FullScreenWrapper from "../../components/fpa/FullScreenWrapper";
@@ -27,40 +25,10 @@ export default function PLIndividualPage() {
   if (!result) return null;
   const { plBlob, plPreview, companyName } = result;
 
-  const months      = plPreview?.months ?? [];
-  const rows        = plPreview?.rows   ?? [];
+  const months       = plPreview?.months ?? [];
   const defaultMonth = months[months.length - 1] ?? "";
 
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
-
-  // ── KPI helpers ────────────────────────────────────────────────────────────
-  const findRow = (label) => rows.find((r) => r.label === label);
-  const getVal  = (row)  =>
-    row?.values?.[selectedMonth]?.co_a ?? null;
-
-  const totalRevRow  = findRow("Total Revenue");
-  const grossProfRow = findRow("Gross Profit");
-  const opProfRow    = findRow("Operating Profit");
-  const netIncRow    = findRow("Net Income");
-
-  const totalRev  = getVal(totalRevRow);
-  const grossProf = getVal(grossProfRow);
-  const opProf    = getVal(opProfRow);
-  const netInc    = getVal(netIncRow);
-
-  const fmtAmt = (v) => {
-    if (v == null) return "—";
-    const abs  = Math.abs(v);
-    const sign = v < 0 ? "-" : "";
-    if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(2)}M`;
-    if (abs >= 1_000)     return `${sign}$${(abs / 1_000).toFixed(1)}K`;
-    return `${sign}$${abs.toFixed(0)}`;
-  };
-
-  const fmtPct = (num, den) => {
-    if (num == null || !den || Math.abs(den) < 0.001) return null;
-    return `${((num / den) * 100).toFixed(1)}%`;
-  };
 
   const handleDownload = () => {
     if (!plBlob) return;
@@ -97,33 +65,28 @@ export default function PLIndividualPage() {
               {/* Month selector */}
               {months.length > 0 && (
                 <FormControl size="small" sx={{ minWidth: 130 }}>
-                  <InputLabel id="pl-month-label" sx={{ fontSize: "0.8rem" }}>
-                    As of
-                  </InputLabel>
+                  <InputLabel id="pl-month-label">As of</InputLabel>
                   <Select
                     labelId="pl-month-label"
                     value={selectedMonth}
                     label="As of"
                     onChange={(e) => setSelectedMonth(e.target.value)}
-                    sx={{ fontSize: "0.82rem" }}
                   >
                     {months.map((m) => (
-                      <MenuItem key={m} value={m} sx={{ fontSize: "0.82rem" }}>
-                        {m}
-                      </MenuItem>
+                      <MenuItem key={m} value={m}>{m}</MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               )}
 
-
               {plBlob && (
                 <Button
+                  size="small"
                   variant="contained"
                   startIcon={<DownloadIcon aria-hidden="true" />}
                   onClick={handleDownload}
                   aria-label={`Download ${companyName}_pl_individual.xlsx`}
-                  sx={{ background: "linear-gradient(135deg,#059669,#047857)" }}
+                  sx={{ background: "linear-gradient(135deg,#059669,#047857)", height: 40 }}
                 >
                   Download .xlsx
                 </Button>
@@ -134,36 +97,6 @@ export default function PLIndividualPage() {
       </Box>
 
       <Container maxWidth="xl" sx={{ py: 3 }}>
-
-        {/* ── KPI tiles for selected month ──────────────────────────────────── */}
-        {selectedMonth && (
-          <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
-
-            <KpiTile label="Total Revenue"     value={fmtAmt(totalRev)}  positive={totalRev  >= 0} period={selectedMonth} />
-            <KpiTile
-              label="Gross Profit"
-              value={fmtAmt(grossProf)}
-              sub={fmtPct(grossProf, totalRev)}
-              positive={grossProf != null && grossProf >= 0}
-              period={selectedMonth}
-            />
-            <KpiTile
-              label="Operating Profit"
-              value={fmtAmt(opProf)}
-              sub={fmtPct(opProf, totalRev)}
-              positive={opProf != null && opProf >= 0}
-              period={selectedMonth}
-            />
-            <KpiTile
-              label="Net Income"
-              value={fmtAmt(netInc)}
-              sub={fmtPct(netInc, totalRev)}
-              positive={netInc != null && netInc >= 0}
-              period={selectedMonth}
-            />
-
-          </Box>
-        )}
 
         {/* ── P&L Table ────────────────────────────────────────────────────── */}
         {plPreview && months.length > 0 ? (
@@ -202,38 +135,3 @@ export default function PLIndividualPage() {
 }
 
 
-// ── KPI tile ─────────────────────────────────────────────────────────────────
-function KpiTile({ label, value, sub, positive, period }) {
-  const color = positive ? "success.main" : "error.main";
-  const Icon  = positive ? TrendingUpIcon : TrendingDownIcon;
-
-  return (
-    <Paper
-      elevation={0}
-      variant="outlined"
-      sx={{
-        flex: "0 0 160px", p: 2.5, borderRadius: 3, textAlign: "center",
-        borderColor: positive ? alpha("#059669", 0.3) : alpha("#DC2626", 0.3),
-        bgcolor:     positive ? alpha("#059669", 0.03) : alpha("#DC2626", 0.03),
-      }}
-    >
-      <Box sx={{ display: "flex", justifyContent: "center", mb: 0.75 }}>
-        <Icon sx={{ fontSize: 18, color }} />
-      </Box>
-      <Typography sx={{ fontWeight: 800, fontSize: "1.25rem", color, lineHeight: 1.2 }}>
-        {value}
-      </Typography>
-      {sub && (
-        <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.25 }}>
-          {sub} of revenue
-        </Typography>
-      )}
-      <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: "block", mt: 0.5 }}>
-        {label}
-      </Typography>
-      <Typography variant="caption" color="text.disabled" sx={{ display: "block", fontSize: "0.65rem" }}>
-        {period}
-      </Typography>
-    </Paper>
-  );
-}

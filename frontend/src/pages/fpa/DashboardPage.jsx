@@ -561,59 +561,67 @@ export default function DashboardPage() {
           </Card>
         </Box>
 
-        {/* ── Row 2: Dept Heatmap + Efficiency + Cash ─────────────────────── */}
-        <Box sx={{ display: "flex", gap: 2, mb: 2.5, flexWrap: "wrap" }}>
+        {/* ── Row 2: Dept Heatmap + Efficiency (50 / 50) ─────────────────── */}
+        <Box sx={{ display: "flex", gap: 2, mb: 2.5 }}>
 
           {/* Department spend heatmap */}
-          <Card sx={{ flex: "2 1 400px" }}>
+          <Card sx={{ flex: "1 1 0", minWidth: 0 }}>
             <SectionHeader title="Department Spend" subtitle="Monthly expenditure by category (last 6 months)" />
             <DeptHeatmap months={filteredPlMonths} data={plData} />
           </Card>
 
           {/* Efficiency ratios */}
-          <Card sx={{ flex: "1 1 220px" }}>
+          <Card sx={{ flex: "1 1 0", minWidth: 0 }}>
             <SectionHeader title="Margin Analysis" subtitle="vs SaaS benchmark" />
             {efficiencyRatios.map((r) => <RatioBar key={r.label} {...r} />)}
           </Card>
 
-          {/* Cash & balance sheet */}
-          <Card sx={{ flex: "1 1 220px" }}>
+        </Box>
+
+        {/* ── Row 3: Cash & Balance Sheet (full width) ────────────────────── */}
+        <Box sx={{ mb: 2.5 }}>
+          <Card>
             <SectionHeader title="Cash & Balance Sheet" subtitle={bsMonths[bsMonths.length - 1] ?? ""} />
 
-            {/* Cash trend mini chart */}
-            <ResponsiveContainer width="100%" height={100}>
-              <AreaChart data={cashTrendData.slice(-12)} margin={{ top: 2, right: 4, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="cashGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#0369A1" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#0369A1" stopOpacity={0.01} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="month" hide />
-                <YAxis hide />
-                <Tooltip content={<ChartTooltip />} />
-                <ReferenceLine y={0} stroke="#E2E8F0" />
-                <Area type="monotone" dataKey="Cash" stroke="#0369A1" strokeWidth={2} fill="url(#cashGrad)" dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
-
-            <Divider sx={{ my: 1.5 }} />
-
-            {/* BS summary */}
-            {[
-              { label: "Cash",        value: latestCash,   color: "#0369A1" },
-              { label: "Total Assets",value: latestAssets, color: "#236CFF" },
-              { label: "Total Liab.", value: latestLiab,   color: "#DC2626" },
-              { label: "Equity",      value: latestEquity, color: "#2CA01C" },
-              ...(runway ? [{ label: `Runway`, value: `~${runway.toFixed(1)} mo`, raw: true, color: runway < 6 ? "#DC2626" : "#2CA01C" }] : []),
-            ].map(({ label, value, color, raw }) => (
-              <Box key={label} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", py: 0.6 }}>
-                <Typography sx={{ fontSize: "0.75rem", color: "#64748B" }}>{label}</Typography>
-                <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color, fontFamily: "monospace" }}>
-                  {raw ? value : fmtM(value)}
-                </Typography>
+            <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
+              {/* Cash trend mini chart */}
+              <Box sx={{ flex: "1 1 300px", minWidth: 0 }}>
+                <ResponsiveContainer width="100%" height={120}>
+                  <AreaChart data={cashTrendData.slice(-12)} margin={{ top: 2, right: 4, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="cashGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%"  stopColor="#0369A1" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#0369A1" stopOpacity={0.01} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
+                    <YAxis tickFormatter={(v) => fmtM(v)} tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} width={60} />
+                    <Tooltip content={<ChartTooltip />} />
+                    <ReferenceLine y={0} stroke="#E2E8F0" />
+                    <Area type="monotone" dataKey="Cash" stroke="#0369A1" strokeWidth={2} fill="url(#cashGrad)" dot={false} />
+                  </AreaChart>
+                </ResponsiveContainer>
               </Box>
-            ))}
+
+              {/* BS summary */}
+              <Box sx={{ flex: "0 0 260px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                <Divider sx={{ mb: 1.5, display: { xs: "block", sm: "none" } }} />
+                {[
+                  { label: "Cash",         value: latestCash,   color: "#0369A1" },
+                  { label: "Total Assets", value: latestAssets, color: "#236CFF" },
+                  { label: "Total Liab.",  value: latestLiab,   color: "#DC2626" },
+                  { label: "Equity",       value: latestEquity, color: "#2CA01C" },
+                  ...(runway ? [{ label: "Runway", value: `~${runway.toFixed(1)} mo`, raw: true, color: runway < 6 ? "#DC2626" : "#2CA01C" }] : []),
+                ].map(({ label, value, color, raw }) => (
+                  <Box key={label} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", py: 0.6, borderBottom: "1px solid #F1F5F9" }}>
+                    <Typography sx={{ fontSize: "0.75rem", color: "#64748B" }}>{label}</Typography>
+                    <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color, fontFamily: "monospace" }}>
+                      {raw ? value : fmtM(value)}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
           </Card>
         </Box>
 
