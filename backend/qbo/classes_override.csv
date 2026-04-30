@@ -1,25 +1,36 @@
 Class ID,Class Name,Full Name,Active
-1000000017,Admin,G&A:Admin,True
-1000000003,Client Expert,Client Service:Client Expert,True
-1000000004,Client Management,Client Service:Client Management,True
-1000000001,Client Service,Client Service,True
-1000000006,Client Success,Client Service:Client Success,True
-1000000008,COGS,COGS,True
-1000000015,Day to Day Support,COGS:Shared Services:Day to Day Support,True
-1000000020,Engineering,R&D:Engineering,True
-1000000016,G&A,G&A,True
-1000000009,Insurance,COGS:Procurement:Insurance,True
-1000000025,market data,COGS:Procurement:Tech & MD:market data,True
-1000000023,Marketing,S&M:Marketing,True
-1000000018,Operations,G&A:Operations,True
-1000000007,Procurement,Client Service:Procurement,True
-653778,Procurement,COGS:Procurement,True
-1000000021,Product,R&D:Product,True
-1000000019,R&D,R&D,True
-1000000011,Readiness and Analysis,COGS:Procurement:Tech & MD:Readiness and Analysis,True
-1000000022,S&M,S&M,True
-1000000024,Sales,S&M:Sales,True
-1000000014,Shared Services,COGS:Shared Services,True
-1000000010,Tech & MD,COGS:Procurement:Tech & MD,True
-1000000012,Technology,COGS:Procurement:Tech & MD:Technology,True
-1000000013,Travel,COGS:Procurement:Travel,True
+3600000000001797616,Admin,G&A:Admin,True
+3600000000001797612,Business Development,S&M:Sales:Business Development,True
+3600000000002067230,Client Expert,Client Service:Client Expert,True
+3600000000002067228,Client Management,Client Service:Client Management,True
+3600000000002067226,Client Service,Client Service,True
+3600000000001797627,Client Services (2023),COGS (2023):Client Services (2023),True
+3600000000002067227,Client Success,Client Service:Client Success,True
+3600000000001797721,Client Success (2023),Client Success (2023),True
+3600000000002067231,COGS,COGS,True
+3600000000001797621,COGS (2023),COGS (2023),True
+3600000000002067243,Day to Day Support,COGS:Shared Services:Day to Day Support,True
+3600000000001797620,Engineering,R&D:Engineering,True
+3600000000001797615,G&A,G&A,True
+3600000000002067233,Insurance,COGS:Procurement:Insurance,True
+3600000000001797730,Insurance (2023),COGS (2023):Procurement (2023):Insurance (2023),True
+3600000000001797617,Management,G&A:Management,True
+3600000000002067239,Market Data,COGS:Procurement:Tech & MD:Market Data,True
+3600000000001797624,Market Data (2023),COGS (2023):Procurement (2023):Market Data (2023),True
+3600000000001797614,Marketing,S&M:Marketing,True
+598854,Operations,G&A:Operations,True
+3600000000002067232,Procurement,COGS:Procurement,True
+3600000000002067229,Procurement,Client Service:Procurement,True
+3600000000001797622,Procurement (2023),COGS (2023):Procurement (2023),True
+3600000000001797619,Product,R&D:Product,True
+3600000000001797618,R&D,R&D,True
+3600000000002067241,Readiness and Analysis,COGS:Procurement:Tech & MD:Readiness and Analysis,True
+3600000000001797609,S&M,S&M,True
+3600000000001797611,Sales,S&M:Sales:Sales,True
+3600000000001797610,Sales,S&M:Sales,True
+3600000000002067242,Shared Services,COGS:Shared Services,True
+3600000000002067234,Tech & MD,COGS:Procurement:Tech & MD,True
+3600000000002067235,Technology,COGS:Procurement:Tech & MD:Technology,True
+3600000000001797626,Technology (2023),COGS (2023):Procurement (2023):Technology (2023),True
+3600000000002067246,Travel,COGS:Procurement:Travel,True
+3600000000001797625,Travel (2023),COGS (2023):Procurement (2023):Travel (2023),True

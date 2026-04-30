@@ -177,7 +177,7 @@ def _compute_period(m: pd.DataFrame) -> dict:
     gp = rev_total - cogs_total
     d["Gross Profit"] = gp
     d["Gross Profit (%)"] = (
-        (gp / client_recurring * 100) if client_recurring and abs(client_recurring) > 0.001 else None
+        (gp / rev_total * 100) if rev_total and abs(rev_total) > 0.001 else None
     )
 
     # OpEx ─────────────────────────────────────────────────────────────────────

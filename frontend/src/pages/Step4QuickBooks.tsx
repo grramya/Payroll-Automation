@@ -18,6 +18,8 @@ interface TableState {
   rows: JERow[]
   columns: string[]
   source: 'local' | 'qbo' | 'none'
+  lastSynced: string | null
+  syncSource: string | null
   loading: boolean
   syncing: boolean
   saving: boolean
@@ -26,10 +28,29 @@ interface TableState {
 }
 const emptyTable = (): TableState => ({
   rows: [], columns: [], source: 'none',
+  lastSynced: null, syncSource: null,
   loading: false, syncing: false, saving: false, error: '', saveMsg: '',
 })
 
 interface CtxMenu { x: number; y: number; node: IRowNode<JERow> }
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+const STALE_HOURS = 24
+
+function formatSyncAge(isoStr: string | null): string {
+  if (!isoStr) return ''
+  const mins = Math.round((Date.now() - new Date(isoStr).getTime()) / 60000)
+  if (mins < 1)   return 'just now'
+  if (mins < 60)  return `${mins}m ago`
+  const hrs = Math.round(mins / 60)
+  if (hrs < 24)   return `${hrs}h ago`
+  return `${Math.round(hrs / 24)}d ago`
+}
+
+function isSyncStale(isoStr: string | null): boolean {
+  if (!isoStr) return false
+  return (Date.now() - new Date(isoStr).getTime()) / 3600000 > STALE_HOURS
+}
 
 // ── Main page ──────────────────────────────────────────────────────────────────
 export default function Step4QuickBooks() {
@@ -47,6 +68,17 @@ export default function Step4QuickBooks() {
   const [accounts,     setAccounts]     = useState<TableState>(emptyTable())
   const [vendors,      setVendors]      = useState<TableState>(emptyTable())
   const [classes,      setClasses]      = useState<TableState>(emptyTable())
+
+  // Map snake_case API fields to camelCase TableState
+  function mapApiData(d: Record<string, unknown>): Partial<TableState> {
+    return {
+      rows: (d.rows as JERow[]) ?? [],
+      columns: (d.columns as string[]) ?? [],
+      source: (d.source as TableState['source']) ?? 'none',
+      lastSynced: (d.last_synced as string | null) ?? null,
+      syncSource: (d.sync_source as string | null) ?? null,
+    }
+  }
 
   useEffect(() => { fetchStatus() }, [])
 
@@ -104,7 +136,7 @@ export default function Step4QuickBooks() {
     setShowAccounts(true)
     try {
       const d = await getQBOAccounts()
-      setAccounts(s => ({ ...s, ...d, loading: false }))
+      setAccounts(s => ({ ...s, ...mapApiData(d), loading: false }))
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: string } } }
       setAccounts(s => ({ ...s, loading: false, error: e.response?.data?.detail || 'Failed to load.' }))
@@ -115,7 +147,7 @@ export default function Step4QuickBooks() {
     setAccounts(s => ({ ...s, syncing: true, error: '' }))
     try {
       const d = await syncQBOAccounts()
-      setAccounts(s => ({ ...s, ...d, syncing: false, saveMsg: 'Synced from QuickBooks.' }))
+      setAccounts(s => ({ ...s, ...mapApiData(d), syncing: false, saveMsg: 'Synced from QuickBooks.' }))
       setTimeout(() => setAccounts(s => ({ ...s, saveMsg: '' })), 3000)
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: string } } }
@@ -129,7 +161,7 @@ export default function Step4QuickBooks() {
     setShowVendors(true)
     try {
       const d = await getQBOVendors()
-      setVendors(s => ({ ...s, ...d, loading: false }))
+      setVendors(s => ({ ...s, ...mapApiData(d), loading: false }))
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: string } } }
       setVendors(s => ({ ...s, loading: false, error: e.response?.data?.detail || 'Failed to load.' }))
@@ -140,7 +172,7 @@ export default function Step4QuickBooks() {
     setVendors(s => ({ ...s, syncing: true, error: '' }))
     try {
       const d = await syncQBOVendors()
-      setVendors(s => ({ ...s, ...d, syncing: false, saveMsg: 'Synced from QuickBooks.' }))
+      setVendors(s => ({ ...s, ...mapApiData(d), syncing: false, saveMsg: 'Synced from QuickBooks.' }))
       setTimeout(() => setVendors(s => ({ ...s, saveMsg: '' })), 3000)
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: string } } }
@@ -154,7 +186,7 @@ export default function Step4QuickBooks() {
     setShowClasses(true)
     try {
       const d = await getQBOClasses()
-      setClasses(s => ({ ...s, ...d, loading: false }))
+      setClasses(s => ({ ...s, ...mapApiData(d), loading: false }))
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: string } } }
       setClasses(s => ({ ...s, loading: false, error: e.response?.data?.detail || 'Failed to load.' }))
@@ -165,7 +197,7 @@ export default function Step4QuickBooks() {
     setClasses(s => ({ ...s, syncing: true, error: '' }))
     try {
       const d = await syncQBOClasses()
-      setClasses(s => ({ ...s, ...d, syncing: false, saveMsg: 'Synced from QuickBooks.' }))
+      setClasses(s => ({ ...s, ...mapApiData(d), syncing: false, saveMsg: 'Synced from QuickBooks.' }))
       setTimeout(() => setClasses(s => ({ ...s, saveMsg: '' })), 3000)
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: string } } }
@@ -252,7 +284,8 @@ export default function Step4QuickBooks() {
             setAccounts(s => ({ ...s, saving: true }))
             try {
               await saveQBOAccounts(rows)
-              setAccounts(s => ({ ...s, rows, saving: false, saveMsg: 'Saved.' }))
+              const now = new Date().toISOString()
+              setAccounts(s => ({ ...s, rows, saving: false, saveMsg: 'Saved.', lastSynced: now, syncSource: 'manual' }))
               setTimeout(() => setAccounts(s => ({ ...s, saveMsg: '' })), 3000)
             } catch (err: unknown) {
               const e = err as { response?: { data?: { detail?: string } } }
@@ -277,7 +310,8 @@ export default function Step4QuickBooks() {
             setVendors(s => ({ ...s, saving: true }))
             try {
               await saveQBOVendors(rows)
-              setVendors(s => ({ ...s, rows, saving: false, saveMsg: 'Saved.' }))
+              const now = new Date().toISOString()
+              setVendors(s => ({ ...s, rows, saving: false, saveMsg: 'Saved.', lastSynced: now, syncSource: 'manual' }))
               setTimeout(() => setVendors(s => ({ ...s, saveMsg: '' })), 3000)
             } catch (err: unknown) {
               const e = err as { response?: { data?: { detail?: string } } }
@@ -302,7 +336,8 @@ export default function Step4QuickBooks() {
             setClasses(s => ({ ...s, saving: true }))
             try {
               await saveQBOClasses(rows)
-              setClasses(s => ({ ...s, rows, saving: false, saveMsg: 'Saved.' }))
+              const now = new Date().toISOString()
+              setClasses(s => ({ ...s, rows, saving: false, saveMsg: 'Saved.', lastSynced: now, syncSource: 'manual' }))
               setTimeout(() => setClasses(s => ({ ...s, saveMsg: '' })), 3000)
             } catch (err: unknown) {
               const e = err as { response?: { data?: { detail?: string } } }
@@ -399,12 +434,32 @@ function EditableQBOSection({ title, icon, hint, show, state, onToggle, onSync, 
           <span className="material-icons-round" style={{ color: 'var(--p)', fontSize: 22 }}>{icon}</span>
           <div>
             <div style={{ fontWeight: 600, fontSize: 15 }}>{title}</div>
-            <div style={{ fontSize: 13, color: 'var(--muted)' }}>
-              {state.source === 'local'
-                ? `${rowCount} rows (locally saved)`
-                : state.source === 'qbo'
-                  ? `${rowCount} rows (synced from QBO)`
-                  : hint}
+            <div style={{ fontSize: 13, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              {state.source === 'none' ? hint : (
+                <>
+                  <span>{rowCount} rows</span>
+                  {state.lastSynced && (
+                    <>
+                      <span style={{ color: 'var(--border)' }}>·</span>
+                      <span style={{
+                        color: isSyncStale(state.lastSynced) ? '#D97706' : 'var(--muted)',
+                        display: 'flex', alignItems: 'center', gap: 3,
+                      }}>
+                        {isSyncStale(state.lastSynced) && (
+                          <span className="material-icons-round" style={{ fontSize: 13 }}>warning</span>
+                        )}
+                        Last synced {formatSyncAge(state.lastSynced)}
+                        {state.syncSource === 'qbo' ? ' from QBO' : ' (manual save)'}
+                      </span>
+                    </>
+                  )}
+                  {!state.lastSynced && (
+                    <span style={{ color: 'var(--muted)' }}>
+                      · {state.source === 'qbo' ? 'synced from QBO' : 'locally saved'}
+                    </span>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

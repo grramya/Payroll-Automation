@@ -10,14 +10,18 @@ Captured fields per entry:
 """
 
 import os
+import sys
 import socket
 import threading
+import traceback
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
+from filelock import FileLock
 
 LOG_DIR  = Path(__file__).parent.parent / "logs"
 LOG_FILE = LOG_DIR / "Activity_Log.xlsx"
+LOG_DIR.mkdir(exist_ok=True)  # ensure dir exists before FileLock creates its file
 
 # Column order for the log sheet
 _COLUMNS = [
@@ -168,12 +172,17 @@ def log_action(
         finally:
             _LOCK.release()
 
-    except Exception:
-        pass  # logging must never crash the app
+    except Exception as _exc:
+        # Never crash the app, but always surface the failure so operators notice
+        print(
+            f"[Activity Log] WRITE FAILED: {_exc}\n{traceback.format_exc()}",
+            file=sys.stderr,
+            flush=True,
+        )
 
 
-# Thread lock so background threads don't corrupt the file
-_LOCK = threading.Lock()
+# Cross-process lock — works across gunicorn workers and background threads
+_LOCK = FileLock(str(LOG_DIR / ".activity_log.lock"), timeout=15)
 
 
 def log_action_async(**kwargs) -> None:

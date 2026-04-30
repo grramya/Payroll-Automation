@@ -1,4 +1,4 @@
-# Auto-generated from "Mapping table for FP&A.xlsx"
+# Auto-generated from "Mapping table for FP&A_v2.xlsx"
 # ACCOUNT_MAP  — keyed by account name (Financials / Grouping / Classification)
 # DEPT_MAP     — keyed by (account_name, dept_class) for class-dependent columns
 
@@ -27,43 +27,19 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Current Assets',
         'Classification (Line Item)': 'Accounts Receivable',
     },
-    'Accounts Receivable': {
+    '120020 Accounts Receivable (A/R) - AED': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Current Assets',
         'Classification (Line Item)': 'Accounts Receivable',
     },
-    'Accounts Receivable (A/R) - AED': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Current Assets',
-        'Classification (Line Item)': 'Accounts Receivable',
-    },
-    'Accounts Receivable (A/R) - EUR': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Current Assets',
-        'Classification (Line Item)': 'Accounts Receivable',
-    },
-    'Accounts Receivable (A/R) - GBP': {
+    '120040 Accounts Receivable (A/R) - GBP': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Current Assets',
         'Classification (Line Item)': 'Accounts Receivable',
     },
     'Intercompany Receivable - due from Concertiv Inc.': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Current Assets',
-        'Classification (Line Item)': 'Accounts Receivable',
-    },
-    'Intercompany Receivable - due from Concertiv Insurance': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Current Assets',
-        'Classification (Line Item)': 'Accounts Receivable',
-    },
-    'Unbilled A/R': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Current Assets',
@@ -105,7 +81,7 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Current Assets',
         'Classification (Line Item)': 'Cash and Cash equivalents',
     },
-    'Concertiv CD - 5377': {
+    '130030 Concertiv CD - 5377': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Current Assets',
@@ -159,55 +135,37 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Current Assets',
         'Classification (Line Item)': 'Prepaid expenses and other current assets',
     },
-    'Prepaid Expense': {
+    '131010 Prepaid Expense': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Current Assets',
         'Classification (Line Item)': 'Prepaid expenses and other current assets',
     },
-    'Prepaid Expense Adjustments': {
+    '131020 Prepaid Expense Adjustments': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Current Assets',
         'Classification (Line Item)': 'Prepaid expenses and other current assets',
     },
-    'Prepaid Expenses:Prepaid Expense': {
+    '131030 Prepaid Insurance': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Current Assets',
         'Classification (Line Item)': 'Prepaid expenses and other current assets',
     },
-    'Prepaid Expenses:Prepaid Insurance': {
+    '131040 Prepaid Marketing': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Current Assets',
         'Classification (Line Item)': 'Prepaid expenses and other current assets',
     },
-    'Prepaid Expenses:Prepaid Marketing': {
+    '130130 Undeposited Funds': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Current Assets',
         'Classification (Line Item)': 'Prepaid expenses and other current assets',
     },
-    'Prepaid Insurance': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Current Assets',
-        'Classification (Line Item)': 'Prepaid expenses and other current assets',
-    },
-    'Prepaid Marketing': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Current Assets',
-        'Classification (Line Item)': 'Prepaid expenses and other current assets',
-    },
-    'Undeposited Funds': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Current Assets',
-        'Classification (Line Item)': 'Prepaid expenses and other current assets',
-    },
-    'ROU - Finance Leases - A/A': {
+    '154010 ROU - Finance Leases - A/A': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Fixed Assets',
@@ -219,13 +177,7 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Fixed Assets',
         'Classification (Line Item)': 'Goodwill, net of accumulated amortization',
     },
-    'Goodwill - A/A': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Fixed Assets',
-        'Classification (Line Item)': 'Goodwill, net of accumulated amortization',
-    },
-    'Goodwill:Goodwill - A/A': {
+    '153010 Goodwill - A/A': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Fixed Assets',
@@ -243,37 +195,25 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Fixed Assets',
         'Classification (Line Item)': 'Intangible assets, net of accumulated amortization',
     },
-    'Customer Relationships - A/A': {
+    '151010 Customer Relationships - A/A': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Fixed Assets',
         'Classification (Line Item)': 'Intangible assets, net of accumulated amortization',
     },
-    'Customer Relationships:Customer Relationships - A/A': {
+    '152000 Developed Technology': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Fixed Assets',
         'Classification (Line Item)': 'Intangible assets, net of accumulated amortization',
     },
-    'Developed Technology': {
+    '152010 Developed Technology - A/A': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Fixed Assets',
         'Classification (Line Item)': 'Intangible assets, net of accumulated amortization',
     },
-    'Developed Technology - A/A': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Fixed Assets',
-        'Classification (Line Item)': 'Intangible assets, net of accumulated amortization',
-    },
-    'Trade Name - A/A': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Fixed Assets',
-        'Classification (Line Item)': 'Intangible assets, net of accumulated amortization',
-    },
-    'Trade Name:Trade Name - A/A': {
+    '156010 Trade Name - A/A': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Fixed Assets',
@@ -291,19 +231,7 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Fixed Assets',
         'Classification (Line Item)': 'Operating lease right-of-use assets',
     },
-    'ROU - Operating Leases': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Fixed Assets',
-        'Classification (Line Item)': 'Operating lease right-of-use assets',
-    },
-    'ROU - Operating Leases - A/A': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Fixed Assets',
-        'Classification (Line Item)': 'Operating lease right-of-use assets',
-    },
-    'ROU - Operating Leases:ROU - Operating Leases - A/A': {
+    '155010 ROU - Operating Leases - A/A': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Fixed Assets',
@@ -327,55 +255,37 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Fixed Assets',
         'Classification (Line Item)': 'Tangible Assets, net of accumulated depreciation',
     },
-    'Furniture & Fixtures': {
+    '141000 Furniture & Fixtures': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Fixed Assets',
         'Classification (Line Item)': 'Tangible Assets, net of accumulated depreciation',
     },
-    'Furniture & Fixtures - A/D': {
+    '141010 Furniture & Fixtures - A/D': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Fixed Assets',
         'Classification (Line Item)': 'Tangible Assets, net of accumulated depreciation',
     },
-    'Furniture & Fixtures:Furniture & Fixtures - A/D': {
+    '142010 Leasehold Improvement-A/D': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Fixed Assets',
         'Classification (Line Item)': 'Tangible Assets, net of accumulated depreciation',
     },
-    'Leasehold Improvement-A/D': {
+    '142000 Leasehold Improvements': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Fixed Assets',
         'Classification (Line Item)': 'Tangible Assets, net of accumulated depreciation',
     },
-    'Leasehold Improvements': {
+    '143000 Technology Equipment': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Fixed Assets',
         'Classification (Line Item)': 'Tangible Assets, net of accumulated depreciation',
     },
-    'Leasehold Improvements:Leasehold Improvement-A/D': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Fixed Assets',
-        'Classification (Line Item)': 'Tangible Assets, net of accumulated depreciation',
-    },
-    'Technology Equipment': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Fixed Assets',
-        'Classification (Line Item)': 'Tangible Assets, net of accumulated depreciation',
-    },
-    'Technology Equipment:Technology Equpment- A/D': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Fixed Assets',
-        'Classification (Line Item)': 'Tangible Assets, net of accumulated depreciation',
-    },
-    'Technology Equpment- A/D': {
+    '143010 Technology Equpment- A/D': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Fixed Assets',
@@ -387,19 +297,13 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Other Current Assets',
         'Classification (Line Item)': 'Deposit or Advances',
     },
-    'Accrued Interest Receivable': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Other Current Assets',
-        'Classification (Line Item)': 'Deposit or Advances',
-    },
-    'Deferred Contract Costs - ST': {
+    '130040 Deferred Contract Costs - ST': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Other Current Assets',
         'Classification (Line Item)': 'Prepaid expenses and other current assets',
     },
-    'Deferred Financing Costs': {
+    '130050 Deferred Financing Costs': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Other Current Assets',
@@ -411,19 +315,13 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Other Non-Current Assets',
         'Classification (Line Item)': 'Deposit or Advances',
     },
-    'Due from Employee': {
+    '130070 General Overpayments/Deposits': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Other Non-Current Assets',
         'Classification (Line Item)': 'Deposit or Advances',
     },
-    'General Overpayments/Deposits': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Assets',
-        'Secondary Grouping': 'Other Non-Current Assets',
-        'Classification (Line Item)': 'Deposit or Advances',
-    },
-    'Security Deposits': {
+    '150010 Security Deposits': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Assets',
         'Secondary Grouping': 'Other Non-Current Assets',
@@ -435,49 +333,43 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Equity',
         'Classification (Line Item)': 'Additional paid-in capital',
     },
-    'APIC - Common Stock': {
+    '311010 APIC - Common Stock': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Equity',
         'Secondary Grouping': 'Equity',
         'Classification (Line Item)': 'Additional paid-in capital',
     },
-    'APIC - Series B-2 Preferred': {
+    '311050 APIC - Series B-2 Preferred': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Equity',
         'Secondary Grouping': 'Equity',
         'Classification (Line Item)': 'Additional paid-in capital',
     },
-    'APIC - Stock Options': {
+    '311060 APIC - Stock Options': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Equity',
         'Secondary Grouping': 'Equity',
         'Classification (Line Item)': 'Additional paid-in capital',
     },
-    'Additional Paid-In Capital:APIC - Stock Options': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Equity',
-        'Secondary Grouping': 'Equity',
-        'Classification (Line Item)': 'Additional paid-in capital',
-    },
-    'Common Stock': {
+    '310010 Common Stock': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Equity',
         'Secondary Grouping': 'Equity',
         'Classification (Line Item)': 'Common Stock',
     },
-    'Note Receivable': {
+    '310040 Note Receivable': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Equity',
         'Secondary Grouping': 'Equity',
         'Classification (Line Item)': 'Common Stock',
     },
-    'Opening balance equity': {
+    '310050 Opening balance equity': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Equity',
         'Secondary Grouping': 'Equity',
         'Classification (Line Item)': 'Common Stock',
     },
-    'Series B-2 Preferred Stock': {
+    '310090 Series B-2 Preferred Stock': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Equity',
         'Secondary Grouping': 'Equity',
@@ -495,55 +387,43 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': 'Accounts Payable',
     },
-    'Accounts Payable': {
+    '210020 Accounts Payable (A/P) - GBP': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': 'Accounts Payable',
     },
-    'Accounts Payable (A/P) - GBP': {
+    '210030 Accounts Payable - Other': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': 'Accounts Payable',
     },
-    'Accounts Payable - Other': {
+    '210040 Accounts Payable - Other - GBP': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': 'Accounts Payable',
     },
-    'Accounts Payable - Other - GBP': {
+    '220020 Chase CC - A.Ryan 2759': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': 'Accounts Payable',
     },
-    'Amex CC': {
+    '220030 Chase CC - A.Ryan 2759-1': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': 'Accounts Payable',
     },
-    'Chase CC - A.Ryan 2759': {
+    '220040 Chase CC - A.Ryan 7546': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': 'Accounts Payable',
     },
-    'Chase CC - A.Ryan 2759-1': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Liabilities',
-        'Secondary Grouping': 'Current Liabilities',
-        'Classification (Line Item)': 'Accounts Payable',
-    },
-    'Chase CC - A.Ryan 7546': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Liabilities',
-        'Secondary Grouping': 'Current Liabilities',
-        'Classification (Line Item)': 'Accounts Payable',
-    },
-    'Chase CC - K.Bird 0562': {
+    '220050 Chase CC - K.Bird 0562': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
@@ -555,7 +435,7 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': 'Accounts Payable',
     },
-    'Intercompany Payable - due to Concertiv Insurance': {
+    '230040 Intercompany Payable - due to Concertiv Insurance': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
@@ -573,43 +453,25 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': 'Accrued expenses',
     },
-    'Accrued Commission': {
+    '231030 Accrued Commission': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': 'Accrued expenses',
     },
-    'Accrued Expense': {
+    '231040 Accrued Expense': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': 'Accrued expenses',
     },
-    'Accrued Expenses:Accrued Expense': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Liabilities',
-        'Secondary Grouping': 'Current Liabilities',
-        'Classification (Line Item)': 'Accrued expenses',
-    },
-    'Accrued Expenses:Accrued Legal fees': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Liabilities',
-        'Secondary Grouping': 'Current Liabilities',
-        'Classification (Line Item)': 'Accrued expenses',
-    },
-    'Accrued Legal fees': {
+    '231060 Accrued Legal fees': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': 'Accrued expenses',
     },
     '230050 Lease Payable - Current': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Liabilities',
-        'Secondary Grouping': 'Current Liabilities',
-        'Classification (Line Item)': 'Current portion of operating lease liabilities',
-    },
-    'Lease Payable - Current': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
@@ -633,43 +495,25 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': "Due to Employee's",
     },
-    'Accrued 401k': {
+    '231010 Accrued 401k': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': "Due to Employee's",
     },
-    'Accrued Bonus': {
+    '231020 Accrued Bonus': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': "Due to Employee's",
     },
-    'Accrued Expenses:Accrued Bonus': {
+    '231070 Accrued Payroll': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
         'Classification (Line Item)': "Due to Employee's",
     },
-    'Accrued Expenses:Accrued Payroll': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Liabilities',
-        'Secondary Grouping': 'Current Liabilities',
-        'Classification (Line Item)': "Due to Employee's",
-    },
-    'Accrued Payroll': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Liabilities',
-        'Secondary Grouping': 'Current Liabilities',
-        'Classification (Line Item)': "Due to Employee's",
-    },
-    'Accrued Vacation': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Liabilities',
-        'Secondary Grouping': 'Current Liabilities',
-        'Classification (Line Item)': "Due to Employee's",
-    },
-    'TriNet Expense Reports': {
+    '231090 Accrued Vacation': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Current Liabilities',
@@ -699,13 +543,7 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Non Current Liabilities',
         'Classification (Line Item)': 'Deferred Revenue',
     },
-    'Deferred Revenue': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Liabilities',
-        'Secondary Grouping': 'Non Current Liabilities',
-        'Classification (Line Item)': 'Deferred Revenue',
-    },
-    'Deferred Revenue - Conference': {
+    '232010 Deferred Revenue - Conference': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Non Current Liabilities',
@@ -717,25 +555,13 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Non Current Liabilities',
         'Classification (Line Item)': 'Deferred Revenue',
     },
-    'Deferred Revenue - Subscription': {
+    '232030 Deferred Revenue - Subscription': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Non Current Liabilities',
         'Classification (Line Item)': 'Deferred Revenue',
     },
-    'Deferred Revenue - Supplier': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Liabilities',
-        'Secondary Grouping': 'Non Current Liabilities',
-        'Classification (Line Item)': 'Deferred Revenue',
-    },
-    'Deferred Revenue:Deferred Revenue - Subscription': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Liabilities',
-        'Secondary Grouping': 'Non Current Liabilities',
-        'Classification (Line Item)': 'Deferred Revenue',
-    },
-    'Deferred Revenue:Deferred Revenue - Supplier': {
+    '232040 Deferred Revenue - Supplier': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Non Current Liabilities',
@@ -747,25 +573,13 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Non Current Liabilities',
         'Classification (Line Item)': 'Operating lease liabilities, net of current portion',
     },
-    'Operating Lease - L/T': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Liabilities',
-        'Secondary Grouping': 'Non Current Liabilities',
-        'Classification (Line Item)': 'Operating lease liabilities, net of current portion',
-    },
-    'Stock Repurchase Liability': {
+    '240050 Stock Repurchase Liability': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Non Current Liabilities',
         'Classification (Line Item)': 'Other Long term Liabilities',
     },
     '230070 State Income Tax Payable': {
-        'Financial Statement': 'Balance Sheet',
-        'Main Grouping': 'Liabilities',
-        'Secondary Grouping': 'Non Current Liabilities',
-        'Classification (Line Item)': 'Statutory Dues',
-    },
-    'State Income Tax Payable': {
         'Financial Statement': 'Balance Sheet',
         'Main Grouping': 'Liabilities',
         'Secondary Grouping': 'Non Current Liabilities',
@@ -819,91 +633,43 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Cost of Revenue',
         'Classification (Line Item)': 'Direct Salaries',
     },
-    'COS - 401k - ER': {
+    '514010 COS - 401k - ER': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'COGS',
         'Secondary Grouping': 'Cost of Revenue',
         'Classification (Line Item)': 'Direct Salaries',
     },
-    'COS - Bonus/Commission': {
+    '514020 COS - Bonus/Commission': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'COGS',
         'Secondary Grouping': 'Cost of Revenue',
         'Classification (Line Item)': 'Direct Salaries',
     },
-    'COS - Health Insurance/Benefits - ER': {
+    '514030 COS - Health Insurance/Benefits - ER': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'COGS',
         'Secondary Grouping': 'Cost of Revenue',
         'Classification (Line Item)': 'Direct Salaries',
     },
-    'COS - Outsourced/India': {
+    '512000 COS - Outsourced/India': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'COGS',
         'Secondary Grouping': 'Cost of Revenue',
         'Classification (Line Item)': 'Direct Salaries',
     },
-    'COS - Payroll Taxes': {
+    '514060 COS - Payroll Taxes': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'COGS',
         'Secondary Grouping': 'Cost of Revenue',
         'Classification (Line Item)': 'Direct Salaries',
     },
-    'COS - Salary/Fixed': {
+    '514070 COS - Salary/Fixed': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'COGS',
         'Secondary Grouping': 'Cost of Revenue',
         'Classification (Line Item)': 'Direct Salaries',
     },
-    'COS - Stock-Based Compensation': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'COGS',
-        'Secondary Grouping': 'Cost of Revenue',
-        'Classification (Line Item)': 'Direct Salaries',
-    },
-    'Cost of Goods Sold:COS - Outsourced/India': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'COGS',
-        'Secondary Grouping': 'Cost of Revenue',
-        'Classification (Line Item)': 'Direct Salaries',
-    },
-    'Cost of Goods Sold:COS - Outsourced/India:COS - Outsourced/India - Allocation': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'COGS',
-        'Secondary Grouping': 'Cost of Revenue',
-        'Classification (Line Item)': 'Direct Salaries',
-    },
-    'Cost of Goods Sold:COS - Staff:COS - 401k - ER': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'COGS',
-        'Secondary Grouping': 'Cost of Revenue',
-        'Classification (Line Item)': 'Direct Salaries',
-    },
-    'Cost of Goods Sold:COS - Staff:COS - Bonus/Commission': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'COGS',
-        'Secondary Grouping': 'Cost of Revenue',
-        'Classification (Line Item)': 'Direct Salaries',
-    },
-    'Cost of Goods Sold:COS - Staff:COS - Health Insurance/Benefits - ER': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'COGS',
-        'Secondary Grouping': 'Cost of Revenue',
-        'Classification (Line Item)': 'Direct Salaries',
-    },
-    'Cost of Goods Sold:COS - Staff:COS - Payroll Taxes': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'COGS',
-        'Secondary Grouping': 'Cost of Revenue',
-        'Classification (Line Item)': 'Direct Salaries',
-    },
-    'Cost of Goods Sold:COS - Staff:COS - Salary/Fixed': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'COGS',
-        'Secondary Grouping': 'Cost of Revenue',
-        'Classification (Line Item)': 'Direct Salaries',
-    },
-    'Cost of Goods Sold:COS - Staff:COS - Stock-Based Compensation': {
+    '514090 COS - Stock-Based Compensation': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'COGS',
         'Secondary Grouping': 'Cost of Revenue',
@@ -915,43 +681,31 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Cost of Revenue',
         'Classification (Line Item)': 'Other Direct Cost',
     },
-    'Billable Travel Expenses': {
+    '620020 Billable Travel Expenses': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'COGS',
         'Secondary Grouping': 'Cost of Revenue',
         'Classification (Line Item)': 'Other Direct Cost',
     },
-    'Client Meals': {
+    '617010 Client Meals': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'COGS',
         'Secondary Grouping': 'Cost of Revenue',
         'Classification (Line Item)': 'Other Direct Cost',
     },
-    'Cost of Goods Sold:Tech Dev Software': {
+    '511030 Other Costs of Services - COS': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'COGS',
         'Secondary Grouping': 'Cost of Revenue',
         'Classification (Line Item)': 'Other Direct Cost',
     },
-    'Other Costs of Services - COS': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'COGS',
-        'Secondary Grouping': 'Cost of Revenue',
-        'Classification (Line Item)': 'Other Direct Cost',
-    },
-    'Tech Dev Software': {
+    '511040 Tech Dev Software': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'COGS',
         'Secondary Grouping': 'Cost of Revenue',
         'Classification (Line Item)': 'Other Direct Cost',
     },
     '617010 Meals:Client Meals': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Cost of Revenue',
-        'Classification (Line Item)': 'Other Direct Cost',
-    },
-    'Meals:Client Meals': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Cost of Revenue',
@@ -964,18 +718,6 @@ ACCOUNT_MAP = {
         'Classification (Line Item)': 'Depreciation and Amortization',
     },
     '810030 Depreciation Expense': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Depreciation and Amortization',
-    },
-    'Amortization Expense': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Depreciation and Amortization',
-    },
-    'Depreciation Expense': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
@@ -1005,55 +747,43 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Expenses Others',
     },
-    'Bad Debt': {
+    '610010 Bad Debt': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Expenses Others',
     },
-    'Bank Fees': {
+    '612010 Bank Fees': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Expenses Others',
     },
-    'Business Insurance': {
+    '612020 Credit Card Fees': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Expenses Others',
     },
-    'Credit Card Fees': {
+    '610040 Donations': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Expenses Others',
     },
-    'Donations': {
+    '612030 Dues & Subscriptions': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Expenses Others',
     },
-    'Dues & Subscriptions': {
+    '612040 Filing & Application Fees': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Expenses Others',
     },
-    'Filing & Application Fees': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Expenses Others',
-    },
-    'General Business Expenses:Bank Fees': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Expenses Others',
-    },
-    'General Office Expenses:Postage & Shipping': {
+    '613070 General Office Expenses:Postage & Shipping': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
@@ -1065,49 +795,37 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Expenses Others',
     },
-    'Interest Expense - Lease': {
+    '810060 Interest Expense - Lease': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Expenses Others',
     },
-    'Merchant Fees': {
+    '612060 Merchant Fees': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Expenses Others',
     },
-    'Other Miscellaneous Expense': {
+    '810080 Penalties & Late Fees': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Expenses Others',
     },
-    'Penalties & Late Fees': {
+    '613070 Postage & Shipping': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Expenses Others',
     },
-    'Postage & Shipping': {
+    '613090 Stationary & Printing': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Expenses Others',
     },
-    'Stationary & Printing': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Expenses Others',
-    },
-    'TriNet Expense Clearing (old)': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Expenses Others',
-    },
-    'Uncategorized Expense': {
+    '610090 TriNet Expense Clearing (old)': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
@@ -1125,31 +843,19 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'IT expenses',
     },
-    'Computer Equipment': {
+    '613030 Computer Equipment': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'IT expenses',
     },
-    'General Office Expenses:IT Software': {
+    '613040 IT Software': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'IT expenses',
     },
-    'General Office Expenses:Office Equipment': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'IT expenses',
-    },
-    'IT Software': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'IT expenses',
-    },
-    'Office Equipment': {
+    '613050 Office Equipment': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
@@ -1209,97 +915,55 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Indirect Salaries',
     },
-    'Bonus': {
+    '619020 Bonus': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Indirect Salaries',
     },
-    'Commission': {
+    '619030 Commission': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Indirect Salaries',
     },
-    'General Office Expenses:Technology Stipend': {
+    '613100 General Office Expenses:Technology Stipend': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Indirect Salaries',
     },
-    'Health Insurance/Benefits - ER': {
+    '619040 Health Insurance/Benefits - ER': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Indirect Salaries',
     },
-    'Payroll Taxes': {
+    '619070 Payroll Taxes': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Indirect Salaries',
     },
-    'Professional/Consultants - Outsourced/India': {
+    '619080 Salary/Fixed': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Indirect Salaries',
     },
-    'Salary & Benefits:401k - ER': {
+    '619090 Stock-Based Compensation': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Indirect Salaries',
     },
-    'Salary & Benefits:Bonus': {
+    '613100 Technology Stipend': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Indirect Salaries',
     },
-    'Salary & Benefits:Health Insurance/Benefits - ER': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Indirect Salaries',
-    },
-    'Salary & Benefits:Payroll Taxes': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Indirect Salaries',
-    },
-    'Salary & Benefits:Salary/Fixed': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Indirect Salaries',
-    },
-    'Salary & Benefits:Stock-Based Compensation': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Indirect Salaries',
-    },
-    'Salary/Fixed': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Indirect Salaries',
-    },
-    'Stock-Based Compensation': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Indirect Salaries',
-    },
-    'Technology Stipend': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Indirect Salaries',
-    },
-    'Vacation': {
+    '619100 Vacation': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
@@ -1341,67 +1005,43 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Office Maintenance',
     },
-    'General Office Expenses:Office Supplies': {
+    '613060 Office Supplies': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Office Maintenance',
     },
-    'Office Supplies': {
+    '618010 Rent - Cleaning/Office Expenses': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Office Maintenance',
     },
-    'Rent - Cleaning/Office Expenses': {
+    '618020 Rent - Other Fees': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Office Maintenance',
     },
-    'Rent - Other Fees': {
+    '618030 Rent - Utilities': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Office Maintenance',
     },
-    'Rent - Utilities': {
+    '618040 Rent Expense': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Office Maintenance',
     },
-    'Rent Expense': {
+    '613080 Repair & Maintenance': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Office Maintenance',
     },
-    'Rent:Rent - Cleaning/Office Expenses': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Office Maintenance',
-    },
-    'Rent:Rent - Utilities': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Office Maintenance',
-    },
-    'Rent:Rent Expense': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Office Maintenance',
-    },
-    'Repair & Maintenance': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Office Maintenance',
-    },
-    'Telephone & Internet': {
+    '613110 Telephone & Internet': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
@@ -1455,79 +1095,37 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Professional fee',
     },
-    'Accounting Fees': {
+    '615010 Accounting Fees': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Professional fee',
     },
-    'Consulting/Professional Fees': {
+    '615020 Consulting/Professional Fees': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Professional fee',
     },
-    'Contractor Fees': {
+    '611000 Contractor Fees': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Professional fee',
     },
-    'Contractor Fees:IT Security - Contractors': {
+    '611010 IT Security - Contractors': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Professional fee',
     },
-    'IT Security - Contractors': {
+    '615030 Legal Fees': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Professional fee',
     },
-    'Legal & Professional Fees': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Professional fee',
-    },
-    'Legal & Professional Fees:Accounting Fees': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Professional fee',
-    },
-    'Legal & Professional Fees:Consulting/Professional Fees': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Professional fee',
-    },
-    'Legal & Professional Fees:Legal Fees': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Professional fee',
-    },
-    'Legal & Professional Fees:Payroll/Benefit Admin Fees': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Professional fee',
-    },
-    'Legal & Professional Fees:Recruiting Fees': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Professional fee',
-    },
-    'Legal Fees': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Professional fee',
-    },
-    'Payroll/Benefit Admin Fees': {
+    '615040 Payroll/Benefit Admin Fees': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
@@ -1539,13 +1137,13 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Professional fee',
     },
-    'Recruiting Fees': {
+    '615050 Recruiting Fees': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Professional fee',
     },
-    'Valuation Fees': {
+    '615070 Valuation Fees': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
@@ -1587,109 +1185,85 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Sales & Marketing',
     },
-    'Client Conference': {
+    '616010 Client Conference': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Sales & Marketing',
     },
-    'Company Events': {
+    '613010 Company Events': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Sales & Marketing',
     },
-    'Digital Marketing': {
+    '616030 Digital Marketing': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Sales & Marketing',
     },
-    'Events': {
+    '616040 Events': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Sales & Marketing',
     },
-    'General Business Expenses:Industry Conferences': {
+    '616050 Graphics & Printing': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Sales & Marketing',
     },
-    'Graphics & Printing': {
+    '616060 Industry Ads': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Sales & Marketing',
     },
-    'Industry Ads': {
+    '612050 Industry Conferences': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Sales & Marketing',
     },
-    'Industry Conferences': {
+    '616120 Marketing:Tools': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Sales & Marketing',
     },
-    'Marketing:Digital Marketing': {
+    '616110 Marketing:Website': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Sales & Marketing',
     },
-    'Marketing:Events': {
+    '616070 Miscellaneous': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Sales & Marketing',
     },
-    'Marketing:Industry Ads': {
+    '616080 Professional Services/Freelancers': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Sales & Marketing',
     },
-    'Marketing:Tools': {
+    '616090 Public/Analyst Relations': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Sales & Marketing',
     },
-    'Marketing:Website': {
+    '110080 Tools': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Sales & Marketing',
     },
-    'Miscellaneous': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Sales & Marketing',
-    },
-    'Professional Services/Freelancers': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Sales & Marketing',
-    },
-    'Public/Analyst Relations': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Sales & Marketing',
-    },
-    'Tools': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Sales & Marketing',
-    },
-    'Website': {
+    '616110 Website': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
@@ -1707,49 +1281,37 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Staff welfare',
     },
-    'Company Meals/Snacks': {
+    '613020 Company Meals/Snacks': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Staff welfare',
     },
-    'General Office Expenses:Company Meals/Snacks': {
+    '617020 Office/Working Late Meals': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Staff welfare',
     },
-    'Meals:Office/Working Late Meals': {
+    '612070 Professional Development': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Staff welfare',
     },
-    'Office/Working Late Meals': {
+    '620070 Staff Entertainment': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Staff welfare',
     },
-    'Professional Development': {
+    '610080 Staff Welfare': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Staff welfare',
     },
-    'Staff Entertainment': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Staff welfare',
-    },
-    'Staff Welfare': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Staff welfare',
-    },
-    'Temporary Housing': {
+    '620080 Temporary Housing': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
@@ -1797,91 +1359,55 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Travel',
     },
-    'Airfare': {
+    '620010 Airfare': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Travel',
     },
-    'Business/Client Entertainment': {
+    '620030 Business/Client Entertainment': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Travel',
     },
-    'Lodging': {
+    '620040 Lodging': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Travel',
     },
-    'Meals': {
+    '620050 Mileage': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Travel',
     },
-    'Meals:Travel Meals': {
+    '620060 Other': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Travel',
     },
-    'Mileage': {
+    '620090 Train': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Travel',
     },
-    'Other': {
+    '620100 Transportation': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Travel',
     },
-    'Train': {
+    '620000 Travel & Entertainment': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
         'Classification (Line Item)': 'Travel',
     },
-    'Transportation': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Travel',
-    },
-    'Travel & Entertainment': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Travel',
-    },
-    'Travel & Entertainment:Airfare': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Travel',
-    },
-    'Travel & Entertainment:Lodging': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Travel',
-    },
-    'Travel & Entertainment:Train': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Travel',
-    },
-    'Travel & Entertainment:Transportation': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Travel',
-    },
-    'Travel Meals': {
+    '617030 Travel Meals': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
@@ -1893,13 +1419,7 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Tax Expense',
         'Classification (Line Item)': 'Tax Expense',
     },
-    'State Income Tax': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Expenses',
-        'Secondary Grouping': 'Tax Expense',
-        'Classification (Line Item)': 'Tax Expense',
-    },
-    'Tax Expense:State Income Tax': {
+    '811030 State Income Tax': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Tax Expense',
@@ -1923,13 +1443,7 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Revenue',
         'Classification (Line Item)': 'Revenue',
     },
-    'Billable Expense Income': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Income',
-        'Secondary Grouping': 'Revenue',
-        'Classification (Line Item)': 'Revenue',
-    },
-    'Managed Services Income - I/C': {
+    '410010 Billable Expense Income': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Income',
         'Secondary Grouping': 'Revenue',
@@ -1941,7 +1455,7 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Revenue',
         'Classification (Line Item)': 'Revenue',
     },
-    'Revenue - Conference': {
+    '411010 Revenue - Conference': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Income',
         'Secondary Grouping': 'Revenue',
@@ -1953,43 +1467,25 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Revenue',
         'Classification (Line Item)': 'Revenue',
     },
-    'Revenue - Project': {
+    '411020 Revenue - Project': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Income',
         'Secondary Grouping': 'Revenue',
         'Classification (Line Item)': 'Revenue',
     },
-    'Revenue - Subscription': {
+    '411030 Revenue - Subscription': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Income',
         'Secondary Grouping': 'Revenue',
         'Classification (Line Item)': 'Revenue',
     },
-    'Revenue - Supplier': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Income',
-        'Secondary Grouping': 'Revenue',
-        'Classification (Line Item)': 'Revenue',
-    },
-    'Revenue:Revenue - Subscription': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Income',
-        'Secondary Grouping': 'Revenue',
-        'Classification (Line Item)': 'Revenue',
-    },
-    'Revenue:Revenue - Supplier': {
+    '411040 Revenue - Supplier': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Income',
         'Secondary Grouping': 'Revenue',
         'Classification (Line Item)': 'Revenue',
     },
     '810040 Exchange Gain or Loss': {
-        'Financial Statement': 'Profit and Loss A/c',
-        'Main Grouping': 'Other Income (Expenses)',
-        'Secondary Grouping': 'Other Income (Expenses)',
-        'Classification (Line Item)': 'Other Expenses',
-    },
-    'Exchange Gain or Loss': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Other Income (Expenses)',
         'Secondary Grouping': 'Other Income (Expenses)',
@@ -2007,878 +1503,1116 @@ ACCOUNT_MAP = {
         'Secondary Grouping': 'Other Income (Expenses)',
         'Classification (Line Item)': 'Other Income',
     },
-    'Credit card rewards': {
+    '710020 Credit card rewards': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Other Income (Expenses)',
         'Secondary Grouping': 'Other Income (Expenses)',
         'Classification (Line Item)': 'Other Income',
     },
-    'Interest Earned': {
+    '154000 ROU - Finance Leases': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Assets',
+        'Secondary Grouping': 'Fixed Assets',
+        'Classification (Line Item)': 'Finance lease right-of-use assets',
+    },
+    '153000 Goodwill': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Assets',
+        'Secondary Grouping': 'Fixed Assets',
+        'Classification (Line Item)': 'Goodwill, net of accumulated amortization',
+    },
+    '151000 Customer Relationships': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Assets',
+        'Secondary Grouping': 'Fixed Assets',
+        'Classification (Line Item)': 'Intangible assets, net of accumulated amortization',
+    },
+    '156000 Trade Name': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Assets',
+        'Secondary Grouping': 'Fixed Assets',
+        'Classification (Line Item)': 'Intangible assets, net of accumulated amortization',
+    },
+    '311000 Additional Paid-In Capital': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Equity',
+        'Secondary Grouping': 'Equity',
+        'Classification (Line Item)': 'Additional paid-in capital',
+    },
+    '311040 APIC - Series B-1 Preferred': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Equity',
+        'Secondary Grouping': 'Equity',
+        'Classification (Line Item)': 'Additional paid-in capital',
+    },
+    '310030 Non-Controlling Interest': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Equity',
+        'Secondary Grouping': 'Equity',
+        'Classification (Line Item)': 'Common Stock',
+    },
+    '310060 Retained Earnings': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Equity',
+        'Secondary Grouping': 'Equity',
+        'Classification (Line Item)': 'Retained Earning',
+    },
+    '310070 Series B Preferred Stock': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Equity',
+        'Secondary Grouping': 'Equity',
+        'Classification (Line Item)': 'Preferred Stock',
+    },
+    '310080 Series B-1 Preferred Stock': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Equity',
+        'Secondary Grouping': 'Equity',
+        'Classification (Line Item)': 'Preferred Stock',
+    },
+    '230010 Customer Prepayments': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Liabilities',
+        'Secondary Grouping': 'Non Current Liabilities',
+        'Classification (Line Item)': 'Deferred Revenue',
+    },
+    '616120 Tools': {
+        'Financial Statement': 'Profit and Loss A/c',
+        'Main Grouping': 'Expenses',
+        'Secondary Grouping': 'Operating Expenses',
+        'Classification (Line Item)': 'Sales & Marketing',
+    },
+    '130100 Tax Overpayment/Deposits': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Assets',
+        'Secondary Grouping': 'Current Assets',
+        'Classification (Line Item)': 'Other Current Assets',
+    },
+    '220060 Chase CC - T.Irby 5733': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Liabilities',
+        'Secondary Grouping': 'Current Liabilities',
+        'Classification (Line Item)': 'Accounts Payable',
+    },
+    '230020 Deferred Tax Liablity': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Liabilities',
+        'Secondary Grouping': 'Non Current Liabilities',
+        'Classification (Line Item)': 'Statutory Dues',
+    },
+    '231080 Accrued Transaction Fees': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Liabilities',
+        'Secondary Grouping': 'Current Liabilities',
+        'Classification (Line Item)': 'Accrued expenses',
+    },
+    '240020 Finance Lease - L/T': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Liabilities',
+        'Secondary Grouping': 'Non Current Liabilities',
+        'Classification (Line Item)': 'Finance lease liabilities, net of current portion',
+    },
+    '311020 APIC - Expired Options': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Equity',
+        'Secondary Grouping': 'Equity',
+        'Classification (Line Item)': 'Additional paid-in capital',
+    },
+    '514040 COS - Hourly/Variable': {
+        'Financial Statement': 'Profit and Loss A/c',
+        'Main Grouping': 'COGS',
+        'Secondary Grouping': 'Cost of Revenue',
+        'Classification (Line Item)': 'Direct Salaries',
+    },
+    '615060 Tax Fees': {
+        'Financial Statement': 'Profit and Loss A/c',
+        'Main Grouping': 'Expenses',
+        'Secondary Grouping': 'Operating Expenses',
+        'Classification (Line Item)': 'Professional fee',
+    },
+    '619050 Hourly/Variable': {
+        'Financial Statement': 'Profit and Loss A/c',
+        'Main Grouping': 'Expenses',
+        'Secondary Grouping': 'Operating Expenses',
+        'Classification (Line Item)': 'Indirect Salaries',
+    },
+    '810020 Contract Expenses': {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Other Income (Expenses)',
         'Secondary Grouping': 'Other Income (Expenses)',
-        'Classification (Line Item)': 'Other Income',
+        'Classification (Line Item)': 'Other Expenses',
     },
-    '629': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
+    '810050 Impairment Loss': {
+        'Financial Statement': 'Profit and Loss A/c',
+        'Main Grouping': 'Other Income (Expenses)',
+        'Secondary Grouping': 'Other Income (Expenses)',
+        'Classification (Line Item)': 'Other Expenses',
     },
-    '128': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
+    '811010 Federal Income Tax': {
+        'Financial Statement': 'Profit and Loss A/c',
+        'Main Grouping': 'Expenses',
+        'Secondary Grouping': 'Tax Expense',
+        'Classification (Line Item)': 'Tax Expense',
     },
-    '501': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
+    # ── Accounts added from v5 mapping table ──────────────────────────────────
+    '232020 Deferred Revenue - Project': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Liabilities',
+        'Secondary Grouping': 'Non Current Liabilities',
+        'Classification (Line Item)': 'Deferred Revenue',
     },
-    '71': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
+    '240030 Note Payable': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Liabilities',
+        'Secondary Grouping': 'Non Current Liabilities',
+        'Classification (Line Item)': 'Other Long term Liabilities',
     },
-    '48': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
+    '311070 APIC - Warrants': {
+        'Financial Statement': 'Balance Sheet',
+        'Main Grouping': 'Equity',
+        'Secondary Grouping': 'Equity',
+        'Classification (Line Item)': 'Additional paid-in capital',
     },
-    '9': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
+    '614000 Interest Expense': {
+        'Financial Statement': 'Profit and Loss A/c',
+        'Main Grouping': 'Other Income (Expenses)',
+        'Secondary Grouping': 'Other Income (Expenses)',
+        'Classification (Line Item)': 'Other Expenses',
     },
-    '14': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
+    '616020 Content Marketing/Syndication': {
+        'Financial Statement': 'Profit and Loss A/c',
+        'Main Grouping': 'Expenses',
+        'Secondary Grouping': 'Operating Expenses',
+        'Classification (Line Item)': 'Sales & Marketing',
     },
-    '34': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
-    },
-    '447': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
-    },
-    '6': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
-    },
-    '120': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
-    },
-    '186': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
-    },
-    '86': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
-    },
-    '84': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
-    },
-    '23': {
-        'Financial Statement': None,
-        'Main Grouping': None,
-        'Secondary Grouping': None,
-        'Classification (Line Item)': None,
+    'Not Specified': {
+        'Financial Statement': 'Profit and Loss A/c',
+        'Main Grouping': 'Expenses',
+        'Secondary Grouping': 'Operating Expenses',
+        'Classification (Line Item)': 'Expenses Others',
     },
 }
 
 DEPT_MAP = {
-    ('120010 Accounts Receivable', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('120030 Accounts Receivable (A/R) - EUR', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('130080 Intercompany Receivable - due from Concertiv Insurance', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('130110 Unbilled A/R', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accounts Receivable', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accounts Receivable (A/R) - AED', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accounts Receivable (A/R) - EUR', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accounts Receivable (A/R) - GBP', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Intercompany Receivable - due from Concertiv Inc.', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Intercompany Receivable - due from Concertiv Insurance', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Unbilled A/R', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('110020 Chase Operating - 8856', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('110030 Chase Savings - 5357', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('110040 SVB - Cash Sweep', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('110050 SVB - Restricted Cash 5715', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('110060 SVB Checking -2846', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Checking SVB -2846', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Concertiv CD - 5377', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Concertiv Insurance Brokers Checking - 8768', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Concertiv Operating - 8856', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Concertiv Savings - 5357', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Restricted Cash Account- COLLATERAL MMA - 3304385715', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('SVB Cash Sweep Account', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('131010 Prepaid Expenses:Prepaid Expense', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('131030 Prepaid Expenses:Prepaid Insurance', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('131040 Prepaid Expenses:Prepaid Marketing', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Prepaid Expense', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Prepaid Expense Adjustments', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Prepaid Expenses:Prepaid Expense', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Prepaid Expenses:Prepaid Insurance', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Prepaid Expenses:Prepaid Marketing', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Prepaid Insurance', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Prepaid Marketing', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Undeposited Funds', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('ROU - Finance Leases - A/A', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('153010 Goodwill:Goodwill - A/A', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Goodwill - A/A', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Goodwill:Goodwill - A/A', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('151010 Customer Relationships:Customer Relationships - A/A', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('156010 Trade Name:Trade Name - A/A', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Customer Relationships - A/A', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Customer Relationships:Customer Relationships - A/A', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Developed Technology', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Developed Technology - A/A', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Trade Name - A/A', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Trade Name:Trade Name - A/A', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('155000 ROU - Operating Leases', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('155010 ROU - Operating Leases:ROU - Operating Leases - A/A', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('ROU - Operating Leases', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('ROU - Operating Leases - A/A', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('ROU - Operating Leases:ROU - Operating Leases - A/A', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('141010 Furniture & Fixtures:Furniture & Fixtures - A/D', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('142010 Leasehold Improvements:Leasehold Improvement-A/D', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('143010 Technology Equipment:Technology Equpment- A/D', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Furniture & Fixtures', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Furniture & Fixtures - A/D', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Furniture & Fixtures:Furniture & Fixtures - A/D', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Leasehold Improvement-A/D', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Leasehold Improvements', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Leasehold Improvements:Leasehold Improvement-A/D', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Technology Equipment', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Technology Equipment:Technology Equpment- A/D', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Technology Equpment- A/D', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('130010 Accrued Interest Receivable', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accrued Interest Receivable', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Deferred Contract Costs - ST', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Deferred Financing Costs', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('130060 Due from Employee', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Due from Employee', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('General Overpayments/Deposits', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Security Deposits', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('311060 Additional Paid-In Capital:APIC - Stock Options', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('APIC - Common Stock', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('APIC - Series B-2 Preferred', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('APIC - Stock Options', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Additional Paid-In Capital:APIC - Stock Options', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Common Stock', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Note Receivable', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Opening balance equity', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Series B-2 Preferred Stock', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('210010 Accounts Payable', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('220010 Amex CC', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accounts Payable', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accounts Payable (A/P) - GBP', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accounts Payable - Other', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accounts Payable - Other - GBP', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Amex CC', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Chase CC - A.Ryan 2759', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Chase CC - A.Ryan 2759-1', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Chase CC - A.Ryan 7546', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Chase CC - K.Bird 0562', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Intercompany Payable - due to Concertiv Inc.', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Intercompany Payable - due to Concertiv Insurance', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('231040 Accrued Expenses:Accrued Expense', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('231060 Accrued Expenses:Accrued Legal fees', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accrued Commission', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accrued Expense', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accrued Expenses:Accrued Expense', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accrued Expenses:Accrued Legal fees', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accrued Legal fees', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('230050 Lease Payable - Current', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Lease Payable - Current', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('210050 TriNet Expense Reports', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('231020 Accrued Expenses:Accrued Bonus', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('231070 Accrued Expenses:Accrued Payroll', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accrued 401k', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accrued Bonus', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accrued Expenses:Accrued Bonus', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accrued Expenses:Accrued Payroll', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accrued Payroll', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Accrued Vacation', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('TriNet Expense Reports', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('232000 Deferred Revenue', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('232030 Deferred Revenue:Deferred Revenue - Subscription', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('232040 Deferred Revenue:Deferred Revenue - Supplier', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Customer prepayments', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Deferred Revenue', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Deferred Revenue - Conference', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Deferred Revenue - Insurance', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Deferred Revenue - Subscription', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Deferred Revenue - Supplier', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Deferred Revenue:Deferred Revenue - Subscription', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Deferred Revenue:Deferred Revenue - Supplier', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('240040 Operating Lease - L/T', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Operating Lease - L/T', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Stock Repurchase Liability', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('230070 State Income Tax Payable', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('State Income Tax Payable', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
+    ('512000 Cost of Goods Sold:COS - Outsourced/India', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('512010 Cost of Goods Sold:COS - Outsourced/India:COS - Outsourced/India - Allocation', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('514010 Cost of Goods Sold:COS - Staff:COS - 401k - ER', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('514020 Cost of Goods Sold:COS - Staff:COS - Bonus/Commission', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('514030 Cost of Goods Sold:COS - Staff:COS - Health Insurance/Benefits - ER', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('514060 Cost of Goods Sold:COS - Staff:COS - Payroll Taxes', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('514070 Cost of Goods Sold:COS - Staff:COS - Salary/Fixed', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('514090 Cost of Goods Sold:COS - Staff:COS - Stock-Based Compensation', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('514010 COS - 401k - ER', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('514020 COS - Bonus/Commission', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('514030 COS - Health Insurance/Benefits - ER', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('512000 COS - Outsourced/India', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'R&D',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('514060 COS - Payroll Taxes', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('514070 COS - Salary/Fixed', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('514090 COS - Stock-Based Compensation', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('511040 Cost of Goods Sold:Tech Dev Software', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Technology',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('620020 Billable Travel Expenses', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('617010 Client Meals', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('511030 Other Costs of Services - COS', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('511040 Tech Dev Software', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Technology',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('617010 Meals:Client Meals', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('810010 Amortization Expense', None): {
+        'Classification 2': 'Depreciation and Amortization',
+        'Classification 3': 'Depreciation and Amortization',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'Depreciation and Amortization',
+    },
+    ('810030 Depreciation Expense', None): {
+        'Classification 2': 'Depreciation and Amortization',
+        'Classification 3': 'Depreciation and Amortization',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'Depreciation and Amortization',
+    },
+    ('610020 Business Insurance', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('610110 Uncategorized Expense', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Sales',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('612010 General Business Expenses:Bank Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('810070 Other Miscellaneous Expense', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('610010 Bad Debt', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('612010 Bank Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('612020 Credit Card Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('610040 Donations', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('612030 Dues & Subscriptions', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('612040 Filing & Application Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('613070 General Office Expenses:Postage & Shipping', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('Insurance', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('810060 Interest Expense - Lease', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('612060 Merchant Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('810080 Penalties & Late Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('613070 Postage & Shipping', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('613090 Stationary & Printing', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Sales',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('610090 TriNet Expense Clearing (old)', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('613040 General Office Expenses:IT Software', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Technology',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('613050 General Office Expenses:Office Equipment', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Technology',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('613030 Computer Equipment', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Technology',
+        'Department (Class)': 'Sales',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('613040 IT Software', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Technology',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('613050 Office Equipment', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Technology',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('401k - ER', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('610060 Professional/Consultants - Outsourced/India', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('619010 Salary & Benefits:401k - ER', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'R&D',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('619020 Salary & Benefits:Bonus', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('619030 Salary & Benefits:Commission', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Sales',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('619040 Salary & Benefits:Health Insurance/Benefits - ER', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'R&D',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('619070 Salary & Benefits:Payroll Taxes', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'R&D',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('619080 Salary & Benefits:Salary/Fixed', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Sales',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('619090 Salary & Benefits:Stock-Based Compensation', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('619020 Bonus', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('619030 Commission', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('613100 General Office Expenses:Technology Stipend', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('619040 Health Insurance/Benefits - ER', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('619070 Payroll Taxes', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('619080 Salary/Fixed', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('619090 Stock-Based Compensation', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('613100 Technology Stipend', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('619100 Vacation', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Sales',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('613060 General Office Expenses:Office Supplies', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('613080 General Office Expenses:Repair & Maintenance', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('613110 General Office Expenses:Telephone & Internet', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('618010 Rent:Rent - Cleaning/Office Expenses', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('618030 Rent:Rent - Utilities', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('618040 Rent:Rent Expense', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('613060 Office Supplies', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('618010 Rent - Cleaning/Office Expenses', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('618020 Rent - Other Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('618030 Rent - Utilities', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('618040 Rent Expense', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('613080 Repair & Maintenance', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('613110 Telephone & Internet', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('611010 Contractor Fees:IT Security - Contractors', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('615000 Legal & Professional Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('615010 Legal & Professional Fees:Accounting Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('615020 Legal & Professional Fees:Consulting/Professional Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('615030 Legal & Professional Fees:Legal Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('615040 Legal & Professional Fees:Payroll/Benefit Admin Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'R&D',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('615050 Legal & Professional Fees:Recruiting Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('615010 Accounting Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('615020 Consulting/Professional Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('611000 Contractor Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('611010 IT Security - Contractors', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('615030 Legal Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('615040 Payroll/Benefit Admin Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Sales',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('Professional Charges', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('615050 Recruiting Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('615070 Valuation Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('612050 General Business Expenses:Industry Conferences', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('613010 General Office Expenses:Company Events', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('616030 Marketing:Digital Marketing', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('616040 Marketing:Events', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('616050 Marketing:Graphics & Printing', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('616060 Marketing:Industry Ads', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('616010 Client Conference', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('613010 Company Events', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('616030 Digital Marketing', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Sales',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('616040 Events', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('616050 Graphics & Printing', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('616060 Industry Ads', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('612050 Industry Conferences', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('616120 Marketing:Tools', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('616110 Marketing:Website', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('616070 Miscellaneous', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('616080 Professional Services/Freelancers', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('616090 Public/Analyst Relations', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('110080 Tools', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('616110 Website', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('613020 General Office Expenses:Company Meals/Snacks', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('617020 Meals:Office/Working Late Meals', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('613020 Company Meals/Snacks', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('617020 Office/Working Late Meals', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('612070 Professional Development', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('620070 Staff Entertainment', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('610080 Staff Welfare', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('620080 Temporary Housing', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('617000 Meals', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('617030 Meals:Travel Meals', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('620010 Travel & Entertainment:Airfare', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('620040 Travel & Entertainment:Lodging', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('620060 Travel & Entertainment:Other', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('620090 Travel & Entertainment:Train', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('620100 Travel & Entertainment:Transportation', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('620010 Airfare', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('620030 Business/Client Entertainment', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('620040 Lodging', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'R&D',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('620050 Mileage', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('620060 Other', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('620090 Train', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'R&D',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('620100 Transportation', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'R&D',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('620000 Travel & Entertainment', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('617030 Travel Meals', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('811030 Tax Expense:State Income Tax', None): {
+        'Classification 2': 'Tax Expense',
+        'Classification 3': 'Tax Expense',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'Tax Expense',
+    },
+    ('811030 State Income Tax', None): {
+        'Classification 2': 'Tax Expense',
+        'Classification 3': 'Tax Expense',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('410040 Managed Services Income - I/C', None): {
+        'Classification 2': 'Intercompany Revenue',
+        'Classification 3': 'Intercompany Revenue',
+        'Department Group (BD)': 'Intercompany Revenue',
+    },
+    ('411030 Revenue:Revenue - Subscription', None): {
+        'Classification 2': 'Client Recurring',
+        'Classification 3': 'Client Recurring',
+        'Department Group (BD)': 'Client Recurring',
+    },
+    ('411040 Revenue:Revenue - Supplier', None): {
+        'Classification 2': 'Supplier Commission',
+        'Classification 3': 'Supplier Commission',
+        'Department Group (BD)': 'Supplier Commission',
+    },
+    ('410010 Billable Expense Income', None): {
+        'Classification 2': 'Billable Expense',
+        'Classification 3': 'Billable Expense',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('Management Services Fee - I/C', None): {
+        'Classification 2': 'Intercompany Revenue',
+        'Classification 3': 'Intercompany Revenue',
+        'Department Group (BD)': 'Intercompany Revenue',
+    },
+    ('411010 Revenue - Conference', None): {
+        'Classification 2': 'User Conference',
+        'Classification 3': 'User Conference',
+        'Department Group (BD)': 'User Conference',
+    },
+    ('Revenue - Insurance', None): {
+        'Classification 2': 'Client Recurring',
+        'Classification 3': 'Client Recurring',
+        'Department Group (BD)': 'Client Recurring',
+    },
+    ('411020 Revenue - Project', None): {
+        'Classification 2': 'Project - One Time',
+        'Classification 3': 'Project - One Time',
+        'Department Group (BD)': 'Project - One Time',
+    },
+    ('411030 Revenue - Subscription', None): {
+        'Classification 2': 'Client Recurring',
+        'Classification 3': 'Client Recurring',
+        'Department Group (BD)': 'Client Recurring',
+    },
+    ('411040 Revenue - Supplier', None): {
+        'Classification 2': 'Supplier Commission',
+        'Classification 3': 'Supplier Commission',
+        'Department Group (BD)': 'Supplier Commission',
+    },
+    ('810040 Exchange Gain or Loss', None): {
+        'Classification 2': 'Other Expenses',
+        'Classification 3': 'Other Expenses',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'Exchange Loss/(Gain)',
+    },
+    ('710010 Cost Reimbursement Income', None): {
+        'Classification 2': 'Other Income',
+        'Classification 3': 'Other Income',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'Interest Income',
+    },
+    ('710050 Interest Earned', None): {
+        'Classification 2': 'Other Income',
+        'Classification 3': 'Other Income',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'Interest Income',
+    },
+    ('710020 Credit card rewards', None): {
+        'Classification 2': 'Other Income',
+        'Classification 3': 'Other Income',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'Interest Income',
+    },
+    ('512010 COS - Outsourced/India - Allocation', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('616120 Tools', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
     },
     ('512000 Cost of Goods Sold:COS - Outsourced/India', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
@@ -2886,7 +2620,7 @@ DEPT_MAP = {
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('512010 Cost of Goods Sold:COS - Outsourced/India:COS - Outsourced/India - Allocation', 'Cost of Revenue'): {
+    ('512010 COS - Outsourced/India - Allocation', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Cost of Revenue',
@@ -2928,103 +2662,61 @@ DEPT_MAP = {
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('COS - 401k - ER', 'Cost of Revenue'): {
+    ('514010 COS - 401k - ER', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('COS - Bonus/Commission', 'Cost of Revenue'): {
+    ('514020 COS - Bonus/Commission', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('COS - Health Insurance/Benefits - ER', 'Cost of Revenue'): {
+    ('514030 COS - Health Insurance/Benefits - ER', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('COS - Outsourced/India', 'Cost of Revenue'): {
+    ('512000 COS - Outsourced/India', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('COS - Outsourced/India', 'R&D'): {
+    ('512000 COS - Outsourced/India', 'R&D'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('COS - Payroll Taxes', 'Cost of Revenue'): {
+    ('514060 COS - Payroll Taxes', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('COS - Salary/Fixed', 'Cost of Revenue'): {
+    ('514070 COS - Salary/Fixed', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('COS - Salary/Fixed', 'G&A'): {
+    ('514070 COS - Salary/Fixed', 'G&A'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('COS - Stock-Based Compensation', 'Cost of Revenue'): {
+    ('514090 COS - Stock-Based Compensation', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Cost of Goods Sold:COS - Outsourced/India', 'Cost of Revenue'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Cost of Goods Sold:COS - Outsourced/India:COS - Outsourced/India - Allocation', 'Cost of Revenue'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Cost of Goods Sold:COS - Staff:COS - 401k - ER', 'Cost of Revenue'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Cost of Goods Sold:COS - Staff:COS - Bonus/Commission', 'Cost of Revenue'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Cost of Goods Sold:COS - Staff:COS - Health Insurance/Benefits - ER', 'Cost of Revenue'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Cost of Goods Sold:COS - Staff:COS - Payroll Taxes', 'Cost of Revenue'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Cost of Goods Sold:COS - Staff:COS - Salary/Fixed', 'Cost of Revenue'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Cost of Goods Sold:COS - Staff:COS - Stock-Based Compensation', 'Cost of Revenue'): {
+    ('512010 Cost of Goods Sold:COS - Outsourced/India:COS - Outsourced/India - Allocation', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Cost of Revenue',
@@ -3036,49 +2728,43 @@ DEPT_MAP = {
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Billable Travel Expenses', 'Customer Success'): {
+    ('620020 Billable Travel Expenses', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Client Meals', 'Sales'): {
+    ('617010 Client Meals', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Client Meals', 'Customer Success'): {
+    ('617010 Client Meals', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Client Meals', 'G&A'): {
+    ('617010 Client Meals', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Client Meals', 'Cost of Revenue'): {
+    ('617010 Client Meals', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Cost of Goods Sold:Tech Dev Software', 'Cost of Revenue'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Technology',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Other Costs of Services - COS', 'Cost of Revenue'): {
+    ('511030 Other Costs of Services - COS', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Tech Dev Software', 'Cost of Revenue'): {
+    ('511040 Tech Dev Software', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'Cost of Revenue',
@@ -3096,49 +2782,25 @@ DEPT_MAP = {
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Client Meals', 'Marketing'): {
+    ('617010 Client Meals', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Meals:Client Meals', 'Sales'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Meals:Client Meals', 'G&A'): {
+    ('617010 Meals:Client Meals', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
-    },
-    ('Meals:Client Meals', 'Customer Success'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
     },
     ('810010 Amortization Expense', 'G&A'): {
         'Classification 2': 'Depreciation and Amortization',
         'Classification 3': 'Depreciation and Amortization',
         'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('810030 Depreciation Expense', 'G&A'): {
-        'Classification 2': 'Depreciation and Amortization',
-        'Classification 3': 'Depreciation and Amortization',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Amortization Expense', 'G&A'): {
-        'Classification 2': 'Depreciation and Amortization',
-        'Classification 3': 'Depreciation and Amortization',
-        'Department (Class)': 'G&A',
         'Department Group (BD)': 'Depreciation and Amortization',
     },
-    ('Depreciation Expense', 'G&A'): {
+    ('810030 Depreciation Expense', 'G&A'): {
         'Classification 2': 'Depreciation and Amortization',
         'Classification 3': 'Depreciation and Amortization',
         'Department (Class)': 'G&A',
@@ -3168,61 +2830,49 @@ DEPT_MAP = {
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Bad Debt', 'G&A'): {
+    ('610010 Bad Debt', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Bank Fees', 'G&A'): {
+    ('612010 Bank Fees', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Business Insurance', 'G&A'): {
+    ('612020 Credit Card Fees', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Credit Card Fees', 'G&A'): {
+    ('610040 Donations', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Donations', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Dues & Subscriptions', 'Cost of Revenue'): {
+    ('612030 Dues & Subscriptions', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Dues & Subscriptions', 'G&A'): {
+    ('612030 Dues & Subscriptions', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Filing & Application Fees', 'G&A'): {
+    ('612040 Filing & Application Fees', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('General Business Expenses:Bank Fees', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('General Office Expenses:Postage & Shipping', 'G&A'): {
+    ('613070 General Office Expenses:Postage & Shipping', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
@@ -3234,85 +2884,79 @@ DEPT_MAP = {
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Interest Expense - Lease', 'G&A'): {
+    ('810060 Interest Expense - Lease', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Merchant Fees', 'G&A'): {
+    ('612060 Merchant Fees', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Other Miscellaneous Expense', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Other Miscellaneous Expense', 'Customer Success'): {
+    ('810070 Other Miscellaneous Expense', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Penalties & Late Fees', 'G&A'): {
+    ('810080 Penalties & Late Fees', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Postage & Shipping', 'G&A'): {
+    ('613070 Postage & Shipping', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Postage & Shipping', 'R&D'): {
+    ('613070 Postage & Shipping', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Postage & Shipping', 'Customer Success'): {
+    ('613070 Postage & Shipping', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Postage & Shipping', 'Sales'): {
+    ('613070 Postage & Shipping', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Postage & Shipping', 'Cost of Revenue'): {
+    ('613070 Postage & Shipping', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Stationary & Printing', 'G&A'): {
+    ('613090 Stationary & Printing', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Stationary & Printing', 'Sales'): {
+    ('613090 Stationary & Printing', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('TriNet Expense Clearing (old)', 'G&A'): {
+    ('610090 TriNet Expense Clearing (old)', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Uncategorized Expense', 'Sales'): {
+    ('610110 Uncategorized Expense', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Sales',
@@ -3354,187 +2998,145 @@ DEPT_MAP = {
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Computer Equipment', 'G&A'): {
+    ('613030 Computer Equipment', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Computer Equipment', 'Cost of Revenue'): {
+    ('613030 Computer Equipment', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Computer Equipment', 'R&D'): {
+    ('613030 Computer Equipment', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Computer Equipment', 'Customer Success'): {
+    ('613030 Computer Equipment', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Computer Equipment', 'Marketing'): {
+    ('613030 Computer Equipment', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Computer Equipment', 'Sales'): {
+    ('613030 Computer Equipment', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('General Office Expenses:IT Software', 'G&A'): {
+    ('613040 IT Software', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('General Office Expenses:IT Software', 'Product'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Technology',
-        'Department (Class)': 'Product',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('General Office Expenses:IT Software', 'R&D'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Technology',
-        'Department (Class)': 'R&D',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('General Office Expenses:IT Software', 'Cost of Revenue'): {
+    ('613040 IT Software', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('General Office Expenses:IT Software', 'Customer Success'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Technology',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('General Office Expenses:Office Equipment', None): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Technology',
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('General Office Expenses:Office Equipment', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Technology',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('IT Software', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Technology',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('IT Software', 'Cost of Revenue'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Technology',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('IT Software', 'R&D'): {
+    ('613040 IT Software', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('IT Software', 'Sales'): {
+    ('613040 IT Software', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('IT Software', 'Product'): {
+    ('613040 IT Software', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('IT Software', 'Marketing'): {
+    ('613040 IT Software', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('IT Software', 'Customer Success'): {
+    ('613040 IT Software', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Office Equipment', 'G&A'): {
+    ('613050 Office Equipment', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Office Equipment', 'Cost of Revenue'): {
+    ('613050 Office Equipment', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Office Equipment', 'Customer Success'): {
+    ('613050 Office Equipment', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Office Equipment', 'Marketing'): {
+    ('613050 Office Equipment', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Technology',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('401k - ER', 'Sales'): {
+    ('619010 Salary & Benefits:401k - ER', 'Sales'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('401k - ER', 'Customer Success'): {
+    ('619010 Salary & Benefits:401k - ER', 'Customer Success'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('401k - ER', 'R&D'): {
+    ('619010 Salary & Benefits:401k - ER', 'R&D'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('401k - ER', 'Marketing'): {
+    ('619010 Salary & Benefits:401k - ER', 'Marketing'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('401k - ER', 'G&A'): {
+    ('619010 Salary & Benefits:401k - ER', 'G&A'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('401k - ER', 'Product'): {
+    ('619010 Salary & Benefits:401k - ER', 'Product'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('401k - ER', 'Cost of Revenue'): {
+    ('619010 Salary & Benefits:401k - ER', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Cost of Revenue',
@@ -3563,42 +3165,6 @@ DEPT_MAP = {
         'Classification 3': 'Compensation',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
-    },
-    ('619010 Salary & Benefits:401k - ER', 'Product'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Product',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('619010 Salary & Benefits:401k - ER', 'Cost of Revenue'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('619010 Salary & Benefits:401k - ER', 'G&A'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('619010 Salary & Benefits:401k - ER', 'Customer Success'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('619010 Salary & Benefits:401k - ER', 'Marketing'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Marketing',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('619010 Salary & Benefits:401k - ER', 'Sales'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
     },
     ('619020 Salary & Benefits:Bonus', 'Sales'): {
         'Classification 2': 'Compensation',
@@ -3780,571 +3346,331 @@ DEPT_MAP = {
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Bonus', 'Sales'): {
+    ('619020 Bonus', 'Sales'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Bonus', 'Marketing'): {
+    ('619020 Bonus', 'Marketing'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Bonus', 'Customer Success'): {
+    ('619020 Bonus', 'Customer Success'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Bonus', 'G&A'): {
+    ('619020 Bonus', 'G&A'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Bonus', 'R&D'): {
+    ('619020 Bonus', 'R&D'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Bonus', 'Product'): {
+    ('619020 Bonus', 'Product'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Bonus', 'Cost of Revenue'): {
+    ('619020 Bonus', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Commission', 'Sales'): {
+    ('619030 Commission', 'Sales'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Commission', 'Customer Success'): {
+    ('619030 Commission', 'Customer Success'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('General Office Expenses:Technology Stipend', 'G&A'): {
+    ('613100 General Office Expenses:Technology Stipend', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('General Office Expenses:Technology Stipend', 'Customer Success'): {
+    ('613100 General Office Expenses:Technology Stipend', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('General Office Expenses:Technology Stipend', 'R&D'): {
+    ('613100 General Office Expenses:Technology Stipend', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('General Office Expenses:Technology Stipend', 'Cost of Revenue'): {
+    ('613100 General Office Expenses:Technology Stipend', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('General Office Expenses:Technology Stipend', 'Marketing'): {
+    ('613100 General Office Expenses:Technology Stipend', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('General Office Expenses:Technology Stipend', 'Sales'): {
+    ('613100 General Office Expenses:Technology Stipend', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('General Office Expenses:Technology Stipend', 'Product'): {
+    ('613100 General Office Expenses:Technology Stipend', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Health Insurance/Benefits - ER', 'Marketing'): {
+    ('619040 Health Insurance/Benefits - ER', 'Marketing'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Health Insurance/Benefits - ER', 'Product'): {
+    ('619040 Health Insurance/Benefits - ER', 'Product'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Health Insurance/Benefits - ER', 'Sales'): {
+    ('619040 Health Insurance/Benefits - ER', 'Sales'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Health Insurance/Benefits - ER', 'Customer Success'): {
+    ('619040 Health Insurance/Benefits - ER', 'Customer Success'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Health Insurance/Benefits - ER', 'G&A'): {
+    ('619040 Health Insurance/Benefits - ER', 'G&A'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Health Insurance/Benefits - ER', 'R&D'): {
+    ('619040 Health Insurance/Benefits - ER', 'R&D'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Health Insurance/Benefits - ER', 'Cost of Revenue'): {
+    ('619040 Health Insurance/Benefits - ER', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Payroll Taxes', 'Customer Success'): {
+    ('619070 Payroll Taxes', 'Customer Success'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Payroll Taxes', 'Sales'): {
+    ('619070 Payroll Taxes', 'Sales'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Payroll Taxes', 'G&A'): {
+    ('619070 Payroll Taxes', 'G&A'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Payroll Taxes', 'Marketing'): {
+    ('619070 Payroll Taxes', 'Marketing'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Payroll Taxes', 'Product'): {
+    ('619070 Payroll Taxes', 'Product'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Payroll Taxes', 'R&D'): {
+    ('619070 Payroll Taxes', 'R&D'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Payroll Taxes', 'Cost of Revenue'): {
+    ('619070 Payroll Taxes', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Professional/Consultants - Outsourced/India', 'R&D'): {
+    ('619040 Salary & Benefits:Health Insurance/Benefits - ER', 'R&D'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Professional/Consultants - Outsourced/India', 'Marketing'): {
+    ('619070 Salary & Benefits:Payroll Taxes', 'R&D'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
-        'Department (Class)': 'Marketing',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Professional/Consultants - Outsourced/India', 'G&A'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Professional/Consultants - Outsourced/India', 'Product'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Product',
+        'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Salary & Benefits:401k - ER', 'Customer Success'): {
+    ('619080 Salary & Benefits:Salary/Fixed', 'R&D'): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'R&D',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('619080 Salary/Fixed', 'Customer Success'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Salary & Benefits:401k - ER', 'G&A'): {
+    ('619080 Salary/Fixed', 'G&A'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Salary & Benefits:401k - ER', 'Marketing'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Marketing',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:401k - ER', 'Sales'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:401k - ER', 'Product'): {
+    ('619080 Salary/Fixed', 'Product'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Salary & Benefits:401k - ER', 'Cost of Revenue'): {
+    ('619080 Salary/Fixed', 'Sales'): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Sales',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('619080 Salary/Fixed', 'R&D'): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'R&D',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('619080 Salary/Fixed', 'Marketing'): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('619080 Salary/Fixed', 'Cost of Revenue'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Salary & Benefits:401k - ER', 'R&D'): {
+    ('619090 Stock-Based Compensation', 'Customer Success'): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('619090 Stock-Based Compensation', 'G&A'): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('619090 Stock-Based Compensation', 'Sales'): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Sales',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('619090 Stock-Based Compensation', 'R&D'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Salary & Benefits:Bonus', 'Marketing'): {
+    ('619090 Stock-Based Compensation', 'Product'): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('619090 Stock-Based Compensation', 'Marketing'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Salary & Benefits:Bonus', 'R&D'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'R&D',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Salary & Benefits:Bonus', 'Sales'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:Bonus', 'G&A'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Salary & Benefits:Bonus', 'Customer Success'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:Bonus', 'Product'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Product',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Salary & Benefits:Health Insurance/Benefits - ER', 'Customer Success'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:Health Insurance/Benefits - ER', 'G&A'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Salary & Benefits:Health Insurance/Benefits - ER', 'Cost of Revenue'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Salary & Benefits:Health Insurance/Benefits - ER', 'Product'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Product',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Salary & Benefits:Health Insurance/Benefits - ER', 'Sales'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:Health Insurance/Benefits - ER', 'Marketing'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Marketing',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:Health Insurance/Benefits - ER', 'R&D'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'R&D',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Salary & Benefits:Payroll Taxes', 'Marketing'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Marketing',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:Payroll Taxes', 'Customer Success'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:Payroll Taxes', 'G&A'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Salary & Benefits:Payroll Taxes', 'Sales'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:Payroll Taxes', 'Product'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Product',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Salary & Benefits:Payroll Taxes', 'Cost of Revenue'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Salary & Benefits:Payroll Taxes', 'R&D'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'R&D',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Salary & Benefits:Salary/Fixed', 'G&A'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Salary & Benefits:Salary/Fixed', 'Customer Success'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:Salary/Fixed', 'R&D'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'R&D',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Salary & Benefits:Salary/Fixed', 'Marketing'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Marketing',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:Salary/Fixed', 'Cost of Revenue'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Salary & Benefits:Salary/Fixed', 'Product'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Product',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Salary & Benefits:Salary/Fixed', 'Sales'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:Stock-Based Compensation', 'R&D'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'R&D',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Salary & Benefits:Stock-Based Compensation', 'Customer Success'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:Stock-Based Compensation', 'Product'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Product',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Salary & Benefits:Stock-Based Compensation', 'Sales'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary & Benefits:Stock-Based Compensation', 'G&A'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Salary/Fixed', 'Customer Success'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary/Fixed', 'G&A'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Salary/Fixed', 'Product'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Product',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Salary/Fixed', 'Sales'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary/Fixed', 'R&D'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'R&D',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Salary/Fixed', 'Marketing'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Marketing',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Salary/Fixed', 'Cost of Revenue'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Stock-Based Compensation', 'Customer Success'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Stock-Based Compensation', 'G&A'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Stock-Based Compensation', 'Sales'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Stock-Based Compensation', 'R&D'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'R&D',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Stock-Based Compensation', 'Product'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Product',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Stock-Based Compensation', 'Marketing'): {
-        'Classification 2': 'Compensation',
-        'Classification 3': 'Compensation',
-        'Department (Class)': 'Marketing',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Technology Stipend', 'Sales'): {
+    ('613100 Technology Stipend', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Technology Stipend', 'Customer Success'): {
+    ('613100 Technology Stipend', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Technology Stipend', 'Product'): {
+    ('613100 Technology Stipend', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Technology Stipend', 'Cost of Revenue'): {
+    ('613100 Technology Stipend', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Technology Stipend', 'R&D'): {
+    ('613100 Technology Stipend', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Technology Stipend', 'G&A'): {
+    ('613100 Technology Stipend', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Technology Stipend', 'Marketing'): {
+    ('613100 Technology Stipend', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Vacation', 'G&A'): {
+    ('619100 Vacation', 'G&A'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Vacation', 'Sales'): {
+    ('619100 Vacation', 'Sales'): {
         'Classification 2': 'Compensation',
         'Classification 3': 'Compensation',
         'Department (Class)': 'Sales',
@@ -4398,131 +3724,101 @@ DEPT_MAP = {
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('General Office Expenses:Office Supplies', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('General Office Expenses:Office Supplies', 'Customer Success'): {
+    ('613060 General Office Expenses:Office Supplies', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Office Supplies', 'G&A'): {
+    ('613060 Office Supplies', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Office Supplies', 'Customer Success'): {
+    ('613060 Office Supplies', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Office Supplies', 'Sales'): {
+    ('613060 Office Supplies', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Office Supplies', 'Cost of Revenue'): {
+    ('613060 Office Supplies', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Rent - Cleaning/Office Expenses', 'G&A'): {
+    ('618010 Rent - Cleaning/Office Expenses', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Rent - Other Fees', 'G&A'): {
+    ('618020 Rent - Other Fees', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Rent - Utilities', 'G&A'): {
+    ('618030 Rent - Utilities', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Rent Expense', 'G&A'): {
+    ('618040 Rent Expense', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Rent Expense', 'Customer Success'): {
+    ('618040 Rent Expense', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Rent:Rent - Cleaning/Office Expenses', 'G&A'): {
+    ('613080 Repair & Maintenance', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Rent:Rent - Utilities', 'G&A'): {
+    ('613110 Telephone & Internet', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Rent:Rent Expense', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Repair & Maintenance', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Telephone & Internet', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Telephone & Internet', 'Customer Success'): {
+    ('613110 Telephone & Internet', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Telephone & Internet', 'Sales'): {
+    ('613110 Telephone & Internet', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Telephone & Internet', 'R&D'): {
+    ('613110 Telephone & Internet', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Telephone & Internet', 'Product'): {
+    ('613110 Telephone & Internet', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
-    },
-    ('610050 Implementation / Setup Expense', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
     },
     ('611010 Contractor Fees:IT Security - Contractors', 'G&A'): {
         'Classification 2': 'Other',
@@ -4602,175 +3898,103 @@ DEPT_MAP = {
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Accounting Fees', 'G&A'): {
+    ('615010 Accounting Fees', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Consulting/Professional Fees', 'G&A'): {
+    ('615020 Consulting/Professional Fees', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Consulting/Professional Fees', 'Customer Success'): {
+    ('615020 Consulting/Professional Fees', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Consulting/Professional Fees', 'Cost of Revenue'): {
+    ('615020 Consulting/Professional Fees', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Consulting/Professional Fees', 'Marketing'): {
+    ('615020 Consulting/Professional Fees', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Contractor Fees', 'Cost of Revenue'): {
+    ('611000 Contractor Fees', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Contractor Fees:IT Security - Contractors', 'G&A'): {
+    ('611010 IT Security - Contractors', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('IT Security - Contractors', 'G&A'): {
+    ('615020 Legal & Professional Fees:Consulting/Professional Fees', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Legal & Professional Fees', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Legal & Professional Fees', 'Cost of Revenue'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Legal & Professional Fees:Accounting Fees', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Legal & Professional Fees:Consulting/Professional Fees', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Legal & Professional Fees:Legal Fees', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Legal & Professional Fees:Payroll/Benefit Admin Fees', 'Cost of Revenue'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Legal & Professional Fees:Payroll/Benefit Admin Fees', 'Marketing'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Marketing',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Legal & Professional Fees:Payroll/Benefit Admin Fees', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Legal & Professional Fees:Payroll/Benefit Admin Fees', 'Product'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Product',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Legal & Professional Fees:Payroll/Benefit Admin Fees', 'Sales'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Legal & Professional Fees:Payroll/Benefit Admin Fees', 'Customer Success'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Legal & Professional Fees:Payroll/Benefit Admin Fees', 'R&D'): {
+    ('615040 Legal & Professional Fees:Payroll/Benefit Admin Fees', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Legal & Professional Fees:Recruiting Fees', 'G&A'): {
+    ('615030 Legal Fees', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Legal Fees', 'G&A'): {
+    ('615040 Payroll/Benefit Admin Fees', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Payroll/Benefit Admin Fees', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Payroll/Benefit Admin Fees', 'Marketing'): {
+    ('615040 Payroll/Benefit Admin Fees', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Payroll/Benefit Admin Fees', 'Cost of Revenue'): {
+    ('615040 Payroll/Benefit Admin Fees', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Payroll/Benefit Admin Fees', 'R&D'): {
+    ('615040 Payroll/Benefit Admin Fees', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Payroll/Benefit Admin Fees', 'Customer Success'): {
+    ('615040 Payroll/Benefit Admin Fees', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Payroll/Benefit Admin Fees', 'Product'): {
+    ('615040 Payroll/Benefit Admin Fees', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Payroll/Benefit Admin Fees', 'Sales'): {
+    ('615040 Payroll/Benefit Admin Fees', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Sales',
@@ -4782,37 +4006,37 @@ DEPT_MAP = {
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Recruiting Fees', 'R&D'): {
+    ('615050 Recruiting Fees', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Recruiting Fees', 'G&A'): {
+    ('615050 Recruiting Fees', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Recruiting Fees', 'Customer Success'): {
+    ('615050 Recruiting Fees', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Recruiting Fees', 'Sales'): {
+    ('615050 Recruiting Fees', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Recruiting Fees', 'Cost of Revenue'): {
+    ('615050 Recruiting Fees', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Valuation Fees', 'G&A'): {
+    ('615070 Valuation Fees', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
@@ -4854,145 +4078,115 @@ DEPT_MAP = {
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Client Conference', 'Marketing'): {
+    ('616010 Client Conference', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Client Conference', 'Customer Success'): {
+    ('616010 Client Conference', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Company Events', 'G&A'): {
+    ('613010 Company Events', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Digital Marketing', 'Marketing'): {
+    ('616030 Digital Marketing', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Digital Marketing', 'Sales'): {
+    ('616030 Digital Marketing', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Events', 'Marketing'): {
+    ('616040 Events', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('General Business Expenses:Industry Conferences', 'Cost of Revenue'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Graphics & Printing', 'Marketing'): {
+    ('616050 Graphics & Printing', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Graphics & Printing', 'Cost of Revenue'): {
+    ('616050 Graphics & Printing', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Graphics & Printing', 'G&A'): {
+    ('616050 Graphics & Printing', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Industry Ads', 'Marketing'): {
+    ('616060 Industry Ads', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Industry Conferences', 'Cost of Revenue'): {
+    ('612050 Industry Conferences', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Marketing:Digital Marketing', 'Marketing'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Marketing',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Marketing:Events', 'Sales'): {
+    ('616040 Marketing:Events', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Marketing:Events', 'Marketing'): {
+    ('616120 Tools', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Marketing:Industry Ads', 'Marketing'): {
+    ('616110 Marketing:Website', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Marketing:Tools', 'Marketing'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Marketing',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Marketing:Tools', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Marketing:Website', 'Marketing'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Marketing',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Miscellaneous', 'Cost of Revenue'): {
+    ('616070 Miscellaneous', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Professional Services/Freelancers', 'Marketing'): {
+    ('616080 Professional Services/Freelancers', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Public/Analyst Relations', 'Marketing'): {
+    ('616090 Public/Analyst Relations', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Tools', 'Marketing'): {
+    ('110080 Tools', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Website', 'Marketing'): {
+    ('616110 Website', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
@@ -5028,151 +4222,127 @@ DEPT_MAP = {
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Company Meals/Snacks', 'G&A'): {
+    ('613020 Company Meals/Snacks', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Company Meals/Snacks', 'Sales'): {
+    ('613020 Company Meals/Snacks', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Company Meals/Snacks', 'Cost of Revenue'): {
+    ('613020 Company Meals/Snacks', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Company Meals/Snacks', 'R&D'): {
+    ('613020 Company Meals/Snacks', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Company Meals/Snacks', 'Marketing'): {
+    ('613020 Company Meals/Snacks', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Company Meals/Snacks', 'Customer Success'): {
+    ('613020 Company Meals/Snacks', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Company Meals/Snacks', 'Product'): {
+    ('613020 Company Meals/Snacks', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('General Office Expenses:Company Meals/Snacks', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('General Office Expenses:Company Meals/Snacks', 'Sales'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('General Office Expenses:Company Meals/Snacks', 'Customer Success'): {
+    ('613020 General Office Expenses:Company Meals/Snacks', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Meals:Office/Working Late Meals', 'Sales'): {
+    ('617020 Office/Working Late Meals', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Meals:Office/Working Late Meals', 'Customer Success'): {
+    ('617020 Office/Working Late Meals', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Office/Working Late Meals', 'Sales'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Office/Working Late Meals', 'Customer Success'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Office/Working Late Meals', 'Cost of Revenue'): {
+    ('617020 Office/Working Late Meals', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Office/Working Late Meals', 'Product'): {
+    ('617020 Office/Working Late Meals', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Office/Working Late Meals', 'R&D'): {
+    ('617020 Office/Working Late Meals', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Office/Working Late Meals', 'G&A'): {
+    ('617020 Office/Working Late Meals', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Professional Development', 'G&A'): {
+    ('612070 Professional Development', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Staff Entertainment', 'G&A'): {
+    ('620070 Staff Entertainment', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Staff Entertainment', 'R&D'): {
+    ('620070 Staff Entertainment', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Staff Entertainment', 'Product'): {
+    ('620070 Staff Entertainment', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Staff Entertainment', 'Cost of Revenue'): {
+    ('620070 Staff Entertainment', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Staff Welfare', 'Cost of Revenue'): {
+    ('610080 Staff Welfare', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Temporary Housing', 'G&A'): {
+    ('620080 Temporary Housing', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'G&A',
@@ -5280,439 +4450,355 @@ DEPT_MAP = {
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Airfare', 'R&D'): {
+    ('620010 Airfare', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Airfare', 'Sales'): {
+    ('620010 Airfare', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Airfare', 'Customer Success'): {
+    ('620010 Airfare', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Airfare', 'Cost of Revenue'): {
+    ('620010 Airfare', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Airfare', 'G&A'): {
+    ('620010 Airfare', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Airfare', 'Marketing'): {
+    ('620010 Airfare', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Airfare', 'Product'): {
+    ('620010 Airfare', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Business/Client Entertainment', 'G&A'): {
+    ('620030 Business/Client Entertainment', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Business/Client Entertainment', 'Cost of Revenue'): {
+    ('620030 Business/Client Entertainment', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Business/Client Entertainment', 'Customer Success'): {
+    ('620030 Business/Client Entertainment', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Lodging', 'Sales'): {
+    ('620040 Lodging', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Lodging', 'Product'): {
+    ('620040 Lodging', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Lodging', 'Marketing'): {
+    ('620040 Lodging', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Lodging', 'Customer Success'): {
+    ('620040 Lodging', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Lodging', 'G&A'): {
+    ('620040 Lodging', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Lodging', 'Cost of Revenue'): {
+    ('620040 Lodging', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Lodging', 'R&D'): {
+    ('620040 Lodging', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Meals', 'G&A'): {
+    ('617000 Meals', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Meals', 'Customer Success'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Office Supplies/Equipment',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Meals', 'Marketing'): {
+    ('617000 Meals', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Meals:Travel Meals', 'Customer Success'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Travel',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Meals:Travel Meals', 'Product'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Travel',
-        'Department (Class)': 'Product',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Mileage', 'Sales'): {
+    ('620050 Mileage', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Mileage', 'Marketing'): {
+    ('620050 Mileage', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Mileage', 'G&A'): {
+    ('620050 Mileage', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Mileage', 'Customer Success'): {
+    ('620050 Mileage', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Mileage', 'Cost of Revenue'): {
+    ('620050 Mileage', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Mileage', 'Product'): {
+    ('620050 Mileage', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Other', 'Sales'): {
+    ('620060 Other', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Other', 'G&A'): {
+    ('620060 Other', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Other', 'Product'): {
+    ('620060 Other', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Other', 'R&D'): {
+    ('620060 Other', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Other', 'Cost of Revenue'): {
+    ('620060 Other', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Train', 'Sales'): {
+    ('620090 Train', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Train', 'Product'): {
+    ('620090 Train', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Train', 'Marketing'): {
+    ('620090 Train', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Train', 'G&A'): {
+    ('620090 Train', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Train', 'Cost of Revenue'): {
+    ('620090 Train', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Train', 'Customer Success'): {
+    ('620090 Train', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Train', 'R&D'): {
+    ('620090 Train', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Transportation', 'Sales'): {
+    ('620100 Transportation', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Transportation', 'Product'): {
+    ('620100 Transportation', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Transportation', 'Marketing'): {
+    ('620100 Transportation', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Marketing',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Transportation', 'G&A'): {
+    ('620100 Transportation', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Transportation', 'Customer Success'): {
+    ('620100 Transportation', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Transportation', 'Cost of Revenue'): {
+    ('620100 Transportation', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Transportation', 'R&D'): {
+    ('620100 Transportation', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Travel & Entertainment', 'Cost of Revenue'): {
+    ('620000 Travel & Entertainment', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Travel & Entertainment', 'Customer Success'): {
+    ('620000 Travel & Entertainment', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Travel & Entertainment:Airfare', 'Sales'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Travel',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Travel & Entertainment:Airfare', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Travel',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Travel & Entertainment:Airfare', 'Product'): {
+    ('620010 Travel & Entertainment:Airfare', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Travel & Entertainment:Airfare', 'Customer Success'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Travel',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Travel & Entertainment:Airfare', 'Marketing'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Travel',
-        'Department (Class)': 'Marketing',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Travel & Entertainment:Airfare', 'R&D'): {
+    ('620010 Travel & Entertainment:Airfare', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Travel & Entertainment:Airfare', 'Cost of Revenue'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Travel',
-        'Department (Class)': 'Cost of Revenue',
-        'Department Group (BD)': 'Cost of Goods Sold',
-    },
-    ('Travel & Entertainment:Lodging', 'Sales'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Travel',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Travel & Entertainment:Lodging', 'Product'): {
+    ('620040 Travel & Entertainment:Lodging', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Travel & Entertainment:Train', 'Sales'): {
+    ('620090 Travel & Entertainment:Train', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Travel & Entertainment:Train', 'Cost of Revenue'): {
+    ('620090 Travel & Entertainment:Train', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Travel & Entertainment:Train', 'Customer Success'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Travel',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Travel & Entertainment:Train', 'Product'): {
+    ('620090 Travel & Entertainment:Train', 'Product'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Product',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Travel & Entertainment:Transportation', 'Sales'): {
+    ('617030 Travel Meals', 'Sales'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Travel & Entertainment:Transportation', 'G&A'): {
+    ('617030 Travel Meals', 'Product'): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Travel',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('617030 Travel Meals', 'G&A'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('Travel & Entertainment:Transportation', 'Customer Success'): {
+    ('617030 Travel Meals', 'Customer Success'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Travel & Entertainment:Transportation', 'Product'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Travel',
-        'Department (Class)': 'Product',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Travel Meals', 'Sales'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Travel',
-        'Department (Class)': 'Sales',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Travel Meals', 'Product'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Travel',
-        'Department (Class)': 'Product',
-        'Department Group (BD)': 'Research & Development',
-    },
-    ('Travel Meals', 'G&A'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Travel',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Travel Meals', 'Customer Success'): {
-        'Classification 2': 'Other',
-        'Classification 3': 'Travel',
-        'Department (Class)': 'Customer Success',
-        'Department Group (BD)': 'Sales & Marketing',
-    },
-    ('Travel Meals', 'Cost of Revenue'): {
+    ('617030 Travel Meals', 'Cost of Revenue'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Cost of Revenue',
         'Department Group (BD)': 'Cost of Goods Sold',
     },
-    ('Travel Meals', 'R&D'): {
+    ('617030 Travel Meals', 'R&D'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'R&D',
         'Department Group (BD)': 'Research & Development',
     },
-    ('Travel Meals', 'Marketing'): {
+    ('617030 Travel Meals', 'Marketing'): {
         'Classification 2': 'Other',
         'Classification 3': 'Travel',
         'Department (Class)': 'Marketing',
@@ -5722,105 +4808,21 @@ DEPT_MAP = {
         'Classification 2': 'Tax Expense',
         'Classification 3': 'Tax Expense',
         'Department (Class)': 'G&A',
+        'Department Group (BD)': 'Tax Expense',
+    },
+    ('811030 State Income Tax', 'G&A'): {
+        'Classification 2': 'Tax Expense',
+        'Classification 3': 'Tax Expense',
+        'Department (Class)': 'G&A',
         'Department Group (BD)': 'General & Administrative',
     },
-    ('State Income Tax', 'G&A'): {
-        'Classification 2': 'Tax Expense',
-        'Classification 3': 'Tax Expense',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'Tax Expense',
-    },
-    ('Tax Expense:State Income Tax', 'G&A'): {
-        'Classification 2': 'Tax Expense',
-        'Classification 3': 'Tax Expense',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'Tax Expense',
-    },
-    ('410040 Managed Services Income - I/C', None): {
-        'Classification 2': 'Intercompany Revenue',
-        'Classification 3': 'Intercompany Revenue',
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('411030 Revenue:Revenue - Subscription', None): {
-        'Classification 2': 'Client Recurring',
-        'Classification 3': 'Client Recurring',
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('411040 Revenue:Revenue - Supplier', None): {
-        'Classification 2': 'Supplier Commission',
-        'Classification 3': 'Supplier Commission',
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('Billable Expense Income', 'Customer Success'): {
+    ('410010 Billable Expense Income', 'Customer Success'): {
         'Classification 2': 'Billable Expense',
         'Classification 3': 'Billable Expense',
         'Department (Class)': 'Customer Success',
         'Department Group (BD)': 'Sales & Marketing',
     },
-    ('Managed Services Income - I/C', None): {
-        'Classification 2': 'Intercompany Revenue',
-        'Classification 3': 'Intercompany Revenue',
-        'Department (Class)': None,
-        'Department Group (BD)': 'Intercompany Revenue',
-    },
-    ('Management Services Fee - I/C', None): {
-        'Classification 2': 'Intercompany Revenue',
-        'Classification 3': 'Intercompany Revenue',
-        'Department (Class)': None,
-        'Department Group (BD)': 'Intercompany Revenue',
-    },
-    ('Revenue - Conference', None): {
-        'Classification 2': 'User Conference',
-        'Classification 3': 'User Conference',
-        'Department (Class)': None,
-        'Department Group (BD)': 'User Conference',
-    },
-    ('Revenue - Insurance', None): {
-        'Classification 2': 'Client Recurring',
-        'Classification 3': 'Client Recurring',
-        'Department (Class)': None,
-        'Department Group (BD)': 'Client Recurring',
-    },
-    ('Revenue - Project', None): {
-        'Classification 2': 'Project - One Time',
-        'Classification 3': 'Project - One Time',
-        'Department (Class)': None,
-        'Department Group (BD)': 'Project - One Time',
-    },
-    ('Revenue - Subscription', None): {
-        'Classification 2': 'Client Recurring',
-        'Classification 3': 'Client Recurring',
-        'Department (Class)': None,
-        'Department Group (BD)': 'Client Recurring',
-    },
-    ('Revenue - Supplier', None): {
-        'Classification 2': 'Supplier Commission',
-        'Classification 3': 'Supplier Commission',
-        'Department (Class)': None,
-        'Department Group (BD)': 'Supplier Commission',
-    },
-    ('Revenue:Revenue - Subscription', None): {
-        'Classification 2': 'Client Recurring',
-        'Classification 3': 'Client Recurring',
-        'Department (Class)': None,
-        'Department Group (BD)': 'Client Recurring',
-    },
-    ('Revenue:Revenue - Supplier', None): {
-        'Classification 2': 'Supplier Commission',
-        'Classification 3': 'Supplier Commission',
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
     ('810040 Exchange Gain or Loss', 'G&A'): {
-        'Classification 2': 'Other Expenses',
-        'Classification 3': 'Other Expenses',
-        'Department (Class)': 'G&A',
-        'Department Group (BD)': 'General & Administrative',
-    },
-    ('Exchange Gain or Loss', 'G&A'): {
         'Classification 2': 'Other Expenses',
         'Classification 3': 'Other Expenses',
         'Department (Class)': 'G&A',
@@ -5838,106 +4840,65 @@ DEPT_MAP = {
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'Interest Income',
     },
-    ('Credit card rewards', 'G&A'): {
+    ('710020 Credit card rewards', 'G&A'): {
         'Classification 2': 'Other Income',
         'Classification 3': 'Other Income',
         'Department (Class)': 'G&A',
         'Department Group (BD)': 'Interest Income',
     },
-    ('Interest Earned', 'G&A'): {
-        'Classification 2': 'Other Income',
-        'Classification 3': 'Other Income',
+    ('514040 COS - Hourly/Variable', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('615060 Tax Fees', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'G&A',
-        'Department Group (BD)': 'Interest Income',
+        'Department Group (BD)': 'General & Administrative',
     },
-    ('629', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
+    ('619050 Hourly/Variable', None): {
+        'Classification 2': 'Compensation',
+        'Classification 3': 'Compensation',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
     },
-    ('128', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
+    ('810020 Contract Expenses', None): {
+        'Classification 2': 'Other Expenses',
+        'Classification 3': 'Other Expenses',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
     },
-    ('501', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
+    ('810050 Impairment Loss', None): {
+        'Classification 2': 'Other Expenses',
+        'Classification 3': 'Other Expenses',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
     },
-    ('71', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
+    ('811010 Federal Income Tax', None): {
+        'Classification 2': 'Tax Expense',
+        'Classification 3': 'Tax Expense',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'Tax Expense',
     },
-    ('48', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
+    # ── Accounts added from v5 mapping table ──────────────────────────────────
+    ('614000 Interest Expense', None): {
+        'Classification 2': 'Other Expenses',
+        'Classification 3': 'Other Expenses',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
     },
-    ('9', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
+    ('616020 Content Marketing/Syndication', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
     },
-    ('14', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('34', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('447', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('6', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('120', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('186', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('86', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('84', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
-    },
-    ('23', None): {
-        'Classification 2': None,
-        'Classification 3': None,
-        'Department (Class)': None,
-        'Department Group (BD)': None,
+    ('Not Specified', None): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Other Expenses',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
     },
 }

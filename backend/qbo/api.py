@@ -60,8 +60,17 @@ class QBOClient:
     """
 
     def __init__(self):
-        # Fetch (and auto-refresh) tokens on construction
         self._store: TokenStore = get_valid_token()
+        # Warn loudly if the token is for a different company than configured
+        expected = config.MAIN_REALM_ID
+        actual   = self._store.realm_id
+        if expected and actual and expected != actual:
+            raise RuntimeError(
+                f"QBO realm ID mismatch: the stored token is for company '{actual}' "
+                f"but QBO_MAIN_REALM_ID is set to '{expected}'. "
+                "Please disconnect and re-authenticate in the QBO Settings panel "
+                "while logged into the correct QBO company."
+            )
 
     # -------------------------------------------------------------------------
     # Internal helpers
@@ -221,13 +230,17 @@ class QBOClient:
         if not accounts:
             return pd.DataFrame()
         raw = pd.DataFrame(accounts)
-        # FullyQualifiedName may be absent for some QBO accounts — fill with Name
         if "FullyQualifiedName" not in raw.columns:
             raw["FullyQualifiedName"] = raw["Name"]
         else:
             raw["FullyQualifiedName"] = raw["FullyQualifiedName"].fillna(raw["Name"])
-        df = raw[["Id", "Name", "FullyQualifiedName", "AccountType", "AccountSubType", "Active", "CurrentBalance"]]
+        if "AcctNum" not in raw.columns:
+            raw["AcctNum"] = ""
+        else:
+            raw["AcctNum"] = raw["AcctNum"].fillna("")
+        df = raw[["AcctNum", "Id", "Name", "FullyQualifiedName", "AccountType", "AccountSubType", "Active", "CurrentBalance"]]
         df = df.rename(columns={
+            "AcctNum":             "Account Number",
             "Id":                  "Account ID",
             "Name":                "Account Name",
             "FullyQualifiedName":  "Full Name",

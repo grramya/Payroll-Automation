@@ -1,4 +1,5 @@
 import io
+import re
 import pandas as pd
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
@@ -23,17 +24,68 @@ for dept_key in list(DEPT_MAP.keys()):
         if new_key not in DEPT_MAP:
             DEPT_MAP[new_key] = DEPT_MAP[dept_key]
 
+_NUM_PREFIX   = re.compile(r"^\d+\s+")
+_NUM_CAPTURE  = re.compile(r"^(\d+)\s+")
+
+def _account_aliases(name: str) -> list[str]:
+    """Return lookup candidates for an account name.
+
+    Handles QBO parent-path names like '619010 Salary & Benefits:401k - ER':
+      1. original:              '619010 Salary & Benefits:401k - ER'
+      2. number-stripped:       'Salary & Benefits:401k - ER'
+      3. number + last segment: '619010 401k - ER'
+      4. last segment only:     '401k - ER'
+    """
+    aliases: list[str] = [name]
+    m = _NUM_CAPTURE.match(name)
+    num = m.group(1) if m else None
+
+    if num:
+        stripped = name[len(num):].lstrip()
+        if stripped not in aliases:
+            aliases.append(stripped)
+
+    if ":" in name:
+        last = name.rsplit(":", 1)[-1].strip()
+        if num:
+            num_last = f"{num} {last}"
+            if num_last not in aliases:
+                aliases.append(num_last)
+        # "last segment only" intentionally omitted — too generic, causes false matches
+
+    return aliases
+
+
+def _acct_lookup(acct: str, d: dict):
+    """Look up an account in d, trying all aliases if the exact name misses."""
+    for alias in _account_aliases(acct):
+        v = d.get(alias)
+        if v is not None:
+            return v
+    return None
+
+def _build_lookup(field: str) -> dict:
+    """Build a flat lookup dict that includes both original and number-stripped keys."""
+    result = {}
+    for k, v in ACCOUNT_MAP.items():
+        val = v.get(field)
+        for alias in _account_aliases(k):
+            if alias not in result:
+                result[alias] = val
+    return result
+
 # Pre-flatten ACCOUNT_MAP: one dict per field avoids double .get() on every row
-_FIN_MAP   = {k: v.get("Financial Statement")         for k, v in ACCOUNT_MAP.items()}
-_MAIN_MAP  = {k: v.get("Main Grouping")               for k, v in ACCOUNT_MAP.items()}
-_SEC_MAP   = {k: v.get("Secondary Grouping")          for k, v in ACCOUNT_MAP.items()}
-_CLASS_MAP = {k: v.get("Classification (Line Item)")  for k, v in ACCOUNT_MAP.items()}
+_FIN_MAP   = _build_lookup("Financial Statement")
+_MAIN_MAP  = _build_lookup("Main Grouping")
+_SEC_MAP   = _build_lookup("Secondary Grouping")
+_CLASS_MAP = _build_lookup("Classification (Line Item)")
 
 # Pre-build reverse index: account → [(dept, vals)] so dept fallback is O(matches)
 # instead of O(entire DEPT_MAP) per row
 _DEPT_BY_ACCT: dict = defaultdict(list)
 for (_d_acct, _d_dept), _d_vals in DEPT_MAP.items():
-    _DEPT_BY_ACCT[_d_acct].append((_d_dept, _d_vals))
+    for _alias in _account_aliases(_d_acct):
+        _DEPT_BY_ACCT[_alias].append((_d_dept, _d_vals))
 
 # ── Class (QuickBooks hierarchy) → Department (Class) ────────────────────────
 CLASS_TO_DEPT = {
@@ -104,7 +156,21 @@ def _resolve_name(row) -> str | None:
     return None
 
 
-def run_transform(input_bytes: bytes, company_name: str = "Acme Corp, Inc.") -> tuple[bytes, dict, list]:
+def run_transform_from_df(df: pd.DataFrame, company_name: str = "Acme Corp, Inc.") -> tuple:
+    """
+    Run the FP&A transform pipeline on a pre-parsed DataFrame.
+
+    Use this when data comes from the QBO API (via fpa/qbo_fetch.py) rather
+    than a QuickBooks Excel export.  The DataFrame must have columns matching
+    the QB Transaction Detail report: Account, Date, Amount, Class, etc.
+    """
+    df = df.copy()
+    df.dropna(how="all", inplace=True)
+    df.reset_index(drop=True, inplace=True)
+    return _transform_core(df, company_name)
+
+
+def run_transform(input_bytes: bytes, company_name: str = "Acme Corp, Inc.") -> tuple:
     # QuickBooks exports often include metadata rows (company name, report
     # title, date range) before the real column headers.  Read without a
     # header first, find the row that contains "Account", then re-read using
@@ -128,6 +194,10 @@ def run_transform(input_bytes: bytes, company_name: str = "Acme Corp, Inc.") -> 
     # Drop any fully-empty rows that sometimes follow the header in QB exports
     df.dropna(how="all", inplace=True)
     df.reset_index(drop=True, inplace=True)
+    return _transform_core(df, company_name)
+
+
+def _transform_core(df: pd.DataFrame, company_name: str) -> tuple:
 
     # Helper: return column series if it exists, else a None-filled series
     def col(name):
@@ -150,11 +220,33 @@ def run_transform(input_bytes: bytes, company_name: str = "Acme Corp, Inc.") -> 
         lambda dt: f"Q{(dt.month - 1) // 3 + 1}-{dt.year}" if pd.notna(dt) else None
     )
 
+    # Ensure Amount and Balance columns exist — QBO API may use different column titles
+    if "Amount" not in df.columns:
+        df["Amount"] = None
+    else:
+        df["Amount"] = pd.to_numeric(df["Amount"], errors="coerce")
+
+    if "Balance" not in df.columns:
+        # Compute running balance per account using position-based ops to avoid
+        # duplicate-index issues after pd.concat (broker + main merge).
+        _amt = pd.to_numeric(df["Amount"], errors="coerce").fillna(0)
+        _work = pd.DataFrame({
+            "Account": df["Account"].values,
+            "_date":   df["_date"].values,
+            "_amt":    _amt.values,
+        })
+        _work = _work.sort_values("_date")
+        _work["Balance"] = _work.groupby("Account")["_amt"].cumsum()
+        _work = _work.sort_index()          # restore original row positions
+        df["Balance"] = _work["Balance"].values
+    else:
+        df["Balance"] = pd.to_numeric(df["Balance"], errors="coerce")
+
     # ── Account-only lookups (Financials / Grouping / Classification 1) ───────
-    df["_Financials"]        = df["Account"].map(_FIN_MAP)
-    df["_MainGrouping"]      = df["Account"].map(_MAIN_MAP)
-    df["_SecondaryGrouping"] = df["Account"].map(_SEC_MAP)
-    df["_Classification"]    = df["Account"].map(_CLASS_MAP)
+    df["_Financials"]        = df["Account"].map(lambda a: _acct_lookup(a, _FIN_MAP))
+    df["_MainGrouping"]      = df["Account"].map(lambda a: _acct_lookup(a, _MAIN_MAP))
+    df["_SecondaryGrouping"] = df["Account"].map(lambda a: _acct_lookup(a, _SEC_MAP))
+    df["_Classification"]    = df["Account"].map(lambda a: _acct_lookup(a, _CLASS_MAP))
 
     # ── Composite (account, dept_class) lookups ───────────────────────────────
     # Single pass over rows; reverse index makes the fallback O(acct entries) not O(DEPT_MAP)
@@ -163,15 +255,26 @@ def run_transform(input_bytes: bytes, company_name: str = "Acme Corp, Inc.") -> 
     def dept_lookup_all(row):
         acct = row["Account"]
         dept = row["_DeptClass"]
+        aliases = _account_aliases(acct)
         results = [None, None, None, None]
         for i, field in enumerate(_DEPT_FIELDS):
-            val = DEPT_MAP.get((acct, dept), {}).get(field)
+            val = None
+            for alias in aliases:
+                val = DEPT_MAP.get((alias, dept), {}).get(field)
+                if val is not None:
+                    break
             if val is None:
-                val = DEPT_MAP.get((acct, None), {}).get(field)
+                for alias in aliases:
+                    val = DEPT_MAP.get((alias, None), {}).get(field)
+                    if val is not None:
+                        break
             if val is None:
-                for _, vals in _DEPT_BY_ACCT.get(acct, []):
-                    if vals.get(field) is not None:
-                        val = vals[field]
+                for alias in aliases:
+                    for _, vals in _DEPT_BY_ACCT.get(alias, []):
+                        if vals.get(field) is not None:
+                            val = vals[field]
+                            break
+                    if val is not None:
                         break
             results[i] = val
         return results

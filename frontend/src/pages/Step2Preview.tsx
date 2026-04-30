@@ -25,6 +25,7 @@ export default function Step2Preview() {
   const [showDeptSummary, setShowDeptSummary] = useState(false)
   const [showNaMapped, setShowNaMapped] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
+  const [showQboConfirm, setShowQboConfirm] = useState(false)
   const gridRef = useRef<AgGridReact<JERow>>(null)
 
   if (!sessionId) {
@@ -82,7 +83,8 @@ export default function Step2Preview() {
   }
 
   // ── Post to QBO ───────────────────────────────────────────────────────────
-  async function handlePostQBO() {
+  async function confirmPostQBO() {
+    setShowQboConfirm(false)
     setApiError('')
     setQboResult(null)
     setLoading(true, 'Posting to QuickBooks…')
@@ -271,7 +273,7 @@ export default function Step2Preview() {
           </button>
           <button
             className="btn btn-secondary"
-            onClick={handlePostQBO}
+            onClick={() => setShowQboConfirm(true)}
             disabled={loading}
             style={{ marginLeft: 'auto' }}
           >
@@ -280,6 +282,45 @@ export default function Step2Preview() {
           </button>
         </div>
       </div>
+
+      {/* Confirmation modal — Post to QuickBooks */}
+      {showQboConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 2000,
+          background: 'rgba(0,0,0,0.45)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{
+            background: 'var(--surface)', borderRadius: 12,
+            padding: '28px 32px', maxWidth: 440, width: '90%',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.22)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <span className="material-icons-round" style={{ color: 'var(--warn)', fontSize: 28 }}>warning</span>
+              <h3 style={{ margin: 0, fontSize: 17 }}>Post to QuickBooks?</h3>
+            </div>
+            <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 8 }}>
+              This will create a <strong>permanent Journal Entry</strong> in your QuickBooks Online company:
+            </p>
+            <ul style={{ fontSize: 13.5, color: 'var(--text)', paddingLeft: 20, marginBottom: 20, lineHeight: 1.8 }}>
+              <li>Journal: <strong>{jeRows[0]?.['Journal Number'] ?? '—'}</strong></li>
+              <li>Lines: <strong>{jeRows.length}</strong></li>
+            </ul>
+            <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>
+              Once posted, the entry can only be deleted directly in QuickBooks. Are you sure?
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <button className="btn btn-secondary" onClick={() => setShowQboConfirm(false)}>
+                Cancel
+              </button>
+              <button className="btn btn-primary" onClick={confirmPostQBO}>
+                <span className="material-icons-round">cloud_upload</span>
+                Yes, Post to QuickBooks
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

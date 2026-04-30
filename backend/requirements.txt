@@ -15,3 +15,6 @@ python-multipart>=0.0.9
 # Authentication
 passlib[bcrypt]>=1.7.4
 python-jose[cryptography]>=3.3.0
+
+# Cross-process file locking (consolidator, logger, session files)
+filelock>=3.14.0

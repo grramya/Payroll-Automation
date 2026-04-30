@@ -113,6 +113,18 @@ export async function changeOwnPassword(
 
 // ── JE generation & management ─────────────────────────────────────────────────
 
+export async function parseFileMetadata(
+  file: File
+): Promise<{ journal_number: string; invoice_date: string }> {
+  const form = new FormData()
+  form.append('file', file)
+  const { data } = await http.post<{ journal_number: string; invoice_date: string }>(
+    '/parse-file',
+    form
+  )
+  return data
+}
+
 export async function generateJE(
   file: File,
   journalNumber: string,

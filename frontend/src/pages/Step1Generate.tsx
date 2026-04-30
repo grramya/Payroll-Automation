@@ -4,7 +4,7 @@ import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import Alert from '../components/Alert'
 import { useApp } from '../context/AppContext'
-import { generateJE } from '../api/api'
+import { generateJE, parseFileMetadata } from '../api/api'
 
 export default function Step1Generate() {
   const navigate = useNavigate()
@@ -19,24 +19,15 @@ export default function Step1Generate() {
   const [apiError, setApiError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  function handleFile(f: File) {
+  async function handleFile(f: File) {
     setFile(f)
     setErrors((e) => ({ ...e, file: '' }))
     if (journalNumber) return
-
-    const name = f.name
-
-    // Full date with year: 1.30.2026, 01-30-2026, 01/30/2026
-    const full = name.match(/(\d{1,2})[._\-\/](\d{1,2})[._\-\/](\d{4})/)
-    if (full) {
-      setJournalNumber(`Salary for ${full[1]}/${full[2]}/${full[3]}`)
-      return
-    }
-
-    // Month.Day only: "Payroll 1.30.xlsx" → "Salary for 1/30/2026"
-    const partial = name.match(/(\d{1,2})[._\-](\d{1,2})(?:\.\w+)?$/)
-    if (partial) {
-      setJournalNumber(`Salary for ${partial[1]}/${partial[2]}/${new Date().getFullYear()}`)
+    try {
+      const meta = await parseFileMetadata(f)
+      if (meta.journal_number) setJournalNumber(meta.journal_number)
+    } catch {
+      // leave the field blank for manual entry
     }
   }
 

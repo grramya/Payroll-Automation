@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import {
   Box, Container, Typography, Button,
   Select, MenuItem, FormControl, InputLabel,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
-import DownloadIcon    from "@mui/icons-material/Download";
+import DownloadIcon from "@mui/icons-material/Download";
 
 import { useFpaResult } from "../../context/FpaResultContext";
 
@@ -36,8 +36,6 @@ function monthStrToYYYYMM(s) {
   return `${fullYr}-${MONTH_ABBR[mon]}`;
 }
 
-// Returns the 4 quarters ending at (and including) the selected quarter.
-// e.g. "Q3-2026" → ["Q4-2025","Q1-2026","Q2-2026","Q3-2026"]
 function fourQuartersEndingAt(q) {
   const [qPart, yr] = q.split("-");
   let qNum = parseInt(qPart.slice(1));
@@ -56,7 +54,7 @@ function fourQuartersEndingAt(q) {
 
 const ROW_STYLES = {
   section: {
-    bg: "#0F172A", labelColor: "#fff", valColor: "#fff",
+    bg: "#400f61", labelColor: "#fff", valColor: "#fff",
     fontWeight: 700, fontSize: "0.78rem", height: 28,
   },
   subsection: {
@@ -68,9 +66,9 @@ const ROW_STYLES = {
     fontWeight: 400, fontSize: "0.75rem", height: 22,
   },
   subtotal: {
-    bg: "#EBF2FB", labelColor: "#1E40AF", valColor: "#1E40AF",
+    bg: "#f5eefa", labelColor: "#400f61", valColor: "#400f61",
     fontWeight: 700, fontSize: "0.75rem", height: 22,
-    borderTop: "1px solid #CBD5E1",
+    borderTop: "1px solid #d4c5e8",
   },
   total: {
     bg: "#F1F5F9", labelColor: "#0F172A", valColor: "#0F172A",
@@ -78,12 +76,12 @@ const ROW_STYLES = {
     borderTop: "1px solid #CBD5E1",
   },
   grand_total: {
-    bg: "#1E3A5F", labelColor: "#fff", valColor: "#fff",
+    bg: "#2d0a45", labelColor: "#fff", valColor: "#fff",
     fontWeight: 700, fontSize: "0.78rem", height: 28,
-    borderTop: "2px solid #64748B",
+    borderTop: "2px solid #400f61",
   },
   metric: {
-    bg: "#F0F9FF", labelColor: "#0369A1", valColor: "#0369A1",
+    bg: "#f5eefa", labelColor: "#400f61", valColor: "#400f61",
     fontWeight: 400, fontSize: "0.72rem", height: 20, italic: true,
   },
   blank: { bg: "#fff", height: 10 },
@@ -93,16 +91,16 @@ const ROW_STYLES = {
 
 function buildColumnGroups(monthCols, fourQuarters, selectedYear) {
   return [
-    { label: "Months",   cols: monthCols,                                          color: "#1E3A5F" },
-    { label: "Quarters", cols: fourQuarters,                                       color: "#374151" },
-    { label: "Year",     cols: [String(selectedYear - 1), String(selectedYear)],   color: "#1E3A5F" },
+    { label: "Months",   cols: monthCols,                                        color: "#400f61" },
+    { label: "Quarters", cols: fourQuarters,                                     color: "#2d0a45" },
+    { label: "Year",     cols: [String(selectedYear - 1), String(selectedYear)], color: "#400f61" },
   ];
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function ComparativePLPage() {
-  const { result } = useFpaResult();
+  const { result, pageFilters, setPageFilter } = useFpaResult();
   if (!result) return null;
 
   const { compPlBlob, compPlPreview, companyName } = result;
@@ -122,10 +120,16 @@ export default function ComparativePLPage() {
   const firstYear = quarters.length ? quarters[0].split("-")[1]                    : String(new Date().getFullYear());
   const lastYear  = quarters.length ? quarters[quarters.length - 1].split("-")[1]  : String(new Date().getFullYear());
 
-  const [selectedQuarter, setSelectedQuarter] = useState(defaultQuarter);
-  const [selectedYear,    setSelectedYear]    = useState(defaultYear);
-  const [fromDate,        setFromDate]        = useState(dayjs(`${firstYear}-01-01`));
-  const [toDate,          setToDate]          = useState(dayjs(`${lastYear}-12-31`));
+  const defaultFrom = dayjs(`${firstYear}-01-01`);
+  const defaultTo   = dayjs(`${lastYear}-12-31`);
+  const fromDate        = pageFilters.compPL?.fromDate        ?? defaultFrom;
+  const toDate          = pageFilters.compPL?.toDate          ?? defaultTo;
+  const selectedQuarter = pageFilters.compPL?.selectedQuarter ?? defaultQuarter;
+  const selectedYear    = pageFilters.compPL?.selectedYear    ?? defaultYear;
+  const setFromDate        = (v) => setPageFilter("compPL", { fromDate: v, toDate, selectedQuarter, selectedYear });
+  const setToDate          = (v) => setPageFilter("compPL", { fromDate, toDate: v, selectedQuarter, selectedYear });
+  const setSelectedQuarter = (v) => setPageFilter("compPL", { fromDate, toDate, selectedQuarter: v, selectedYear });
+  const setSelectedYear    = (v) => setPageFilter("compPL", { fromDate, toDate, selectedQuarter, selectedYear: v });
 
   // ── Filter quarters by date range ────────────────────────────────────────
   const filteredQuarters = useMemo(() => {
@@ -189,48 +193,50 @@ export default function ComparativePLPage() {
   const COL_W_LABEL = 220;
   const COL_W_DATA  = 110;
   const totalW      = COL_W_LABEL + allPeriods.length * COL_W_DATA;
+  const tableCaption = `Comparative P&L (Class) — ${companyName}`;
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <Box className="page-enter">
 
       {/* ── Page header ──────────────────────────────────────────────────── */}
-      <Box sx={{ borderBottom: "1px solid #E2E8F0", bgcolor: "background.paper", px: { xs: 2, md: 4 }, py: 2.5 }}>
+      <Box
+        component="section"
+        aria-label="Page controls"
+        sx={{ borderBottom: "1px solid #E2E8F0", bgcolor: "background.paper", px: { xs: 2, md: 4 }, py: 2.5 }}
+      >
         <Container maxWidth="xl" disableGutters>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
 
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-              <Box>
-                <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
-                  Comparative P&amp;L (Class)
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {companyName}
-                </Typography>
-              </Box>
+            <Box>
+              <Typography variant="h5" component="h1" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
+                Comparative P&amp;L (Class)
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {companyName}
+              </Typography>
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
 
-              {/* ── Date range filter ── */}
               <DatePicker
                 label="From"
                 value={fromDate}
                 onChange={(v) => setFromDate(v)}
-                slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, inputProps: { "aria-label": "Filter from date" } } }}
               />
               <DatePicker
                 label="To"
                 value={toDate}
                 onChange={(v) => setToDate(v)}
-                slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, inputProps: { "aria-label": "Filter to date" } } }}
               />
 
-              {/* Quarter selector — shows all available quarters; selects the "ending" quarter */}
               {filteredQuarters.length > 0 && (
                 <FormControl size="small" sx={{ minWidth: 130 }}>
-                  <InputLabel>Quarter</InputLabel>
+                  <InputLabel id="comp-pl-quarter-label">Quarter</InputLabel>
                   <Select
+                    labelId="comp-pl-quarter-label"
                     value={effectiveQuarter}
                     label="Quarter"
                     onChange={(e) => setSelectedQuarter(e.target.value)}
@@ -242,11 +248,11 @@ export default function ComparativePLPage() {
                 </FormControl>
               )}
 
-              {/* Year selector */}
               {years.length > 0 && (
                 <FormControl size="small" sx={{ minWidth: 110 }}>
-                  <InputLabel>Year</InputLabel>
+                  <InputLabel id="comp-pl-year-label">Year</InputLabel>
                   <Select
+                    labelId="comp-pl-year-label"
                     value={selectedYear}
                     label="Year"
                     onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -262,9 +268,10 @@ export default function ComparativePLPage() {
                 <Button
                   size="small"
                   variant="contained"
-                  startIcon={<DownloadIcon />}
+                  startIcon={<DownloadIcon aria-hidden="true" />}
                   onClick={handleDownload}
-                  sx={{ background: "linear-gradient(135deg,#D97706,#B45309)", whiteSpace: "nowrap", height: 40 }}
+                  aria-label={`Download ${companyName}_comparative_pl.xlsx`}
+                  sx={{ background: "linear-gradient(135deg,#400f61,#2d0a45)", whiteSpace: "nowrap", height: 40 }}
                 >
                   Download .xlsx
                 </Button>
@@ -276,8 +283,13 @@ export default function ComparativePLPage() {
 
       {/* ── Table ────────────────────────────────────────────────────────── */}
       <Container maxWidth="xl" sx={{ py: 3, px: { xs: 1, md: 3 } }}>
-        <Box sx={{ overflowX: "auto", borderRadius: 2, border: "1px solid #E2E8F0", boxShadow: 1 }}>
+        <Box
+          role="region"
+          aria-label={tableCaption}
+          sx={{ overflowX: "auto", borderRadius: 2, border: "1px solid #E2E8F0", boxShadow: 1 }}
+        >
           <table
+            aria-label={tableCaption}
             style={{
               borderCollapse: "collapse",
               width: `${totalW}px`,
@@ -286,6 +298,8 @@ export default function ComparativePLPage() {
               fontFamily: "'Inter', -apple-system, sans-serif",
             }}
           >
+            <caption className="sr-only">{tableCaption}</caption>
+
             <colgroup>
               <col style={{ width: `${COL_W_LABEL}px` }} />
               {allPeriods.map((p) => (
@@ -294,12 +308,13 @@ export default function ComparativePLPage() {
             </colgroup>
 
             <thead>
-              {/* ── Group header row ─────────────────────────────────── */}
+              {/* Group header row */}
               <tr>
                 <th
+                  scope="col"
                   style={{
                     position: "sticky", left: 0, zIndex: 3,
-                    background: "#0F172A", color: "#fff",
+                    background: "#400f61", color: "#fff",
                     padding: "8px 12px", textAlign: "left",
                     fontSize: "0.72rem", fontWeight: 700,
                     letterSpacing: "0.08em", textTransform: "uppercase",
@@ -311,9 +326,10 @@ export default function ComparativePLPage() {
                 {columnGroups.map((grp) => (
                   <th
                     key={grp.label}
+                    scope="colgroup"
                     colSpan={grp.cols.length}
                     style={{
-                      background: "#0F172A", color: "rgba(255,255,255,0.7)",
+                      background: "#400f61", color: "rgba(255,255,255,0.7)",
                       padding: "8px 6px", textAlign: "center",
                       fontSize: "0.68rem", fontWeight: 600,
                       letterSpacing: "0.08em", textTransform: "uppercase",
@@ -325,12 +341,13 @@ export default function ComparativePLPage() {
                 ))}
               </tr>
 
-              {/* ── Period label row ─────────────────────────────────── */}
+              {/* Period label row */}
               <tr>
                 <th
+                  scope="col"
                   style={{
                     position: "sticky", left: 0, zIndex: 3,
-                    background: "#0F172A",
+                    background: "#400f61",
                     borderRight: "1px solid rgba(255,255,255,0.12)",
                     borderBottom: "1px solid rgba(255,255,255,0.12)",
                   }}
@@ -339,8 +356,9 @@ export default function ComparativePLPage() {
                   grp.cols.map((period, ci) => (
                     <th
                       key={period}
+                      scope="col"
                       style={{
-                        background: "#0F172A", color: "rgba(255,255,255,0.85)",
+                        background: "#400f61", color: "rgba(255,255,255,0.85)",
                         padding: "6px 8px", textAlign: "right",
                         fontSize: "0.7rem", fontWeight: 600,
                         letterSpacing: "0.03em",
@@ -364,7 +382,7 @@ export default function ComparativePLPage() {
 
                 if (type === "blank") {
                   return (
-                    <tr key={ri}>
+                    <tr key={ri} aria-hidden="true">
                       <td
                         colSpan={allPeriods.length + 1}
                         style={{ height: style.height, background: style.bg }}
@@ -376,7 +394,8 @@ export default function ComparativePLPage() {
                 return (
                   <tr key={ri} style={{ background: style.bg, borderTop: style.borderTop }}>
                     {/* Label cell — sticky */}
-                    <td
+                    <th
+                      scope="row"
                       style={{
                         position: "sticky", left: 0, zIndex: 2,
                         background: style.bg,
@@ -389,10 +408,11 @@ export default function ComparativePLPage() {
                         whiteSpace: "nowrap",
                         borderRight: "2px solid #E2E8F0",
                         borderTop: style.borderTop,
+                        textAlign: "left",
                       }}
                     >
                       {label ?? ""}
-                    </td>
+                    </th>
 
                     {/* Value cells */}
                     {allPeriods.map((period, pi) => {
@@ -405,7 +425,6 @@ export default function ComparativePLPage() {
                       if (isNeg && type === "grand_total") valColor = "#FCA5A5";
                       if (isNeg && type === "metric")      valColor = "#DC2626";
 
-                      // Group boundary: start of Months, Quarters, and Year groups
                       const groupStart = pi === 0
                         || pi === filteredMonths.length
                         || pi === filteredMonths.length + fourQuarters.length;

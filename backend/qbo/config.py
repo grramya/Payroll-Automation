@@ -8,7 +8,8 @@ No credentials are ever hard-coded — everything is read from .env.
 Setup:
     1. Copy .env.example → .env in the project root
     2. Fill in QBO_CLIENT_ID and QBO_CLIENT_SECRET from your Intuit Developer Portal app
-    3. Make sure your app's redirect URI is set to: http://localhost:8000/callback
+    3. Register http://localhost:8000/api/qbo/callback as a redirect URI in the Portal
+    4. Set QBO_MAIN_REALM_ID and (optionally) QBO_BROKER_REALM_ID
 """
 
 import os
@@ -40,13 +41,11 @@ REVOKE_URL        = "https://developer.api.intuit.com/v2/oauth2/tokens/revoke"
 # ---------------------------------------------------------------------------
 # Redirect URI — must exactly match what you registered in the Dev Portal
 # ---------------------------------------------------------------------------
-REDIRECT_URI  = "https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl"
+REDIRECT_URI = _get_secret("QBO_REDIRECT_URI", "http://localhost:8000/api/qbo/callback")
 
 # ---------------------------------------------------------------------------
 # OAuth scopes
 # ---------------------------------------------------------------------------
-# com.intuit.quickbooks.accounting → read/write access to QBO company data
-# openid profile email             → identity info (optional)
 SCOPES = "com.intuit.quickbooks.accounting openid profile email"
 
 # ---------------------------------------------------------------------------
@@ -62,16 +61,30 @@ BASE_URL    = SANDBOX_BASE_URL if USE_SANDBOX else PRODUCTION_BASE_URL
 API_VERSION = "v3"
 
 # ---------------------------------------------------------------------------
-# Local files
+# Company realm IDs
 # ---------------------------------------------------------------------------
-# Token storage — persists access + refresh tokens between runs
-TOKEN_FILE = _PROJECT_ROOT / "qbo" / "tokens.json"
+MAIN_REALM_ID        = _get_secret("QBO_MAIN_REALM_ID", "")
+BROKER_REALM_ID      = _get_secret("QBO_BROKER_REALM_ID", "")
+BROKER_COMPANY_NAME  = _get_secret("QBO_BROKER_COMPANY_NAME", "Concertiv Insurance Brokers, Inc.")
 
 # ---------------------------------------------------------------------------
-# Shared accounts override file
-# If ACCOUNTS_OVERRIDE_PATH is set in .env, both users can point to the same
-# shared network/OneDrive path so edits sync automatically.
-# Leave blank to use the default local path: qbo/accounts_override.csv
+# Token storage — per-company token files
+# ---------------------------------------------------------------------------
+_QBO_DIR = _PROJECT_ROOT / "qbo"
+
+# Legacy path (keeps backward compat with existing payroll JE auth)
+TOKEN_FILE = _QBO_DIR / "tokens.json"
+
+
+def get_token_file(company: str) -> Path:
+    """Return the token file path for the given company key ('main' or 'broker')."""
+    if company == "broker":
+        return _QBO_DIR / "tokens_broker.json"
+    return _QBO_DIR / "tokens.json"   # 'main' — backward compat
+
+
+# ---------------------------------------------------------------------------
+# Local files
 # ---------------------------------------------------------------------------
 _override_env = _get_secret("ACCOUNTS_OVERRIDE_PATH", "").strip()
 _default_override = _PROJECT_ROOT / "qbo" / "accounts_override.csv"
@@ -81,18 +94,11 @@ if _override_env:
 else:
     ACCOUNTS_OVERRIDE_PATH = _default_override
 
-# ---------------------------------------------------------------------------
-# Vendor list local override file
-# ---------------------------------------------------------------------------
 VENDORS_OVERRIDE_PATH = _PROJECT_ROOT / "qbo" / "vendors_override.csv"
-
-# ---------------------------------------------------------------------------
-# Class list local override file
-# ---------------------------------------------------------------------------
 CLASSES_OVERRIDE_PATH = _PROJECT_ROOT / "qbo" / "classes_override.csv"
 
 # ---------------------------------------------------------------------------
-# Local OAuth callback server settings
+# Local OAuth callback server settings (CLI auth fallback)
 # ---------------------------------------------------------------------------
 CALLBACK_HOST = "localhost"
 CALLBACK_PORT = 8000

@@ -4,11 +4,14 @@ Run with:
     uvicorn app_api:app --reload --port 8000
 """
 from __future__ import annotations
+import base64
+import json
 import math
 import os
 import re
 import sys
 import uuid
+from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
 
@@ -37,7 +40,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).parent
 sys.path.insert(0, str(BASE_DIR))
 
-from processing.reader import parse_all_from_raw
+from processing.reader import parse_all_from_raw, get_file_metadata
 from processing.mapper import load_mapping
 from processing.aggregator import (
     aggregate_by_department,
@@ -70,9 +73,45 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── In-memory session storage ──────────────────────────────────────────────────
-_sessions: dict[str, dict] = {}
-_MAP_PATH = BASE_DIR / "Mapping" / "Mapping.xlsx"
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
+
+_CSRF_SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
+
+class CSRFMiddleware(BaseHTTPMiddleware):
+    """
+    Reject state-changing requests (POST/PUT/DELETE/PATCH) that come from a
+    different origin.  Bearer-token APIs are already CSRF-resistant because
+    browsers cannot set the Authorization header cross-origin, but this adds a
+    second layer by checking the Origin/Referer header against the allow-list.
+    Requests with no Origin (e.g. curl, server-to-server, Swagger UI) are
+    allowed so the API remains usable from tools and scripts.
+    """
+    async def dispatch(self, request: Request, call_next):
+        if request.method not in _CSRF_SAFE_METHODS:
+            origin = request.headers.get("origin") or request.headers.get("referer", "")
+            if origin:
+                # Strip path from referer so "http://localhost:5173/step/2" → "http://localhost:5173"
+                from urllib.parse import urlparse as _up
+                parsed = _up(origin)
+                origin_base = f"{parsed.scheme}://{parsed.netloc}"
+                if origin_base not in _origins:
+                    return JSONResponse(
+                        status_code=403,
+                        content={"detail": "CSRF check failed: request origin not allowed."},
+                    )
+        return await call_next(request)
+
+app.add_middleware(CSRFMiddleware)
+
+# ── Paths ──────────────────────────────────────────────────────────────────────
+_MAP_PATH    = BASE_DIR / "Mapping" / "Mapping.xlsx"
+_CACHE_DIR   = BASE_DIR / "cache"
+_CACHE_FILE  = _CACHE_DIR / "qbo_cache.json"
+_SESSION_DIR = BASE_DIR / "sessions"
+_SESSION_DIR.mkdir(exist_ok=True)
+
+_SESSION_TTL_HOURS = 48  # sessions expire after 48 hours of inactivity
 
 _SKIP_COLS = {
     "Company Code", "Company Name", "Employee ID", "Employee Name",
@@ -80,13 +119,101 @@ _SKIP_COLS = {
     "Invoice Number", "Pay End Date", "Check Date",
 }
 
+# ── File-backed session storage ────────────────────────────────────────────────
+# Sessions survive server restarts by persisting each session as a JSON file.
+# DataFrames are stored as records; raw bytes are base64-encoded.
+
+_sessions: dict[str, dict] = {}  # in-memory cache (populated from disk on startup)
+
+
+def _session_to_json(s: dict) -> dict:
+    """Convert a session dict (with DataFrames/bytes) to a JSON-serialisable form."""
+    out = {k: v for k, v in s.items() if k not in ("je_df", "dept_summary", "pf_bytes")}
+    if "je_df" in s and s["je_df"] is not None:
+        out["je_df_records"] = s["je_df"].to_dict(orient="records")
+        out["je_df_columns"] = list(s["je_df"].columns)
+    if "dept_summary" in s and s["dept_summary"] is not None:
+        out["dept_summary_records"] = s["dept_summary"].to_dict(orient="records")
+    if "pf_bytes" in s and s["pf_bytes"]:
+        out["pf_bytes_b64"] = base64.b64encode(s["pf_bytes"]).decode()
+    return out
+
+
+def _session_from_json(d: dict) -> dict:
+    """Reconstruct a session dict (with DataFrames/bytes) from the persisted JSON form."""
+    s = {k: v for k, v in d.items()
+         if k not in ("je_df_records", "je_df_columns", "dept_summary_records", "pf_bytes_b64")}
+    if "je_df_records" in d:
+        cols = d.get("je_df_columns")
+        df = pd.DataFrame(d["je_df_records"], columns=cols) if cols else pd.DataFrame(d["je_df_records"])
+        s["je_df"] = df
+    if "dept_summary_records" in d:
+        s["dept_summary"] = pd.DataFrame(d["dept_summary_records"])
+    if "pf_bytes_b64" in d:
+        s["pf_bytes"] = base64.b64decode(d["pf_bytes_b64"])
+    return s
+
+
+def _session_file(session_id: str) -> Path:
+    return _SESSION_DIR / f"{session_id}.json"
+
+
+def _persist_session(session_id: str, s: dict) -> None:
+    """Write session to disk (non-blocking; errors are logged to stderr)."""
+    try:
+        data = _session_to_json(s)
+        data["_saved_at"] = datetime.now(tz=timezone.utc).isoformat()
+        _session_file(session_id).write_text(json.dumps(data), encoding="utf-8")
+    except Exception as exc:
+        print(f"[Session] Failed to persist {session_id}: {exc}", file=sys.stderr, flush=True)
+
+
+def _load_sessions_from_disk() -> None:
+    """On startup: load all non-expired session files into the in-memory cache."""
+    cutoff = time.time() - _SESSION_TTL_HOURS * 3600
+    for f in _SESSION_DIR.glob("*.json"):
+        try:
+            if f.stat().st_mtime < cutoff:
+                f.unlink(missing_ok=True)
+                continue
+            d = json.loads(f.read_text(encoding="utf-8"))
+            sid = f.stem
+            _sessions[sid] = _session_from_json(d)
+        except Exception as exc:
+            print(f"[Session] Could not load {f.name}: {exc}", file=sys.stderr, flush=True)
+
+
+_load_sessions_from_disk()
+
+
+# ── Per-user JE generation rate limiter ───────────────────────────────────────
+_gen_attempts: dict[str, list[float]] = defaultdict(list)
+_GEN_MAX_CALLS  = 3
+_GEN_WINDOW_SEC = 60
+
+
+def _check_generate_rate(username: str) -> None:
+    now = time.time()
+    _gen_attempts[username] = [t for t in _gen_attempts[username] if now - t < _GEN_WINDOW_SEC]
+    if len(_gen_attempts[username]) >= _GEN_MAX_CALLS:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many JE generations. Wait a moment before trying again.",
+        )
+    _gen_attempts[username].append(now)
+
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
-def _get_session(session_id: str) -> dict:
+def _get_session(session_id: str, current_user: dict | None = None) -> dict:
     if session_id not in _sessions:
         raise HTTPException(status_code=404, detail="Session not found or expired")
-    return _sessions[session_id]
+    s = _sessions[session_id]
+    # Enforce ownership — admins may access any session
+    if current_user and current_user.get("role") != "admin":
+        if s.get("owner") != current_user["username"]:
+            raise HTTPException(status_code=403, detail="Access denied: this session belongs to another user")
+    return s
 
 
 def _df_to_records(df: pd.DataFrame) -> list[dict]:
@@ -189,6 +316,125 @@ def _safe_append_input(file_bytes: bytes, journal_number: str) -> None:
         append_input_to_consolidated(file_bytes, journal_number)
     except Exception:
         pass
+
+
+# ── QBO background cache ───────────────────────────────────────────────────────
+
+def _save_qbo_cache(data: dict) -> None:
+    import json as _json
+    _CACHE_DIR.mkdir(exist_ok=True)
+    _CACHE_FILE.write_text(_json.dumps(data), encoding="utf-8")
+
+
+def _refresh_qbo_cache() -> tuple[bool, str]:
+    """Fetch all QBO transactions, run the FP&A transform, and persist to disk cache.
+
+    Silently no-ops when QBO is not yet authenticated. Called both by the
+    background scheduler and by the manual SSE fetch endpoint.
+    """
+    import base64 as _b64
+    import pandas as _pd
+    from datetime import datetime as _dt, date as _date
+
+    company_name   = os.environ.get("QBO_AUTO_FETCH_COMPANY_NAME",    "Concertiv")
+    include_broker = os.environ.get("QBO_AUTO_FETCH_INCLUDE_BROKER",  "false").lower() == "true"
+
+    try:
+        from qbo.auth import is_authenticated, get_company_info
+        if not is_authenticated():
+            return False, "QBO not authenticated — skipping cache refresh"
+    except Exception as exc:
+        return False, f"Auth check failed: {exc}"
+
+    try:
+        from fpa.qbo_fetch import fetch_company_transactions
+        from fpa.transform import run_transform_from_df
+
+        today = _date.today().isoformat()
+        main_df  = fetch_company_transactions("main", "1900-01-01", today)
+        combined = main_df
+
+        if include_broker:
+            try:
+                if get_company_info("broker").get("connected"):
+                    broker_df = fetch_company_transactions("broker", "1900-01-01", today)
+                    combined  = _pd.concat([main_df, broker_df], ignore_index=True)
+            except Exception:
+                pass
+
+        (
+            excel_bytes, summary, preview,
+            bs_bytes, bs_preview,
+            bsi_bytes, bsi_preview,
+            pl_bytes, pl_preview,
+            comp_pl_bytes, comp_pl_preview,
+            comp_pl_bd_bytes, comp_pl_bd_preview,
+        ) = run_transform_from_df(combined, company_name)
+
+        _save_qbo_cache({
+            "cached_at":            _dt.now().isoformat(),
+            "company_name":         company_name,
+            "summary":              summary,
+            "preview":              preview,
+            "excel_b64":            _b64.b64encode(excel_bytes).decode(),
+            "bs_excel_b64":         _b64.b64encode(bs_bytes).decode(),
+            "bs_preview":           bs_preview,
+            "bsi_excel_b64":        _b64.b64encode(bsi_bytes).decode(),
+            "bsi_preview":          bsi_preview,
+            "pl_excel_b64":         _b64.b64encode(pl_bytes).decode(),
+            "pl_preview":           pl_preview,
+            "comp_pl_excel_b64":    _b64.b64encode(comp_pl_bytes).decode(),
+            "comp_pl_preview":      comp_pl_preview,
+            "comp_pl_bd_excel_b64": _b64.b64encode(comp_pl_bd_bytes).decode(),
+            "comp_pl_bd_preview":   comp_pl_bd_preview,
+        })
+        return True, f"Cached {len(combined):,} rows at {_dt.now().isoformat()}"
+
+    except Exception as exc:
+        import traceback as _tb
+        return False, f"{exc}\n{_tb.format_exc()}"
+
+
+def _qbo_auto_fetch_loop() -> None:
+    """Daemon thread:
+    • First startup: fetch immediately (30 s delay) if no cache exists yet.
+    • Mapping watch: rebuilds the cache automatically within ~60 s of any
+      change to fpa/mapping_data.py — no manual refresh needed.
+    • Daily run: full re-fetch at QBO_AUTO_FETCH_TIME (default 10:00 local).
+    """
+    from datetime import datetime as _dt
+
+    _mapping_py = BASE_DIR / "fpa" / "mapping_data.py"
+
+    if not _CACHE_FILE.exists():
+        time.sleep(30)
+        _refresh_qbo_cache()
+
+    fetch_time_str = os.environ.get("QBO_AUTO_FETCH_TIME", "11:30")
+    hour, minute   = map(int, fetch_time_str.split(":"))
+
+    last_mtime      = _mapping_py.stat().st_mtime if _mapping_py.exists() else 0.0
+    last_daily_date = None
+
+    while True:
+        time.sleep(60)
+        now = _dt.now()
+
+        # ── Mapping file changed? rebuild cache immediately ───────────────────
+        if _mapping_py.exists():
+            mtime = _mapping_py.stat().st_mtime
+            if mtime != last_mtime:
+                last_mtime = mtime
+                _refresh_qbo_cache()
+                continue
+
+        # ── Daily scheduled run ───────────────────────────────────────────────
+        if now.hour == hour and now.minute == minute and last_daily_date != now.date():
+            last_daily_date = now.date()
+            _refresh_qbo_cache()
+
+
+threading.Thread(target=_qbo_auto_fetch_loop, daemon=True, name="qbo-auto-fetch").start()
 
 
 # ── Brute-force / rate-limit protection ───────────────────────────────────────
@@ -462,7 +708,9 @@ async def fpa_transform(
         ) = run_transform(input_bytes, company_name)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Transform error: {e}")
+    from datetime import datetime as _dt
     return {
+        "cached_at":            _dt.now().isoformat(),
         "summary":              summary,
         "preview":              preview,
         "excel_b64":            _b64.b64encode(excel_bytes).decode(),
@@ -479,7 +727,328 @@ async def fpa_transform(
     }
 
 
+# ── QBO OAuth callback (handles both main and broker company auth) ─────────────
+
+# In-memory state store for CSRF protection (nonce → company)
+_qbo_oauth_states: dict[str, str] = {}
+
+
+@app.get("/api/fpa/qbo-auth-url")
+async def fpa_qbo_auth_url(
+    company: str = "main",
+    _: dict = Depends(get_current_user),
+):
+    """
+    Generate the Intuit OAuth 2.0 authorization URL for the given company.
+    company: 'main' | 'broker'
+    Returns the URL plus whether callback-mode or paste-mode should be used.
+    """
+    import secrets as _secrets
+    import urllib.parse as _parse
+    from qbo import config as _cfg
+
+    if company not in ("main", "broker"):
+        raise HTTPException(status_code=400, detail="company must be 'main' or 'broker'")
+
+    nonce = _secrets.token_urlsafe(16)
+    state = f"{company}:{nonce}"
+    _qbo_oauth_states[nonce] = company
+
+    params = {
+        "client_id":     _cfg.CLIENT_ID,
+        "response_type": "code",
+        "scope":         _cfg.SCOPES,
+        "redirect_uri":  _cfg.REDIRECT_URI,
+        "state":         state,
+    }
+    auth_url = _cfg.AUTHORIZATION_URL + "?" + _parse.urlencode(params)
+
+    # Detect whether we are using the Playground URL (paste-mode) or our own callback
+    playground_url = "developer.intuit.com/v2/OAuth2Playground"
+    use_paste_mode = playground_url in _cfg.REDIRECT_URI
+
+    return {
+        "auth_url":       auth_url,
+        "company":        company,
+        "paste_mode":     use_paste_mode,
+        "redirect_uri":   _cfg.REDIRECT_URI,
+    }
+
+
+@app.post("/api/fpa/qbo-exchange-url")
+async def fpa_qbo_exchange_url(
+    body: dict = Body(...),
+    _: dict = Depends(get_current_user),
+):
+    """
+    Accept the full redirect URL the user copied from the browser after Intuit
+    authorization (paste-mode flow) and exchange the code for tokens.
+
+    Body: { "redirect_url": "https://...", "company": "main"|"broker" }
+    """
+    import urllib.parse as _parse
+    from qbo.auth import exchange_code_for_tokens_for_company
+
+    redirect_url = (body.get("redirect_url") or "").strip()
+    company      = body.get("company", "main")
+
+    if not redirect_url:
+        raise HTTPException(status_code=400, detail="redirect_url is required")
+    if company not in ("main", "broker"):
+        raise HTTPException(status_code=400, detail="company must be 'main' or 'broker'")
+
+    parsed = _parse.urlparse(redirect_url)
+    qs     = _parse.parse_qs(parsed.query)
+
+    if "error" in qs:
+        raise HTTPException(status_code=400, detail=f"Intuit error: {qs['error'][0]}")
+
+    code     = qs.get("code",    [""])[0]
+    realm_id = qs.get("realmId", [""])[0]
+
+    if not code:
+        raise HTTPException(
+            status_code=400,
+            detail="No authorization code found in the URL. Copy the full URL from the browser address bar."
+        )
+
+    try:
+        store = exchange_code_for_tokens_for_company(code, realm_id, company)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+
+    return {"connected": True, "realm_id": store.realm_id, "company": company}
+
+
+@app.get("/api/qbo/callback")
+async def qbo_oauth_callback(
+    code: str = "",
+    realmId: str = "",
+    state: str = "",
+    error: str = "",
+):
+    """
+    OAuth 2.0 redirect endpoint — Intuit calls this after the user authorizes.
+    Exchanges the code for tokens, saves per-company token file, then returns
+    a small HTML page the user can close.
+    """
+    from fastapi.responses import HTMLResponse
+    from qbo.auth import exchange_code_for_tokens_for_company
+
+    if error:
+        return HTMLResponse(
+            f"<h2 style='color:red;font-family:sans-serif'>Authorization failed</h2>"
+            f"<p>{error}</p><p>You can close this tab.</p>",
+            status_code=400,
+        )
+
+    # Parse state to determine company
+    company = "main"
+    if ":" in state:
+        nonce = state.split(":", 1)[1]
+        company = _qbo_oauth_states.pop(nonce, "main")
+
+    try:
+        exchange_code_for_tokens_for_company(code, realmId, company)
+    except Exception as exc:
+        return HTMLResponse(
+            f"<h2 style='color:red;font-family:sans-serif'>Token exchange failed</h2>"
+            f"<p>{exc}</p><p>You can close this tab.</p>",
+            status_code=500,
+        )
+
+    label = "Main Company" if company == "main" else "Broker Company"
+    return HTMLResponse(
+        f"<h2 style='color:green;font-family:sans-serif'>"
+        f"Connected: {label}</h2>"
+        f"<p style='font-family:sans-serif'>You can close this tab and return to the app.</p>"
+        f"<script>window.close();</script>"
+    )
+
+
+@app.get("/api/fpa/qbo-status")
+async def fpa_qbo_status(_: dict = Depends(get_current_user)):
+    """Return QBO connection status for both main and broker companies."""
+    from qbo.auth import get_company_info
+    from qbo import config as _cfg
+    return {
+        "main":   {**get_company_info("main"),   "company_name": "Concertiv"},
+        "broker": {**get_company_info("broker"), "company_name": _cfg.BROKER_COMPANY_NAME},
+        "sandbox": _cfg.USE_SANDBOX,
+    }
+
+
+@app.post("/api/fpa/qbo-fetch")
+async def fpa_qbo_fetch(
+    body: dict = Body(...),
+    _: dict = Depends(_require_fpa),
+):
+    """
+    Stream fetch progress via SSE, then deliver the full result as the final event.
+
+    Events: { step, msg }  — progress updates
+             { step: "done", data: {...} }  — final result
+             { step: "error", msg: "..." }  — failure
+    """
+    import asyncio
+    import base64 as _b64
+    import json
+    import traceback as _tb
+    import pandas as _pd
+    from fastapi.responses import StreamingResponse
+    from fpa.qbo_fetch import fetch_company_transactions
+    from fpa.transform import run_transform_from_df
+
+    from datetime import date as _date
+    company_name   = body.get("company_name", "Concertiv").strip()
+    start_date     = "1900-01-01"
+    end_date       = _date.today().isoformat()
+    include_broker = bool(body.get("include_broker", False))
+
+    def _evt(step: str, msg: str = "", **extra) -> str:
+        return f"data: {json.dumps({'step': step, 'msg': msg, **extra})}\n\n"
+
+    async def generate():
+        try:
+            yield _evt("connecting", "Authenticating with QuickBooks Online…")
+
+            # ── Fetch main company ────────────────────────────────────────────
+            yield _evt("fetching_main", "Fetching all transactions from QBO…")
+            try:
+                main_df = await asyncio.to_thread(
+                    fetch_company_transactions, "main", start_date, end_date
+                )
+            except FileNotFoundError as e:
+                yield _evt("error", str(e)); return
+            except Exception as e:
+                yield _evt("error", f"QBO fetch error: {e}"); return
+
+            combined_df = main_df
+
+            # ── Optionally fetch broker ───────────────────────────────────────
+            if include_broker:
+                yield _evt("fetching_broker", "Fetching broker company transactions…")
+                try:
+                    broker_df = await asyncio.to_thread(
+                        fetch_company_transactions, "broker", start_date, end_date
+                    )
+                    combined_df = _pd.concat([main_df, broker_df], ignore_index=True)
+                except FileNotFoundError as e:
+                    yield _evt("error", str(e)); return
+                except Exception as e:
+                    yield _evt("error", f"Broker fetch error: {e}"); return
+
+            # ── Stream raw rows so the UI can show them immediately ───────────
+            raw_rows = _df_to_records(combined_df)
+            yield _evt("rows", f"Fetched {len(raw_rows):,} transactions from QBO.",
+                       total=len(raw_rows), rows=raw_rows)
+
+            # ── Transform ─────────────────────────────────────────────────────
+            yield _evt("transforming", f"Running FP&A transform on {len(combined_df):,} rows…")
+            try:
+                result_tuple = await asyncio.to_thread(
+                    run_transform_from_df, combined_df, company_name
+                )
+            except Exception as e:
+                yield _evt("error", f"Transform error: {e}\n{_tb.format_exc()}"); return
+
+            (
+                excel_bytes, summary, preview,
+                bs_bytes, bs_preview,
+                bsi_bytes, bsi_preview,
+                pl_bytes, pl_preview,
+                comp_pl_bytes, comp_pl_preview,
+                comp_pl_bd_bytes, comp_pl_bd_preview,
+            ) = result_tuple
+
+            yield _evt("packaging", "Packaging reports…")
+
+            from datetime import datetime as _dt2
+            result = {
+                "cached_at":            _dt2.now().isoformat(),
+                "summary":              summary,
+                "preview":              preview,
+                "excel_b64":            _b64.b64encode(excel_bytes).decode(),
+                "bs_excel_b64":         _b64.b64encode(bs_bytes).decode(),
+                "bs_preview":           bs_preview,
+                "bsi_excel_b64":        _b64.b64encode(bsi_bytes).decode(),
+                "bsi_preview":          bsi_preview,
+                "pl_excel_b64":         _b64.b64encode(pl_bytes).decode(),
+                "pl_preview":           pl_preview,
+                "comp_pl_excel_b64":    _b64.b64encode(comp_pl_bytes).decode(),
+                "comp_pl_preview":      comp_pl_preview,
+                "comp_pl_bd_excel_b64": _b64.b64encode(comp_pl_bd_bytes).decode(),
+                "comp_pl_bd_preview":   comp_pl_bd_preview,
+            }
+
+            # Persist so next app load serves this data from cache
+            try:
+                _save_qbo_cache({"company_name": company_name, **result})
+            except Exception:
+                pass
+
+            yield _evt("done", "All reports ready.", data=result)
+
+        except Exception as e:
+            yield _evt("error", f"Unexpected error: {e}\n{_tb.format_exc()}")
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@app.get("/api/fpa/qbo-cache/status")
+async def fpa_qbo_cache_status(_: dict = Depends(get_current_user)):
+    """Return cache metadata without the heavy b64 blobs (used for 'Last refreshed' UI)."""
+    if not _CACHE_FILE.exists():
+        return {"cached": False}
+    import json as _json
+    from datetime import datetime as _dt
+    try:
+        data      = _json.loads(_CACHE_FILE.read_text(encoding="utf-8"))
+        cached_at = data.get("cached_at")
+        age_min   = None
+        if cached_at:
+            age_min = round((_dt.now() - _dt.fromisoformat(cached_at)).total_seconds() / 60, 1)
+        _STALE_AFTER_HOURS = 24
+        is_stale = (age_min is not None) and (age_min > _STALE_AFTER_HOURS * 60)
+        return {
+            "cached":       True,
+            "cached_at":    cached_at,
+            "age_minutes":  age_min,
+            "is_stale":     is_stale,
+            "company_name": data.get("company_name"),
+            "total_rows":   data.get("summary", {}).get("total_rows"),
+        }
+    except Exception:
+        return {"cached": False}
+
+
+@app.get("/api/fpa/qbo-cache")
+async def fpa_qbo_cache(_: dict = Depends(get_current_user)):
+    """Return the full cached FP&A result (same shape as the SSE 'done' event data)."""
+    if not _CACHE_FILE.exists():
+        raise HTTPException(status_code=404, detail="No cache available yet — QBO fetch has not run")
+    import json as _json
+    try:
+        return _json.loads(_CACHE_FILE.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
 # ── Routes ─────────────────────────────────────────────────────────────────────
+
+@app.post("/api/parse-file")
+async def parse_file_metadata(
+    file: UploadFile = File(...),
+    _: dict = _auth,
+):
+    file_bytes = await file.read()
+    meta = get_file_metadata(BytesIO(file_bytes))
+    return {"journal_number": meta.get("journal_number", ""), "invoice_date": meta.get("invoice_date", "")}
+
 
 @app.post("/api/generate")
 async def generate_je(
@@ -487,8 +1056,25 @@ async def generate_je(
     journal_number: str = Form(...),
     entry_date: str = Form(...),
     provision_desc: str = Form(""),
-    _: dict = _auth,
+    current_user: dict = Depends(get_current_user),
 ):
+    # Per-user rate limit
+    _check_generate_rate(current_user["username"])
+
+    # Validate journal_number
+    jn = journal_number.strip()
+    if not jn:
+        raise HTTPException(status_code=422, detail={"errors": ["Journal Number is required."]})
+    if len(jn) > 200:
+        raise HTTPException(status_code=422, detail={"errors": ["Journal Number is too long (max 200 characters)."]})
+
+    # Validate entry_date format (must be MM/DD/YYYY)
+    from datetime import datetime as _dt
+    try:
+        _dt.strptime(entry_date.strip(), "%m/%d/%Y")
+    except ValueError:
+        raise HTTPException(status_code=422, detail={"errors": [f"Entry Date '{entry_date}' is invalid. Expected MM/DD/YYYY."]})
+
     file_bytes = await file.read()
     filename = file.filename or "payroll.xlsx"
 
@@ -499,7 +1085,7 @@ async def generate_je(
     if issues:
         raise HTTPException(status_code=422, detail={"errors": issues})
 
-    je_df, summary, ctx = _run_pipeline_from_raw(raw_df, journal_number, entry_date, provision_desc)
+    je_df, summary, ctx = _run_pipeline_from_raw(raw_df, jn, entry_date.strip(), provision_desc)
 
     clean_stem = re.sub(
         r"^Invoice_Supporting_Details[\s_\-]*", "",
@@ -510,13 +1096,14 @@ async def generate_je(
 
     session_id = str(uuid.uuid4())
     _sessions[session_id] = {
+        "owner": current_user["username"],
         "je_df": je_df,
         "je_filename": je_filename,
         "summary": summary,
         "payroll_gt": ctx["payroll_gt"],
         "je_provision": ctx["je_provision"],
-        "journal_number": journal_number,
-        "entry_date": entry_date,
+        "journal_number": jn,
+        "entry_date": entry_date.strip(),
         "provision_desc": provision_desc,
         "unmapped_cols": ctx["unmapped_cols"],
         "na_mapped_cols": ctx["na_mapped_cols"],
@@ -524,6 +1111,9 @@ async def generate_je(
         "pf_bytes": file_bytes,
         "pf_name": filename,
     }
+    threading.Thread(
+        target=_persist_session, args=(session_id, _sessions[session_id]), daemon=True
+    ).start()
 
     # Persist input file synchronously (needed for audit trail)
     # If the file is open in another program (e.g. Excel), skip silently.
@@ -566,8 +1156,8 @@ async def generate_je(
 
 
 @app.get("/api/je/{session_id}")
-async def get_je(session_id: str, _: dict = _auth):
-    s = _get_session(session_id)
+async def get_je(session_id: str, current_user: dict = Depends(get_current_user)):
+    s = _get_session(session_id, current_user)
     je_df = s["je_df"]
     return {
         "je_rows": _df_to_records(je_df),
@@ -583,8 +1173,8 @@ async def get_je(session_id: str, _: dict = _auth):
 
 
 @app.put("/api/je/{session_id}")
-async def update_je(session_id: str, body: dict = Body(...), _: dict = _auth):
-    s = _get_session(session_id)
+async def update_je(session_id: str, body: dict = Body(...), current_user: dict = Depends(get_current_user)):
+    s = _get_session(session_id, current_user)
     rows = body.get("rows", [])
     je_df = pd.DataFrame(rows)
     s["je_df"] = je_df
@@ -599,6 +1189,7 @@ async def update_je(session_id: str, body: dict = Body(...), _: dict = _auth):
         2,
     )
     s["je_provision"] = je_provision
+    threading.Thread(target=_persist_session, args=(session_id, s), daemon=True).start()
 
     log_action_async(
         action="JE Edited",
@@ -611,8 +1202,8 @@ async def update_je(session_id: str, body: dict = Body(...), _: dict = _auth):
 
 
 @app.get("/api/je/{session_id}/download")
-async def download_je(session_id: str, _: dict = _auth):
-    s = _get_session(session_id)
+async def download_je(session_id: str, current_user: dict = Depends(get_current_user)):
+    s = _get_session(session_id, current_user)
     je_df = s["je_df"]
     buf = BytesIO()
     je_df.to_excel(buf, index=False)
@@ -636,8 +1227,8 @@ async def download_je(session_id: str, _: dict = _auth):
 
 
 @app.post("/api/regenerate/{session_id}")
-async def regenerate_je(session_id: str, body: dict = Body(...), _: dict = _auth):
-    s = _get_session(session_id)
+async def regenerate_je(session_id: str, body: dict = Body(...), current_user: dict = Depends(get_current_user)):
+    s = _get_session(session_id, current_user)
     pf_bytes = s.get("pf_bytes")
     if not pf_bytes:
         raise HTTPException(status_code=400, detail="No payroll file in session")
@@ -660,6 +1251,7 @@ async def regenerate_je(session_id: str, body: dict = Body(...), _: dict = _auth
             "na_mapped_cols": ctx["na_mapped_cols"],
         }
     )
+    threading.Thread(target=_persist_session, args=(session_id, s), daemon=True).start()
 
     log_action_async(
         action="JE Regenerated",
@@ -712,11 +1304,11 @@ async def save_mapping(body: dict = Body(...), _: dict = _auth):
 
 
 @app.post("/api/je/{session_id}/post-qbo")
-async def post_to_qbo(session_id: str, _: dict = _auth):
+async def post_to_qbo(session_id: str, current_user: dict = Depends(get_current_user)):
     import asyncio
     from qbo.api import QBOClient
 
-    s = _get_session(session_id)
+    s = _get_session(session_id, current_user)
     je_df = s["je_df"]
 
     def _do_post():
@@ -725,10 +1317,16 @@ async def post_to_qbo(session_id: str, _: dict = _auth):
         except FileNotFoundError:
             raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
 
-        # All three maps read from local CSVs — no parallel threads needed
         account_map = client.fetch_account_map()
         class_map   = client.fetch_class_map()
         vendor_map  = client.fetch_vendor_map()
+
+        # Pre-flight: accounts list must be populated or posting will silently use wrong IDs
+        if not account_map:
+            raise HTTPException(
+                status_code=400,
+                detail="Chart of Accounts is empty. Go to Step 4 → Chart of Accounts → Sync from QBO first.",
+            )
 
         payload = QBOClient.build_je_payload(
             je_df,
@@ -814,21 +1412,73 @@ _QBO_ACCOUNTS_CSV = BASE_DIR / "qbo" / "accounts_override.csv"
 _QBO_VENDORS_CSV  = BASE_DIR / "qbo" / "vendors_override.csv"
 
 
+def _csv_meta_path(csv_path: Path) -> Path:
+    return csv_path.with_name(csv_path.stem + ".meta.json")
+
+
+def _read_csv_meta(csv_path: Path) -> dict:
+    meta_path = _csv_meta_path(csv_path)
+    if meta_path.exists():
+        try:
+            return json.loads(meta_path.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+
+def _write_csv_meta(csv_path: Path, source: str, row_count: int) -> None:
+    meta = {
+        "last_synced": datetime.now(tz=timezone.utc).isoformat(),
+        "source": source,
+        "row_count": row_count,
+    }
+    try:
+        _csv_meta_path(csv_path).write_text(json.dumps(meta), encoding="utf-8")
+    except Exception:
+        pass
+
+
 def _read_qbo_csv(path: Path) -> dict:
     if path.exists():
         df = pd.read_csv(str(path), dtype=str).fillna("")
-        return {"rows": _df_to_records(df), "columns": list(df.columns), "source": "local"}
-    return {"rows": [], "columns": [], "source": "none"}
+        meta = _read_csv_meta(path)
+        return {
+            "rows": _df_to_records(df),
+            "columns": list(df.columns),
+            "source": "local",
+            "last_synced": meta.get("last_synced"),
+            "sync_source": meta.get("source", "unknown"),
+        }
+    return {"rows": [], "columns": [], "source": "none", "last_synced": None, "sync_source": None}
 
 
-def _save_qbo_csv(path: Path, rows: list) -> None:
+def _save_qbo_csv(path: Path, rows: list, source: str = "manual") -> None:
     path.parent.mkdir(exist_ok=True)
     pd.DataFrame(rows).to_csv(str(path), index=False)
+    _write_csv_meta(path, source=source, row_count=len(rows))
+
+
+def _fetch_and_cache_qbo(csv_path: Path, fetch_fn) -> dict:
+    """Fetch live from QBO, update the local CSV cache, and return the data."""
+    df = fetch_fn()
+    records = _df_to_records(df)
+    _save_qbo_csv(csv_path, records, source="qbo")
+    synced_at = datetime.now(tz=timezone.utc).isoformat()
+    return {"rows": records, "columns": list(df.columns), "source": "qbo", "last_synced": synced_at, "sync_source": "qbo"}
 
 
 @app.get("/api/qbo/accounts")
 async def qbo_accounts(_: dict = _auth):
-    return _read_qbo_csv(_QBO_ACCOUNTS_CSV)
+    try:
+        from qbo.auth import is_authenticated
+        from qbo.api import QBOClient
+        if not is_authenticated():
+            raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
+        return _fetch_and_cache_qbo(_QBO_ACCOUNTS_CSV, QBOClient().get_accounts_dataframe)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.put("/api/qbo/accounts")
@@ -844,10 +1494,7 @@ async def sync_qbo_accounts(_: dict = _auth):
         from qbo.api import QBOClient
         if not is_authenticated():
             raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
-        client = QBOClient()
-        df = client.get_accounts_dataframe()
-        _save_qbo_csv(_QBO_ACCOUNTS_CSV, _df_to_records(df))
-        return {"rows": _df_to_records(df), "columns": list(df.columns), "source": "qbo"}
+        return _fetch_and_cache_qbo(_QBO_ACCOUNTS_CSV, QBOClient().get_accounts_dataframe)
     except HTTPException:
         raise
     except Exception as e:
@@ -856,7 +1503,16 @@ async def sync_qbo_accounts(_: dict = _auth):
 
 @app.get("/api/qbo/vendors")
 async def qbo_vendors(_: dict = _auth):
-    return _read_qbo_csv(_QBO_VENDORS_CSV)
+    try:
+        from qbo.auth import is_authenticated
+        from qbo.api import QBOClient
+        if not is_authenticated():
+            raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
+        return _fetch_and_cache_qbo(_QBO_VENDORS_CSV, QBOClient().get_vendors_dataframe)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.put("/api/qbo/vendors")
@@ -872,10 +1528,7 @@ async def sync_qbo_vendors(_: dict = _auth):
         from qbo.api import QBOClient
         if not is_authenticated():
             raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
-        client = QBOClient()
-        df = client.get_vendors_dataframe()
-        _save_qbo_csv(_QBO_VENDORS_CSV, _df_to_records(df))
-        return {"rows": _df_to_records(df), "columns": list(df.columns), "source": "qbo"}
+        return _fetch_and_cache_qbo(_QBO_VENDORS_CSV, QBOClient().get_vendors_dataframe)
     except HTTPException:
         raise
     except Exception as e:
@@ -887,7 +1540,16 @@ _QBO_CLASSES_CSV = BASE_DIR / "qbo" / "classes_override.csv"
 
 @app.get("/api/qbo/classes")
 async def qbo_classes(_: dict = _auth):
-    return _read_qbo_csv(_QBO_CLASSES_CSV)
+    try:
+        from qbo.auth import is_authenticated
+        from qbo.api import QBOClient
+        if not is_authenticated():
+            raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
+        return _fetch_and_cache_qbo(_QBO_CLASSES_CSV, QBOClient().get_classes_dataframe)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.put("/api/qbo/classes")
@@ -903,10 +1565,7 @@ async def sync_qbo_classes(_: dict = _auth):
         from qbo.api import QBOClient
         if not is_authenticated():
             raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
-        client = QBOClient()
-        df = client.get_classes_dataframe()
-        _save_qbo_csv(_QBO_CLASSES_CSV, _df_to_records(df))
-        return {"rows": _df_to_records(df), "columns": list(df.columns), "source": "qbo"}
+        return _fetch_and_cache_qbo(_QBO_CLASSES_CSV, QBOClient().get_classes_dataframe)
     except HTTPException:
         raise
     except Exception as e:

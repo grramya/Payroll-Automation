@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
-import { Box, Container, Typography, alpha, Divider, Collapse } from "@mui/material";
+import { Box, Container, Typography, Divider, Collapse } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon   from "@mui/icons-material/KeyboardArrowUp";
+import dayjs from "dayjs";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell,
+  Tooltip, Legend, ResponsiveContainer, ReferenceLine,
 } from "recharts";
 import { useFpaResult } from "../../context/FpaResultContext";
 
@@ -53,12 +55,12 @@ function Card({ children, sx = {} }) {
 function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
-    <Box sx={{ bgcolor: "#1C2B41", borderRadius: 1.5, p: 1.5, minWidth: 160 }}>
-      <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.68rem", mb: 0.75 }}>{label}</Typography>
+    <Box sx={{ bgcolor: "#F5F5F5", borderRadius: 1.5, p: 1.5, minWidth: 160, border: "1px solid #E0E0E0", boxShadow: "0 2px 8px rgba(0,0,0,0.10)" }}>
+      <Typography sx={{ color: "#616161", fontSize: "0.68rem", mb: 0.75, fontWeight: 600 }}>{label}</Typography>
       {payload.map((p) => (
         <Box key={p.dataKey} sx={{ display: "flex", justifyContent: "space-between", gap: 2, mb: 0.25 }}>
           <Typography sx={{ color: p.color, fontSize: "0.72rem", fontWeight: 500 }}>{p.name}</Typography>
-          <Typography sx={{ color: "#fff", fontSize: "0.72rem", fontWeight: 700 }}>
+          <Typography sx={{ color: "#252525", fontSize: "0.72rem", fontWeight: 700 }}>
             {typeof p.value === "number" ? fmtM(p.value) : p.value}
           </Typography>
         </Box>
@@ -139,6 +141,7 @@ const DEPT_KEYS = [
   { label: "Sales",           key: "Total Sales" },
   { label: "Marketing",       key: "Total Marketing" },
   { label: "Customer Success",key: "Total Customer Success" },
+  { label: "Product",         key: "Total Product" },
 ];
 
 function DeptHeatmap({ months, data }) {
@@ -253,22 +256,22 @@ function PeriodTable({ data, months }) {
     <Box sx={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
         <thead>
-          <tr style={{ background: "#0F172A" }}>
-            <th style={{ textAlign: "left", padding: "8px 12px", color: "rgba(255,255,255,0.8)", fontWeight: 600, fontSize: "0.72rem" }}>
+          <tr style={{ background: "#400f61" }}>
+            <th style={{ textAlign: "left", padding: "8px 12px", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: "0.72rem" }}>
               Line Item
             </th>
             {cols.map((c) => (
-              <th key={c.label} style={{ textAlign: "right", padding: "8px 10px", color: "rgba(255,255,255,0.8)", fontWeight: 600, fontSize: "0.72rem", whiteSpace: "nowrap" }}>
+              <th key={c.label} style={{ textAlign: "right", padding: "8px 10px", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: "0.72rem", whiteSpace: "nowrap" }}>
                 {c.label}
               </th>
             ))}
             {prev && (
-              <th style={{ textAlign: "right", padding: "8px 10px", color: "rgba(255,255,255,0.8)", fontWeight: 600, fontSize: "0.72rem" }}>
+              <th style={{ textAlign: "right", padding: "8px 10px", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: "0.72rem" }}>
                 Δ MoM
               </th>
             )}
             {yearAgo && (
-              <th style={{ textAlign: "right", padding: "8px 10px", color: "rgba(255,255,255,0.8)", fontWeight: 600, fontSize: "0.72rem" }}>
+              <th style={{ textAlign: "right", padding: "8px 10px", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: "0.72rem" }}>
                 Δ YoY
               </th>
             )}
@@ -279,10 +282,15 @@ function PeriodTable({ data, months }) {
             const cur_v  = data[cur]?.[key]    ?? null;
             const prev_v = prev    ? (data[prev]?.[key]    ?? null) : null;
             const yoy_v  = yearAgo ? (data[yearAgo]?.[key] ?? null) : null;
-            const mom_d  = delta(cur_v, prev_v);
-            const yoy_d  = delta(cur_v, yoy_v);
+            const mom_d  = pct
+              ? (cur_v != null && prev_v != null ? cur_v - prev_v : null)
+              : delta(cur_v, prev_v);
+            const yoy_d  = pct
+              ? (cur_v != null && yoy_v  != null ? cur_v - yoy_v  : null)
+              : delta(cur_v, yoy_v);
             const fmt    = (v) => v == null ? "—" : pct ? fmtPct(v) : fmtM(v);
             const dColor = (d) => d == null ? "#94A3B8" : d >= 0 ? "#2CA01C" : "#DC2626";
+            const fmtDelta = (d) => d == null ? "—" : `${d >= 0 ? "▲" : "▼"} ${Math.abs(d).toFixed(1)}${pct ? " pp" : "%"}`;
 
             return (
               <tr key={key} style={{ background: i % 2 === 0 ? "#fff" : "#F8FAFC" }}>
@@ -300,12 +308,12 @@ function PeriodTable({ data, months }) {
                 })}
                 {prev && (
                   <td style={{ padding: "7px 10px", textAlign: "right", borderTop: "1px solid #F1F5F9", color: dColor(mom_d), fontWeight: 700, fontSize: "0.75rem" }}>
-                    {mom_d == null ? "—" : `${mom_d >= 0 ? "▲" : "▼"} ${Math.abs(mom_d).toFixed(1)}%`}
+                    {fmtDelta(mom_d)}
                   </td>
                 )}
                 {yearAgo && (
                   <td style={{ padding: "7px 10px", textAlign: "right", borderTop: "1px solid #F1F5F9", color: dColor(yoy_d), fontWeight: 700, fontSize: "0.75rem" }}>
-                    {yoy_d == null ? "—" : `${yoy_d >= 0 ? "▲" : "▼"} ${Math.abs(yoy_d).toFixed(1)}%`}
+                    {fmtDelta(yoy_d)}
                   </td>
                 )}
               </tr>
@@ -317,39 +325,12 @@ function PeriodTable({ data, months }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Date input (reusable inside the page header)
-// ─────────────────────────────────────────────────────────────────────────────
-function DateInput({ label, value, onChange }) {
-  return (
-    <Box>
-      <Typography sx={{ fontSize: "0.68rem", fontWeight: 600, color: "#64748B", mb: 0.4, display: "block" }}>
-        {label}
-      </Typography>
-      <Box
-        sx={{
-          border: "1px solid #CBD5E1", borderRadius: 1.5,
-          display: "flex", alignItems: "center",
-          px: 1.5, py: 0.55, bgcolor: "#fff", minWidth: 148,
-          "&:focus-within": { borderColor: "#236CFF", boxShadow: "0 0 0 2px rgba(35,108,255,0.12)" },
-        }}
-      >
-        <input
-          type="date"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          style={{ border: "none", outline: "none", fontSize: "0.8rem", color: "#334155", background: "transparent", width: "100%", cursor: "pointer" }}
-        />
-      </Box>
-    </Box>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Dashboard
 // ─────────────────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const { result } = useFpaResult();
+  const { result, pageFilters, setPageFilter } = useFpaResult();
   const [compareOpen, setCompareOpen] = useState(false);
 
   const compPlPreview = result?.compPlPreview;
@@ -362,18 +343,22 @@ export default function DashboardPage() {
   const bsMonths  = bsPreview?.months ?? [];
   const bsRows    = bsPreview?.rows   ?? [];
 
-  // ── Date range state — initialise from data ───────────────────────────────
+  // ── Date range — derived from data, persisted in context ─────────────────
   const toFullYear = (yr) => yr?.length === 2 ? `20${yr}` : yr;
-  const firstYear  = plMonths.length ? toFullYear(plMonths[0].split("-")[1])                  : String(new Date().getFullYear());
-  const lastYear   = plMonths.length ? toFullYear(plMonths[plMonths.length - 1].split("-")[1]): String(new Date().getFullYear());
+  const firstYear  = plMonths.length ? toFullYear(plMonths[0].split("-")[1])                   : String(new Date().getFullYear());
+  const lastYear   = plMonths.length ? toFullYear(plMonths[plMonths.length - 1].split("-")[1]) : String(new Date().getFullYear());
 
-  const [fromDate, setFromDate] = useState(`${firstYear}-01-01`);
-  const [toDate,   setToDate]   = useState(`${lastYear}-12-31`);
+  const defaultFrom = dayjs(`${firstYear}-01-01`);
+  const defaultTo   = dayjs(`${lastYear}-12-31`);
+  const fromDate = pageFilters.dashboard?.fromDate ?? defaultFrom;
+  const toDate   = pageFilters.dashboard?.toDate   ?? defaultTo;
+  const setFromDate = (v) => setPageFilter("dashboard", { fromDate: v, toDate });
+  const setToDate   = (v) => setPageFilter("dashboard", { fromDate, toDate: v });
 
   // ── Filtered P&L months ───────────────────────────────────────────────────
   const filteredPlMonths = useMemo(() => {
-    const fromYM = fromDate ? fromDate.slice(0, 7) : null;
-    const toYM_  = toDate   ? toDate.slice(0, 7)   : null;
+    const fromYM = fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
+    const toYM_  = toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
     return plMonths.filter((m) => {
       const ym = toYM(m);
       if (fromYM && ym < fromYM) return false;
@@ -384,8 +369,8 @@ export default function DashboardPage() {
 
   // ── Filtered BS months (with their original indices for value lookup) ─────
   const filteredBsEntries = useMemo(() => {
-    const fromYM = fromDate ? fromDate.slice(0, 7) : null;
-    const toYM_  = toDate   ? toDate.slice(0, 7)   : null;
+    const fromYM = fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
+    const toYM_  = toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
     return bsMonths
       .map((m, i) => ({ m, i }))
       .filter(({ m }) => {
@@ -396,11 +381,19 @@ export default function DashboardPage() {
       });
   }, [bsMonths, fromDate, toDate]);
 
-  // ── Derived KPI source: latest filtered month ────────────────────────────
-  const latestM = filteredPlMonths[filteredPlMonths.length - 1];
-  const prevM   = filteredPlMonths[filteredPlMonths.length - 2];
-  const latestD = plData[latestM] ?? {};
-  const prevD   = plData[prevM]   ?? {};
+  // ── Derived KPI source: last month with actual revenue ───────────────────
+  // Skips the current partial month when revenue hasn't been invoiced yet.
+  const kpiLatestIdx = (() => {
+    for (let i = filteredPlMonths.length - 1; i >= 0; i--) {
+      if ((plData[filteredPlMonths[i]]?.["Total Revenue"] ?? 0) > 0) return i;
+    }
+    return filteredPlMonths.length - 1;
+  })();
+  const latestM   = filteredPlMonths[kpiLatestIdx];
+  const prevM     = kpiLatestIdx > 0 ? filteredPlMonths[kpiLatestIdx - 1] : undefined;
+  const latestD   = plData[latestM] ?? {};
+  const prevD     = plData[prevM]   ?? {};
+  const kpiMonths = filteredPlMonths.slice(0, kpiLatestIdx + 1);
 
   // ── Revenue trend chart data (filtered) ──────────────────────────────────
   const revTrendData = useMemo(() =>
@@ -427,10 +420,11 @@ export default function DashboardPage() {
 
   // ── Cash trend (filtered BS) ──────────────────────────────────────────────
   const findBsRow     = (label) => bsRows.find((r) => r.label === label);
-  const cashRow       = findBsRow("Cash and Cash equivalents");
-  const assetsRow     = findBsRow("Total Assets");
-  const liabRow       = findBsRow("Total Liabilities");
-  const equityRow     = findBsRow("Equity");
+  const cashRow           = findBsRow("Cash and Cash equivalents");
+  const assetsRow         = findBsRow("Total Assets");
+  const currentLiabRow    = findBsRow("Current Liabilities");
+  const nonCurrentLiabRow = findBsRow("Non Current Liabilities");
+  const equityRow         = findBsRow("Equity");
 
   const cashTrendData = useMemo(() =>
     filteredBsEntries.map(({ m, i }) => ({
@@ -445,29 +439,31 @@ export default function DashboardPage() {
   const latestBsIdx   = lastBsEntry?.i ?? -1;
   const prevBsIdx     = prevBsEntry?.i ?? -1;
 
-  const latestCash    = latestBsIdx >= 0 ? (cashRow?.values?.[latestBsIdx]   ?? null) : null;
-  const prevCash      = prevBsIdx   >= 0 ? (cashRow?.values?.[prevBsIdx]     ?? null) : null;
-  const latestAssets  = latestBsIdx >= 0 ? (assetsRow?.values?.[latestBsIdx] ?? null) : null;
-  const latestLiab    = latestBsIdx >= 0 ? (liabRow?.values?.[latestBsIdx]   ?? null) : null;
-  const latestEquity  = latestBsIdx >= 0 ? (equityRow?.values?.[latestBsIdx] ?? null) : null;
+  const latestCash   = latestBsIdx >= 0 ? (cashRow?.values?.[latestBsIdx]   ?? null) : null;
+  const prevCash     = prevBsIdx   >= 0 ? (cashRow?.values?.[prevBsIdx]     ?? null) : null;
+  const latestAssets = latestBsIdx >= 0 ? (assetsRow?.values?.[latestBsIdx] ?? null) : null;
+  const latestLiab   = latestBsIdx >= 0
+    ? ((currentLiabRow?.values?.[latestBsIdx] ?? 0) + (nonCurrentLiabRow?.values?.[latestBsIdx] ?? 0))
+    : null;
+  const latestEquity = latestBsIdx >= 0 ? (equityRow?.values?.[latestBsIdx] ?? null) : null;
   const monthlyBurn   = latestCash != null && prevCash != null ? latestCash - prevCash : null;
   const runway        = monthlyBurn && monthlyBurn < 0 ? Math.abs(latestCash / monthlyBurn) : null;
 
   // ── KPI tiles ─────────────────────────────────────────────────────────────
   const kpis = [
-    { label: "Revenue",      value: latestD["Total Revenue"],        deltaVal: delta(latestD["Total Revenue"],        prevD["Total Revenue"]),        accent: "#236CFF" },
+    { label: "Revenue",      value: latestD["Total Revenue"],        deltaVal: delta(latestD["Total Revenue"],        prevD["Total Revenue"]),        accent: "#400f61" },
     { label: "Gross Margin", value: latestD["Gross Profit (%)"],     deltaVal: null, format: "pct",                   accent: "#2CA01C" },
     { label: "EBITDA",       value: latestD["EBITDA"],               deltaVal: delta(latestD["EBITDA"],               prevD["EBITDA"]),               accent: "#059669" },
-    { label: "Net Income",   value: latestD["Net Income"],           deltaVal: delta(latestD["Net Income"],           prevD["Net Income"]),           accent: "#7C3AED" },
-    { label: "Cash",         value: latestCash,                      deltaVal: delta(latestCash, prevCash),           accent: "#0369A1" },
-    { label: "Op. Margin",   value: latestD["Operating Profit (%)"], deltaVal: null, format: "pct",                   accent: "#D97706" },
+    { label: "Net Income",   value: latestD["Net Income"],           deltaVal: delta(latestD["Net Income"],           prevD["Net Income"]),           accent: "#400f61" },
+    { label: "Cash",         value: latestCash,                      deltaVal: delta(latestCash, prevCash),           accent: "#6d28d9" },
+    { label: "Op. Margin",   value: latestD["Operating Profit (%)"], deltaVal: null, format: "pct",                   accent: "#2d0a45" },
   ];
 
   const efficiencyRatios = [
     { label: "Gross Margin",      value: latestD["Gross Profit (%)"],     benchmark: 70, color: "#2CA01C" },
     { label: "EBITDA Margin",     value: latestD["EBITDA (%)"],           benchmark: 10, color: "#059669" },
-    { label: "Operating Margin",  value: latestD["Operating Profit (%)"], benchmark: 15, color: "#236CFF" },
-    { label: "Net Income Margin", value: latestD["Net Income (%)"],       benchmark: 10, color: "#7C3AED" },
+    { label: "Operating Margin",  value: latestD["Operating Profit (%)"], benchmark: 15, color: "#400f61" },
+    { label: "Net Income Margin", value: latestD["Net Income (%)"],       benchmark: 10, color: "#2d0a45" },
   ];
 
   if (!result) return (
@@ -481,6 +477,8 @@ export default function DashboardPage() {
 
       {/* ── Page header with date filters ───────────────────────────────── */}
       <Box
+        component="section"
+        aria-label="Page controls"
         sx={{
           borderBottom: "1px solid #E2E8F0", bgcolor: "#fff",
           px: { xs: 2, md: 4 }, py: 2.5, mb: 3,
@@ -489,16 +487,29 @@ export default function DashboardPage() {
         }}
       >
         <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>Dashboard</Typography>
+          <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>Dashboard</Typography>
           <Typography variant="body2" color="text.secondary">
-            {companyName} · {filteredPlMonths[0] ?? "—"} → {filteredPlMonths[filteredPlMonths.length - 1] ?? "—"}
+            {companyName} &mdash; {filteredPlMonths[0] ?? "—"} to {filteredPlMonths[filteredPlMonths.length - 1] ?? "—"}
+            {latestM && latestM !== filteredPlMonths[filteredPlMonths.length - 1] && (
+              <> &nbsp;·&nbsp; KPIs as of {latestM}</>
+            )}
           </Typography>
         </Box>
 
-        {/* Date range pickers */}
-        <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1.5, flexWrap: "wrap" }}>
-          <DateInput label="From" value={fromDate} onChange={setFromDate} />
-          <DateInput label="To"   value={toDate}   onChange={setToDate}   />
+        {/* Date range pickers — same pattern as all other FP&A pages */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+          <DatePicker
+            label="From"
+            value={fromDate}
+            onChange={(v) => setFromDate(v)}
+            slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, inputProps: { "aria-label": "Filter from date" } } }}
+          />
+          <DatePicker
+            label="To"
+            value={toDate}
+            onChange={(v) => setToDate(v)}
+            slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, inputProps: { "aria-label": "Filter to date" } } }}
+          />
         </Box>
       </Box>
 
@@ -521,8 +532,8 @@ export default function DashboardPage() {
               <AreaChart data={revTrendData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#236CFF" stopOpacity={0.18} />
-                    <stop offset="95%" stopColor="#236CFF" stopOpacity={0.01} />
+                    <stop offset="5%"  stopColor="#400f61" stopOpacity={0.18} />
+                    <stop offset="95%" stopColor="#400f61" stopOpacity={0.01} />
                   </linearGradient>
                   <linearGradient id="gpGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%"  stopColor="#2CA01C" stopOpacity={0.15} />
@@ -535,7 +546,7 @@ export default function DashboardPage() {
                 <Tooltip content={<ChartTooltip />} />
                 <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "0.72rem", paddingTop: 8 }} />
                 <ReferenceLine y={0} stroke="#E2E8F0" />
-                <Area type="monotone" dataKey="Revenue"      stroke="#236CFF" strokeWidth={2} fill="url(#revGrad)" dot={false} />
+                <Area type="monotone" dataKey="Revenue"      stroke="#400f61" strokeWidth={2} fill="url(#revGrad)" dot={false} />
                 <Area type="monotone" dataKey="Gross Profit" stroke="#2CA01C" strokeWidth={2} fill="url(#gpGrad)"  dot={false} />
                 <Area type="monotone" dataKey="EBITDA"       stroke="#059669" strokeWidth={1.5} fill="none" strokeDasharray="4 2" dot={false} />
               </AreaChart>
@@ -553,7 +564,7 @@ export default function DashboardPage() {
                 <Tooltip content={<ChartTooltip />} />
                 <Legend iconType="square" iconSize={8} wrapperStyle={{ fontSize: "0.72rem", paddingTop: 8 }} />
                 <ReferenceLine y={0} stroke="#E2E8F0" />
-                <Bar dataKey="Revenue"      fill="#236CFF" radius={[2,2,0,0]} maxBarSize={18} />
+                <Bar dataKey="Revenue"      fill="#400f61" radius={[2,2,0,0]} maxBarSize={18} />
                 <Bar dataKey="Gross Profit" fill="#2CA01C" radius={[2,2,0,0]} maxBarSize={18} />
                 <Bar dataKey="EBITDA"       fill="#059669" radius={[2,2,0,0]} maxBarSize={18} />
               </BarChart>
@@ -590,15 +601,15 @@ export default function DashboardPage() {
                   <AreaChart data={cashTrendData.slice(-12)} margin={{ top: 2, right: 4, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="cashGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"  stopColor="#0369A1" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="#0369A1" stopOpacity={0.01} />
+                        <stop offset="5%"  stopColor="#6d28d9" stopOpacity={0.2} />
+                        <stop offset="95%" stopColor="#6d28d9" stopOpacity={0.01} />
                       </linearGradient>
                     </defs>
                     <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
                     <YAxis tickFormatter={(v) => fmtM(v)} tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} width={60} />
                     <Tooltip content={<ChartTooltip />} />
                     <ReferenceLine y={0} stroke="#E2E8F0" />
-                    <Area type="monotone" dataKey="Cash" stroke="#0369A1" strokeWidth={2} fill="url(#cashGrad)" dot={false} />
+                    <Area type="monotone" dataKey="Cash" stroke="#6d28d9" strokeWidth={2} fill="url(#cashGrad)" dot={false} />
                   </AreaChart>
                 </ResponsiveContainer>
               </Box>
@@ -607,8 +618,8 @@ export default function DashboardPage() {
               <Box sx={{ flex: "0 0 260px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
                 <Divider sx={{ mb: 1.5, display: { xs: "block", sm: "none" } }} />
                 {[
-                  { label: "Cash",         value: latestCash,   color: "#0369A1" },
-                  { label: "Total Assets", value: latestAssets, color: "#236CFF" },
+                  { label: "Cash",         value: latestCash,   color: "#400f61" },
+                  { label: "Total Assets", value: latestAssets, color: "#6d28d9" },
                   { label: "Total Liab.",  value: latestLiab,   color: "#DC2626" },
                   { label: "Equity",       value: latestEquity, color: "#2CA01C" },
                   ...(runway ? [{ label: "Runway", value: `~${runway.toFixed(1)} mo`, raw: true, color: runway < 6 ? "#DC2626" : "#2CA01C" }] : []),
@@ -651,7 +662,7 @@ export default function DashboardPage() {
           <Collapse in={compareOpen}>
             <Divider />
             <Box sx={{ p: 2.5 }}>
-              <PeriodTable data={plData} months={filteredPlMonths} />
+              <PeriodTable data={plData} months={kpiMonths} />
             </Box>
           </Collapse>
         </Card>

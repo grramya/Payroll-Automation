@@ -1,110 +1,250 @@
-Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
-108,401k - ER,Salary & Benefits:401k - ER,Expense,PayrollExpenses,True,0.0
-69,Accounting,Legal & Professional Fees:Accounting,Expense,LegalProfessionalFees,True,0.0
-91,Accounts Payable,Accounts Payable,Accounts Payable,AccountsPayable,True,97004.36
-33,Accounts Payable (A/P),Accounts Payable (A/P),Accounts Payable,AccountsPayable,True,-1602.67
-84,Accounts Receivable (A/R),Accounts Receivable (A/R),Accounts Receivable,AccountsReceivable,True,5281.52
-94,Accrued Bonus,Accrued Expenses:Accrued Bonus,Other Current Liability,OtherCurrentLiabilities,True,12000.0
-93,Accrued Expense,Accrued Expenses:Accrued Expense,Other Current Liability,OtherCurrentLiabilities,True,52492.7
-92,Accrued Expenses,Accrued Expenses,Other Current Liability,OtherCurrentLiabilities,True,0.0
-1150040000,Accrued Payroll,Accrued Expenses:Accrued Payroll,Other Current Liability,OtherCurrentLiabilities,True,-2490224.78
-7,Advertising,Advertising,Expense,AdvertisingPromotional,True,0.0
-89,Arizona Dept. of Revenue Payable,Arizona Dept. of Revenue Payable,Other Current Liability,GlobalTaxPayable,True,0.0
-55,Automobile,Automobile,Expense,Auto,True,0.0
-8,Bank Charges,Bank Charges,Expense,BankCharges,True,0.0
-85,Billable Expense Income,Billable Expense Income,Income,ServiceFeeIncome,True,0.0
-90,Board of Equalization Payable,Board of Equalization Payable,Other Current Liability,GlobalTaxPayable,True,-370.94
-103,Bonus,Salary & Benefits:Bonus,Expense,PayrollWageExpenses,True,0.0
-70,Bookkeeper,Legal & Professional Fees:Bookkeeper,Expense,LegalProfessionalFees,True,0.0
-73,Building Repairs,Maintenance and Repair:Building Repairs,Expense,RepairMaintenance,True,0.0
-99,COS - 401k - ER,Cost of Goods Sold:COS - Staff:COS - 401k - ER,Cost of Goods Sold,CostOfLaborCos,True,0.0
-100,COS - Bonus/Commission,Cost of Goods Sold:COS - Staff:COS - Bonus/Commission,Cost of Goods Sold,CostOfLaborCos,True,0.0
-97,COS - Health Insurance/Benefits - ER,Cost of Goods Sold:COS - Staff:COS - Health Insurance/Benefits - ER,Cost of Goods Sold,CostOfLaborCos,True,0.0
-98,COS - Payroll Taxes,Cost of Goods Sold:COS - Staff:COS - Payroll Taxes,Cost of Goods Sold,CostOfLaborCos,True,0.0
-96,COS - Salary/Fixed,Cost of Goods Sold:COS - Staff:COS - Salary/Fixed,Cost of Goods Sold,CostOfLaborCos,True,0.0
-95,COS - Staff,Cost of Goods Sold:COS - Staff,Cost of Goods Sold,CostOfLaborCos,True,0.0
-35,Checking,Checking,Bank,Checking,True,1201.0
-104,Commission,Salary & Benefits:Commission,Expense,PayrollExpenses,True,0.0
-9,Commissions & fees,Commissions & fees,Expense,OtherMiscellaneousServiceCost,True,0.0
-74,Computer Repairs,Maintenance and Repair:Computer Repairs,Expense,RepairMaintenance,True,0.0
-80,Cost of Goods Sold,Cost of Goods Sold,Cost of Goods Sold,SuppliesMaterialsCogs,True,0.0
-59,Cost of Labor,Job Expenses:Cost of Labor,Expense,OtherMiscellaneousServiceCost,True,0.0
-47,Decks and Patios,Landscaping Services:Job Materials:Decks and Patios,Income,OtherPrimaryIncome,True,0.0
-64,Decks and Patios,Job Expenses:Job Materials:Decks and Patios,Expense,SuppliesMaterials,True,0.0
-40,Depreciation,Depreciation,Other Expense,Depreciation,True,0.0
-39,Depreciation,Truck:Depreciation,Fixed Asset,AccumulatedDepreciation,True,0.0
-82,Design income,Design income,Income,OtherPrimaryIncome,True,0.0
-86,Discounts given,Discounts given,Income,DiscountsRefundsGiven,True,0.0
-28,Disposal Fees,Disposal Fees,Expense,OtherMiscellaneousServiceCost,True,0.0
-10,Dues & Subscriptions,Dues & Subscriptions,Expense,DuesSubscriptions,True,0.0
-29,Equipment Rental,Equipment Rental,Expense,EquipmentRental,True,0.0
-62,Equipment Rental,Job Expenses:Equipment Rental,Expense,EquipmentRental,True,0.0
-75,Equipment Repairs,Maintenance and Repair:Equipment Repairs,Expense,RepairMaintenance,True,0.0
-5,Fees Billed,Fees Billed,Income,ServiceFeeIncome,True,0.0
-65,Fountain and Garden Lighting,Job Expenses:Job Materials:Fountain and Garden Lighting,Expense,SuppliesMaterials,True,0.0
-48,Fountains and Garden Lighting,Landscaping Services:Job Materials:Fountains and Garden Lighting,Income,OtherPrimaryIncome,True,0.0
-56,Fuel,Automobile:Fuel,Expense,Auto,True,0.0
-76,Gas and Electric,Utilities:Gas and Electric,Expense,Utilities,True,0.0
-105,Health Insurance/Benefits - ER,Salary & Benefits:Health Insurance/Benefits - ER,Expense,PayrollExpenses,True,0.0
-60,Installation,Job Expenses:Cost of Labor:Installation,Expense,OtherMiscellaneousServiceCost,True,0.0
-52,Installation,Landscaping Services:Labor:Installation,Income,OtherPrimaryIncome,True,0.0
-11,Insurance,Insurance,Expense,Insurance,True,0.0
-25,Interest Earned,Interest Earned,Other Income,InterestEarned,True,0.0
-81,Inventory Asset,Inventory Asset,Other Current Asset,Inventory,True,596.25
-58,Job Expenses,Job Expenses,Expense,OtherMiscellaneousServiceCost,True,0.0
-46,Job Materials,Landscaping Services:Job Materials,Income,OtherPrimaryIncome,True,0.0
-63,Job Materials,Job Expenses:Job Materials,Expense,SuppliesMaterials,True,0.0
-51,Labor,Landscaping Services:Labor,Income,OtherPrimaryIncome,True,0.0
-45,Landscaping Services,Landscaping Services,Income,OtherPrimaryIncome,True,0.0
-71,Lawyer,Legal & Professional Fees:Lawyer,Expense,LegalProfessionalFees,True,0.0
-12,Legal & Professional Fees,Legal & Professional Fees,Expense,LegalProfessionalFees,True,0.0
-43,Loan Payable,Loan Payable,Other Current Liability,OtherCurrentLiabilities,True,-4000.0
-53,Maintenance and Repair,Landscaping Services:Labor:Maintenance and Repair,Income,OtherPrimaryIncome,True,0.0
-72,Maintenance and Repair,Maintenance and Repair,Expense,RepairMaintenance,True,0.0
-61,Maintenance and Repairs,Job Expenses:Cost of Labor:Maintenance and Repairs,Expense,OtherMiscellaneousServiceCost,True,0.0
-41,Mastercard,Mastercard,Credit Card,CreditCard,True,-157.72
-13,Meals and Entertainment,Meals and Entertainment,Expense,EntertainmentMeals,True,0.0
-14,Miscellaneous,Miscellaneous,Other Expense,OtherMiscellaneousExpense,True,0.0
-44,Notes Payable,Notes Payable,Long Term Liability,OtherLongTermLiabilities,True,-25000.0
-15,Office Expenses,Office Expenses,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
-34,Opening Balance Equity,Opening Balance Equity,Equity,OpeningBalanceEquity,True,9337.5
-38,Original Cost,Truck:Original Cost,Fixed Asset,Vehicles,True,13495.0
-83,Other Income,Other Income,Income,OtherPrimaryIncome,True,0.0
-26,Other Portfolio Income,Other Portfolio Income,Other Income,OtherMiscellaneousIncome,True,0.0
-107,Payroll Taxes,Salary & Benefits:Payroll Taxes,Expense,PayrollTaxExpenses,True,0.0
-106,Payroll/Benefit Admin Fees,Legal & Professional Fees:Payroll/Benefit Admin Fees,Expense,LegalProfessionalFees,True,0.0
-27,Penalties & Settlements,Penalties & Settlements,Other Expense,PenaltiesSettlements,True,0.0
-68,Permits,Job Expenses:Permits,Expense,OtherMiscellaneousServiceCost,True,0.0
-54,Pest Control Services,Pest Control Services,Income,OtherPrimaryIncome,True,0.0
-66,Plants and Soil,Job Expenses:Job Materials:Plants and Soil,Expense,SuppliesMaterials,True,0.0
-49,Plants and Soil,Landscaping Services:Job Materials:Plants and Soil,Income,OtherPrimaryIncome,True,0.0
-3,Prepaid Expenses,Prepaid Expenses,Other Current Asset,PrepaidExpenses,True,0.0
-16,Promotional,Promotional,Expense,AdvertisingPromotional,True,0.0
-78,Purchases,Purchases,Expense,SuppliesMaterials,True,0.0
-6,Refunds-Allowances,Refunds-Allowances,Income,DiscountsRefundsGiven,True,0.0
-17,Rent or Lease,Rent or Lease,Expense,RentOrLeaseOfBuildings,True,0.0
-2,Retained Earnings,Retained Earnings,Equity,RetainedEarnings,True,0.0
-101,Salary & Benefits,Salary & Benefits,Expense,PayrollWageExpenses,True,0.0
-102,Salary/Fixed,Salary & Benefits:Salary/Fixed,Expense,PayrollWageExpenses,True,0.0
-79,Sales of Product Income,Sales of Product Income,Income,SalesOfProductIncome,True,0.0
-36,Savings,Savings,Bank,Savings,True,800.0
-1,Services,Services,Income,ServiceFeeIncome,True,0.0
-67,Sprinklers and Drip Systems,Job Expenses:Job Materials:Sprinklers and Drip Systems,Expense,SuppliesMaterials,True,0.0
-50,Sprinklers and Drip Systems,Landscaping Services:Job Materials:Sprinklers and Drip Systems,Income,OtherPrimaryIncome,True,0.0
-109,Staff Welfare,Staff Welfare,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
-19,Stationery & Printing,Stationery & Printing,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
-20,Supplies,Supplies,Expense,SuppliesMaterials,True,0.0
-21,Taxes & Licenses,Taxes & Licenses,Expense,TaxesPaid,True,0.0
-77,Telephone,Utilities:Telephone,Expense,Utilities,True,0.0
-22,Travel,Travel,Expense,Travel,True,0.0
-23,Travel Meals,Travel Meals,Expense,TravelMeals,True,0.0
-37,Truck,Truck,Fixed Asset,Vehicles,True,0.0
-88,Unapplied Cash Bill Payment Expense,Unapplied Cash Bill Payment Expense,Expense,UnappliedCashBillPaymentExpense,True,0.0
-87,Unapplied Cash Payment Income,Unapplied Cash Payment Income,Income,UnappliedCashPaymentIncome,True,0.0
-32,Uncategorized Asset,Uncategorized Asset,Other Current Asset,OtherCurrentAssets,True,0.0
-31,Uncategorized Expense,Uncategorized Expense,Expense,OtherMiscellaneousServiceCost,True,0.0
-30,Uncategorized Income,Uncategorized Income,Income,ServiceFeeIncome,True,0.0
-4,Undeposited Funds,Undeposited Funds,Other Current Asset,UndepositedFunds,True,2062.52
-24,Utilities,Utilities,Expense,Utilities,True,0.0
-42,Visa,Visa,Credit Card,CreditCard,True,0.0
-57,Workers Compensation,Insurance:Workers Compensation,Expense,Insurance,True,0.0
+Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
+210010,7,Accounts Payable,Accounts Payable,Accounts Payable,AccountsPayable,True,-215775.62
+210020,265,Accounts Payable (A/P) - GBP,Accounts Payable (A/P) - GBP,Accounts Payable,AccountsPayable,True,0.0
+210030,167,Accounts Payable - Other,Accounts Payable - Other,Accounts Payable,AccountsPayable,True,0.0
+210040,286,Accounts Payable - Other - GBP,Accounts Payable - Other - GBP,Accounts Payable,AccountsPayable,True,0.0
+120010,8,Accounts Receivable,Accounts Receivable,Accounts Receivable,AccountsReceivable,True,912935.55
+120020,281,Accounts Receivable (A/R) - AED,Accounts Receivable (A/R) - AED,Accounts Receivable,AccountsReceivable,True,0.0
+120030,280,Accounts Receivable (A/R) - EUR,Accounts Receivable (A/R) - EUR,Accounts Receivable,AccountsReceivable,True,0.0
+120040,261,Accounts Receivable (A/R) - GBP,Accounts Receivable (A/R) - GBP,Accounts Receivable,AccountsReceivable,True,0.0
+231000,170,Accrued Expenses,Accrued Expenses,Other Current Liability,OtherCurrentLiabilities,True,0.0
+231010,171,Accrued 401k,Accrued Expenses:Accrued 401k,Other Current Liability,OtherCurrentLiabilities,True,0.0
+231020,174,Accrued Bonus,Accrued Expenses:Accrued Bonus,Other Current Liability,OtherCurrentLiabilities,True,-357250.29
+231030,175,Accrued Commission,Accrued Expenses:Accrued Commission,Other Current Liability,OtherCurrentLiabilities,True,0.0
+231040,178,Accrued Expense,Accrued Expenses:Accrued Expense,Other Current Liability,OtherCurrentLiabilities,True,-103768.46
+231050,173,Accrued Interest Payable,Accrued Expenses:Accrued Interest Payable,Other Current Liability,OtherCurrentLiabilities,True,0.0
+231060,305,Accrued Legal fees,Accrued Expenses:Accrued Legal fees,Other Current Liability,OtherCurrentLiabilities,True,-10000.0
+231070,172,Accrued Payroll,Accrued Expenses:Accrued Payroll,Other Current Liability,OtherCurrentLiabilities,True,438715.75
+231080,277,Accrued Transaction Fees,Accrued Expenses:Accrued Transaction Fees,Other Current Liability,OtherCurrentLiabilities,True,0.0
+231090,263,Accrued Vacation,Accrued Expenses:Accrued Vacation,Other Current Liability,OtherCurrentLiabilities,True,0.0
+130010,279,Accrued Interest Receivable,Accrued Interest Receivable,Other Current Asset,OtherCurrentAssets,True,0.0
+311000,11,Additional Paid-In Capital,Additional Paid-In Capital,Equity,PaidInCapitalOrSurplus,True,-19678982.0
+311010,196,APIC - Common Stock,Additional Paid-In Capital:APIC - Common Stock,Equity,PaidInCapitalOrSurplus,True,-17247.77
+311020,201,APIC - Expired Options,Additional Paid-In Capital:APIC - Expired Options,Equity,PaidInCapitalOrSurplus,True,0.0
+311030,197,APIC - Series B Preferred,Additional Paid-In Capital:APIC - Series B Preferred,Equity,PaidInCapitalOrSurplus,True,0.0
+311040,198,APIC - Series B-1 Preferred,Additional Paid-In Capital:APIC - Series B-1 Preferred,Equity,PaidInCapitalOrSurplus,True,-3470710.93
+311050,1150040011,APIC - Series B-2 Preferred,Additional Paid-In Capital:APIC - Series B-2 Preferred,Equity,PaidInCapitalOrSurplus,True,-184926.78
+311060,199,APIC - Stock Options,Additional Paid-In Capital:APIC - Stock Options,Equity,PaidInCapitalOrSurplus,True,-966776.17
+311070,200,APIC - Warrants,Additional Paid-In Capital:APIC - Warrants,Equity,PaidInCapitalOrSurplus,True,0.0
+130020,13,Allowance for Doubtful Accounts,Allowance for Doubtful Accounts,Other Current Asset,AllowanceForBadDebts,True,0.0
+220010,1150040001,Amex CC,Amex CC,Credit Card,CreditCard,True,-8776.33
+810010,14,Amortization Expense,Amortization Expense,Other Expense,Amortization,True,0.0
+610010,15,Bad Debt,Bad Debt,Expense,BadDebts,True,0.0
+110010,289,Bill.com Money Out Clearing,Bill.com Money Out Clearing,Bank,CashOnHand,True,0.0
+410010,6,Billable Expense Income,Billable Expense Income,Income,ServiceFeeIncome,True,0.0
+410020,304,Billable Expense Income-1,Billable Expense Income-1,Income,OtherPrimaryIncome,True,0.0
+140010,17,Buildings,Buildings,Fixed Asset,Buildings,True,0.0
+610020,38,Business Insurance,Business Insurance,Expense,Insurance,True,0.0
+610030,23,Charitable Contributions,Charitable Contributions,Expense,CharitableContributions,True,0.0
+220020,303,Chase CC - A.Ryan 2759,Chase CC - A.Ryan 2759,Credit Card,CreditCard,True,0.0
+220030,302,Chase CC - A.Ryan 2759-1,Chase CC - A.Ryan 2759-1,Credit Card,CreditCard,True,0.0
+220040,168,Chase CC - A.Ryan 7546,Chase CC - A.Ryan 7546,Credit Card,CreditCard,True,0.0
+220050,266,Chase CC - K.Bird 0562,Chase CC - K.Bird 0562,Credit Card,CreditCard,True,0.0
+220060,169,Chase CC - T.Irby 5733,Chase CC - T.Irby 5733,Credit Card,CreditCard,True,0.0
+110020,267,Chase Operating - 8856,Chase Operating - 8856,Bank,Checking,True,1213033.23
+110030,154,Chase Savings - 5357,Chase Savings - 5357,Bank,Savings,True,0.17
+310010,21,Common Stock,Common Stock,Equity,CommonStock,True,-1752.59
+130030,157,Concertiv CD - 5377,Concertiv CD - 5377,Other Current Asset,OtherCurrentAssets,True,0.0
+810020,273,Contract Expenses,Contract Expenses,Other Expense,OtherMiscellaneousExpense,True,0.0
+611000,22,Contractor Fees,Contractor Fees,Expense,CostOfLabor,True,0.0
+611010,253,IT Security - Contractors,Contractor Fees:IT Security - Contractors,Expense,CostOfLabor,True,0.0
+511000,24,Cost of Goods Sold,Cost of Goods Sold,Cost of Goods Sold,SuppliesMaterialsCogs,True,0.0
+512000,216,COS - Outsourced/India,Cost of Goods Sold:COS - Outsourced/India,Cost of Goods Sold,CostOfLaborCos,True,0.0
+512010,217,COS - Outsourced/India - Allocation,Cost of Goods Sold:COS - Outsourced/India:COS - Outsourced/India - Allocation,Cost of Goods Sold,CostOfLaborCos,True,0.0
+513000,214,COS - Professional/Consultants,Cost of Goods Sold:COS - Professional/Consultants,Cost of Goods Sold,CostOfLaborCos,True,0.0
+513010,215,COS - Professional/Consultant - Allocation,Cost of Goods Sold:COS - Professional/Consultants:COS - Professional/Consultant - Allocation,Cost of Goods Sold,CostOfLaborCos,True,0.0
+514000,95,COS - Staff,Cost of Goods Sold:COS - Staff,Cost of Goods Sold,CostOfLaborCos,True,0.0
+514010,211,COS - 401k - ER,Cost of Goods Sold:COS - Staff:COS - 401k - ER,Cost of Goods Sold,CostOfLaborCos,True,0.0
+514020,209,COS - Bonus/Commission,Cost of Goods Sold:COS - Staff:COS - Bonus/Commission,Cost of Goods Sold,CostOfLaborCos,True,0.0
+514030,210,COS - Health Insurance/Benefits - ER,Cost of Goods Sold:COS - Staff:COS - Health Insurance/Benefits - ER,Cost of Goods Sold,CostOfLaborCos,True,0.0
+514040,208,COS - Hourly/Variable,Cost of Goods Sold:COS - Staff:COS - Hourly/Variable,Cost of Goods Sold,CostOfLaborCos,True,0.0
+514050,284,COS - Overtime,Cost of Goods Sold:COS - Staff:COS - Overtime,Cost of Goods Sold,CostOfLaborCos,True,0.0
+514060,212,COS - Payroll Taxes,Cost of Goods Sold:COS - Staff:COS - Payroll Taxes,Cost of Goods Sold,CostOfLaborCos,True,0.0
+514070,207,COS - Salary/Fixed,Cost of Goods Sold:COS - Staff:COS - Salary/Fixed,Cost of Goods Sold,CostOfLaborCos,True,0.0
+514080,213,COS - Staff - Allocation,Cost of Goods Sold:COS - Staff:COS - Staff - Allocation,Cost of Goods Sold,CostOfLaborCos,True,0.0
+514090,270,COS - Stock-Based Compensation,Cost of Goods Sold:COS - Staff:COS - Stock-Based Compensation,Cost of Goods Sold,CostOfLaborCos,True,0.0
+511010,96,Equipment rental - COGS,Cost of Goods Sold:Equipment rental - COGS,Cost of Goods Sold,EquipmentRentalCos,True,0.0
+511020,97,Freight in - COGS,Cost of Goods Sold:Freight in - COGS,Cost of Goods Sold,ShippingFreightDeliveryCos,True,0.0
+511030,98,Other Costs of Services - COS,Cost of Goods Sold:Other Costs of Services - COS,Cost of Goods Sold,OtherCostsOfServiceCos,True,0.0
+511040,252,Tech Dev Software,Cost of Goods Sold:Tech Dev Software,Cost of Goods Sold,SuppliesMaterialsCogs,True,0.0
+710010,1150040014,Cost Reimbursement Income,Cost Reimbursement Income,Other Income,OtherMiscellaneousIncome,True,0.0
+710020,25,Credit card rewards,Credit card rewards,Other Income,OtherMiscellaneousIncome,True,0.0
+230010,26,Customer Prepayments,Customer Prepayments,Other Current Liability,OtherCurrentLiabilities,True,-55000.0
+151000,160,Customer Relationships,Customer Relationships,Other Asset,OtherLongTermAssets,True,3700000.0
+151010,161,Customer Relationships - A/A,Customer Relationships:Customer Relationships - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-1253889.06
+240010,194,Deferred Contract Costs - LT,Deferred Contract Costs - LT,Long Term Liability,OtherLongTermLiabilities,True,0.0
+130040,186,Deferred Contract Costs - ST,Deferred Contract Costs - ST,Other Current Asset,OtherCurrentAssets,True,0.0
+130050,275,Deferred Financing Costs,Deferred Financing Costs,Other Current Asset,OtherCurrentAssets,True,0.0
+232000,188,Deferred Revenue,Deferred Revenue,Other Current Liability,DeferredRevenue,True,-287.53
+232010,292,Deferred Revenue - Conference,Deferred Revenue:Deferred Revenue - Conference,Other Current Liability,DeferredRevenue,True,0.0
+232020,191,Deferred Revenue - Project,Deferred Revenue:Deferred Revenue - Project,Other Current Liability,DeferredRevenue,True,0.0
+232030,189,Deferred Revenue - Subscription,Deferred Revenue:Deferred Revenue - Subscription,Other Current Liability,DeferredRevenue,True,-4315771.58
+232040,190,Deferred Revenue - Supplier,Deferred Revenue:Deferred Revenue - Supplier,Other Current Liability,DeferredRevenue,True,-25583.6
+230020,278,Deferred Tax Liablity,Deferred Tax Liablity,Other Current Liability,OtherCurrentLiabilities,True,0.0
+810030,28,Depreciation Expense,Depreciation Expense,Other Expense,Depreciation,True,0.0
+152000,163,Developed Technology,Developed Technology,Other Asset,Licenses,True,0.0
+152010,164,Developed Technology - A/A,Developed Technology:Developed Technology - A/A,Other Asset,Licenses,True,0.0
+410030,68,Discounts given,Discounts given,Income,DiscountsRefundsGiven,True,0.0
+310020,29,Dividends paid,Dividends paid,Equity,OwnersEquity,True,0.0
+710030,30,Dividends received,Dividends received,Other Income,DividendIncome,True,0.0
+610040,271,Donations,Donations,Expense,OtherBusinessExpenses,True,0.0
+130060,1150040004,Due from Employee,Due from Employee,Other Current Asset,EmployeeCashAdvances,True,15916.83
+810040,269,Exchange Gain or Loss,Exchange Gain or Loss,Other Expense,ExchangeGainOrLoss,True,0.0
+230030,183,Federal Income Tax Payable,Federal Income Tax Payable,Other Current Liability,FederalIncomeTaxPayable,True,0.0
+240020,192,Finance Lease - L/T,Finance Lease - L/T,Long Term Liability,OtherLongTermLiabilities,True,0.0
+141000,34,Furniture & Fixtures,Furniture & Fixtures,Fixed Asset,FurnitureAndFixtures,True,5138.88
+141010,159,Furniture & Fixtures - A/D,Furniture & Fixtures:Furniture & Fixtures - A/D,Fixed Asset,AccumulatedDepreciation,True,-734.16
+612000,35,General Business Expenses,General Business Expenses,Expense,OtherBusinessExpenses,True,0.0
+612010,105,Bank Fees,General Business Expenses:Bank Fees,Expense,BankCharges,True,0.0
+612020,245,Credit Card Fees,General Business Expenses:Credit Card Fees,Expense,BankCharges,True,0.0
+612030,104,Dues & Subscriptions,General Business Expenses:Dues & Subscriptions,Expense,DuesSubscriptions,True,0.0
+612040,246,Filing & Application Fees,General Business Expenses:Filing & Application Fees,Expense,OtherBusinessExpenses,True,0.0
+612050,301,Industry Conferences,General Business Expenses:Industry Conferences,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
+612060,118,Merchant Fees,General Business Expenses:Merchant Fees,Expense,BankCharges,True,0.0
+612070,106,Professional Development,General Business Expenses:Professional Development,Expense,OtherBusinessExpenses,True,0.0
+613000,58,General Office Expenses,General Office Expenses,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
+613010,248,Company Events,General Office Expenses:Company Events,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
+613020,247,Company Meals/Snacks,General Office Expenses:Company Meals/Snacks,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
+613030,250,Computer Equipment,General Office Expenses:Computer Equipment,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
+613040,251,IT Software,General Office Expenses:IT Software,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
+613050,121,Office Equipment,General Office Expenses:Office Equipment,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
+613060,119,Office Supplies,General Office Expenses:Office Supplies,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
+613070,123,Postage & Shipping,General Office Expenses:Postage & Shipping,Expense,ShippingFreightDelivery,True,0.0
+613080,69,Repair & Maintenance,General Office Expenses:Repair & Maintenance,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
+613090,120,Stationary & Printing,General Office Expenses:Stationary & Printing,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
+613100,122,Technology Stipend,General Office Expenses:Technology Stipend,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
+613110,254,Telephone & Internet,General Office Expenses:Telephone & Internet,Expense,Utilities,True,0.0
+130070,291,General Overpayments/Deposits,General Overpayments/Deposits,Other Current Asset,OtherCurrentAssets,True,0.0
+153000,36,Goodwill,Goodwill,Other Asset,Goodwill,True,14482540.0
+153010,162,Goodwill - A/A,Goodwill:Goodwill - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-7361957.68
+810050,290,Impairment Loss,Impairment Loss,Other Expense,Amortization,True,0.0
+610050,1150040015,Implementation / Setup Expense,Implementation / Setup Expense,Expense,OtherBusinessExpenses,True,0.0
+710040,39,Insurance claims,Insurance claims,Other Income,OtherMiscellaneousIncome,True,0.0
+230040,187,Intercompany Payable - due to Concertiv Insurance,Intercompany Payable - due to Concertiv Insurance,Other Current Liability,OtherCurrentLiabilities,True,0.0
+130080,177,Intercompany Receivable - due from Concertiv Insurance,Intercompany Receivable - due from Concertiv Insurance,Other Current Asset,OtherCurrentAssets,True,27843.98
+710050,40,Interest Earned,Interest Earned,Other Income,OtherMiscellaneousIncome,True,0.0
+614000,41,Interest Expense,Interest Expense,Expense,InterestPaid,True,0.0
+614010,111,Business loan interest,Interest Expense:Business loan interest,Expense,InterestPaid,True,0.0
+614020,112,Credit card interest,Interest Expense:Credit card interest,Expense,InterestPaid,True,0.0
+614030,113,Mortgage interest,Interest Expense:Mortgage interest,Expense,InterestPaid,True,0.0
+810060,255,Interest Expense - Lease,Interest Expense - Lease,Other Expense,OtherMiscellaneousExpense,True,0.0
+130090,42,Inventory Asset,Inventory Asset,Other Current Asset,Inventory,True,0.0
+140020,43,Land,Land,Fixed Asset,Land,True,0.0
+230050,185,Lease Payable - Current,Lease Payable - Current,Other Current Liability,OtherCurrentLiabilities,True,-579597.1
+142000,37,Leasehold Improvements,Leasehold Improvements,Fixed Asset,LeaseholdImprovements,True,20657.16
+142010,1150040010,Leasehold Improvement-A/D,Leasehold Improvements:Leasehold Improvement-A/D,Fixed Asset,AccumulatedDepreciation,True,-3303.83
+615000,45,Legal & Professional Fees,Legal & Professional Fees,Expense,LegalProfessionalFees,True,0.0
+615010,114,Accounting Fees,Legal & Professional Fees:Accounting Fees,Expense,LegalProfessionalFees,True,0.0
+615020,226,Consulting/Professional Fees,Legal & Professional Fees:Consulting/Professional Fees,Expense,LegalProfessionalFees,True,0.0
+615030,115,Legal Fees,Legal & Professional Fees:Legal Fees,Expense,LegalProfessionalFees,True,0.0
+615040,228,Payroll/Benefit Admin Fees,Legal & Professional Fees:Payroll/Benefit Admin Fees,Expense,LegalProfessionalFees,True,0.0
+615050,229,Recruiting Fees,Legal & Professional Fees:Recruiting Fees,Expense,LegalProfessionalFees,True,0.0
+615060,227,Tax Fees,Legal & Professional Fees:Tax Fees,Expense,LegalProfessionalFees,True,0.0
+615070,230,Valuation Fees,Legal & Professional Fees:Valuation Fees,Expense,LegalProfessionalFees,True,0.0
+410040,206,Managed Services Income - I/C,Managed Services Income - I/C,Income,ServiceFeeIncome,True,0.0
+616000,12,Marketing,Marketing,Expense,AdvertisingPromotional,True,0.0
+616010,298,Client Conference,Marketing:Client Conference,Expense,OtherBusinessExpenses,True,0.0
+616020,236,Content Marketing/Syndication,Marketing:Content Marketing/Syndication,Expense,AdvertisingPromotional,True,0.0
+616030,91,Digital Marketing,Marketing:Digital Marketing,Expense,AdvertisingPromotional,True,0.0
+616040,240,Events,Marketing:Events,Expense,AdvertisingPromotional,True,0.0
+616050,238,Graphics & Printing,Marketing:Graphics & Printing,Expense,AdvertisingPromotional,True,0.0
+616060,237,Industry Ads,Marketing:Industry Ads,Expense,AdvertisingPromotional,True,0.0
+616070,283,Miscellaneous,Marketing:Miscellaneous,Expense,OtherBusinessExpenses,True,0.0
+616080,239,Professional Services/Freelancers,Marketing:Professional Services/Freelancers,Expense,AdvertisingPromotional,True,0.0
+616090,235,Public/Analyst Relations,Marketing:Public/Analyst Relations,Expense,AdvertisingPromotional,True,0.0
+616120,90,Tools,Marketing:Tools,Expense,AdvertisingPromotional,True,0.0
+616110,92,Website,Marketing:Website,Expense,AdvertisingPromotional,True,0.0
+617000,56,Meals,Meals,Expense,TravelMeals,True,0.0
+617010,116,Client Meals,Meals:Client Meals,Expense,PromotionalMeals,True,0.0
+617020,242,Office/Working Late Meals,Meals:Office/Working Late Meals,Expense,TravelMeals,True,0.0
+617030,117,Travel Meals,Meals:Travel Meals,Expense,TravelMeals,True,0.0
+310030,202,Non-Controlling Interest,Non-Controlling Interest,Equity,OwnersEquity,True,-10287000.0
+240030,274,Note Payable,Note Payable,Long Term Liability,NotesPayable,True,0.0
+310040,1150040002,Note Receivable,Note Receivable,Equity,AccumulatedAdjustment,True,0.0
+310050,59,Opening balance equity,Opening balance equity,Equity,OpeningBalanceEquity,True,0.0
+240040,193,Operating Lease - L/T,Operating Lease - L/T,Long Term Liability,OtherLongTermLiabilities,True,-2276576.9
+810070,153,Other Miscellaneous Expense,Other Miscellaneous Expense,Other Expense,OtherMiscellaneousExpense,True,0.0
+810080,64,Penalties & Late Fees,Penalties & Late Fees,Other Expense,PenaltiesSettlements,True,0.0
+131000,66,Prepaid Expenses,Prepaid Expenses,Other Current Asset,PrepaidExpenses,True,0.0
+131010,176,Prepaid Expense,Prepaid Expenses:Prepaid Expense,Other Current Asset,PrepaidExpenses,True,166907.74
+131020,276,Prepaid Expense Adjustments,Prepaid Expenses:Prepaid Expense Adjustments,Other Current Asset,PrepaidExpenses,True,0.0
+131030,155,Prepaid Insurance,Prepaid Expenses:Prepaid Insurance,Other Current Asset,PrepaidExpenses,True,25488.19
+131040,156,Prepaid Marketing,Prepaid Expenses:Prepaid Marketing,Other Current Asset,PrepaidExpenses,True,36473.1
+610060,225,Professional/Consultants - Outsourced/India,Professional/Consultants - Outsourced/India,Expense,CostOfLabor,True,0.0
+610070,152,Purchases,Purchases,Expense,SuppliesMaterials,True,0.0
+810090,272,Reconciliation Discrepancies,Reconciliation Discrepancies,Other Expense,OtherMiscellaneousExpense,True,0.0
+618000,16,Rent,Rent,Expense,RentOrLeaseOfBuildings,True,0.0
+618010,232,Rent - Cleaning/Office Expenses,Rent:Rent - Cleaning/Office Expenses,Expense,RentOrLeaseOfBuildings,True,0.0
+618020,234,Rent - Other Fees,Rent:Rent - Other Fees,Expense,RentOrLeaseOfBuildings,True,0.0
+618030,233,Rent - Utilities,Rent:Rent - Utilities,Expense,RentOrLeaseOfBuildings,True,0.0
+618040,94,Rent Expense,Rent:Rent Expense,Expense,RentOrLeaseOfBuildings,True,0.0
+310060,4,Retained Earnings,Retained Earnings,Equity,RetainedEarnings,True,0.0
+411000,5,Revenue,Revenue,Income,ServiceFeeIncome,True,0.0
+411010,293,Revenue - Conference,Revenue:Revenue - Conference,Income,ServiceFeeIncome,True,0.0
+411020,205,Revenue - Project,Revenue:Revenue - Project,Income,ServiceFeeIncome,True,0.0
+411030,203,Revenue - Subscription,Revenue:Revenue - Subscription,Income,ServiceFeeIncome,True,0.0
+411040,204,Revenue - Supplier,Revenue:Revenue - Supplier,Income,ServiceFeeIncome,True,0.0
+154000,179,ROU - Finance Leases,ROU - Finance Leases,Other Asset,OtherLongTermAssets,True,14318.41
+154010,180,ROU - Finance Leases - A/A,ROU - Finance Leases:ROU - Finance Leases - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-14318.41
+155000,181,ROU - Operating Leases,ROU - Operating Leases,Other Asset,OtherLongTermAssets,True,3891307.88
+155010,182,ROU - Operating Leases - A/A,ROU - Operating Leases:ROU - Operating Leases - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-1323271.07
+619000,62,Salary & Benefits,Salary & Benefits,Expense,PayrollExpenses,True,0.0
+619010,223,401k - ER,Salary & Benefits:401k - ER,Expense,PayrollExpenses,True,0.0
+619020,219,Bonus,Salary & Benefits:Bonus,Expense,PayrollWageExpenses,True,0.0
+619030,220,Commission,Salary & Benefits:Commission,Expense,PayrollExpenses,True,0.0
+619040,222,Health Insurance/Benefits - ER,Salary & Benefits:Health Insurance/Benefits - ER,Expense,PayrollExpenses,True,0.0
+619050,125,Hourly/Variable,Salary & Benefits:Hourly/Variable,Expense,PayrollWageExpenses,True,0.0
+619060,218,Overtime,Salary & Benefits:Overtime,Expense,PayrollWageExpenses,True,0.0
+619070,231,Payroll Taxes,Salary & Benefits:Payroll Taxes,Expense,PayrollTaxExpenses,True,0.0
+619080,124,Salary/Fixed,Salary & Benefits:Salary/Fixed,Expense,PayrollWageExpenses,True,0.0
+619090,224,Stock-Based Compensation,Salary & Benefits:Stock-Based Compensation,Expense,PayrollExpenses,True,0.0
+619100,221,Vacation,Salary & Benefits:Vacation,Expense,PayrollExpenses,True,0.0
+710060,70,Sale of an asset,Sale of an asset,Other Income,OtherMiscellaneousIncome,True,0.0
+710070,71,Sale of investments,Sale of investments,Other Income,OtherInvestmentIncome,True,0.0
+410050,72,Sales,Sales,Income,SalesOfProductIncome,True,0.0
+230060,74,Sales & Use Tax Payable,Sales & Use Tax Payable,Other Current Liability,SalesTaxPayable,True,0.0
+410060,73,Sales of Product Income,Sales of Product Income,Income,SalesOfProductIncome,True,0.0
+150010,75,Security Deposits,Security Deposits,Other Asset,SecurityDeposits,True,0.0
+310070,65,Series B Preferred Stock,Series B Preferred Stock,Equity,PreferredStock,True,-18575.0
+310080,195,Series B-1 Preferred Stock,Series B-1 Preferred Stock,Equity,PreferredStock,True,-2522.24
+310090,1150040012,Series B-2 Preferred Stock,Series B-2 Preferred Stock,Equity,PreferredStock,True,-89.28
+510010,150,Shipping,Shipping,Cost of Goods Sold,ShippingFreightDeliveryCos,True,0.0
+410070,282,Shipping Income,Shipping Income,Income,ServiceFeeIncome,True,0.0
+610080,1150040013,Staff Welfare,Staff Welfare,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
+230070,184,State Income Tax Payable,State Income Tax Payable,Other Current Liability,StateLocalIncomeTaxPayable,True,4439.23
+240050,1150040003,Stock Repurchase Liability,Stock Repurchase Liability,Long Term Liability,OtherLongTermLiabilities,True,0.0
+110040,1150040006,SVB - Cash Sweep,SVB - Cash Sweep,Bank,MoneyMarket,True,0.0
+110050,1150040007,SVB - Restricted Cash 5715,SVB - Restricted Cash 5715,Bank,RentsHeldInTrust,True,281583.75
+110060,1150040005,SVB Checking -2846,SVB Checking -2846,Bank,Checking,True,6564.78
+710080,80,Tax exempt investment interest,Tax exempt investment interest,Other Income,TaxExemptInterest,True,0.0
+811000,256,Tax Expense,Tax Expense,Other Expense,OtherMiscellaneousExpense,True,0.0
+811010,257,Federal Income Tax,Tax Expense:Federal Income Tax,Other Expense,OtherMiscellaneousExpense,True,0.0
+811020,259,Sales & Use Tax Expense,Tax Expense:Sales & Use Tax Expense,Other Expense,OtherMiscellaneousExpense,True,0.0
+811030,258,State Income Tax,Tax Expense:State Income Tax,Other Expense,OtherMiscellaneousExpense,True,0.0
+130100,158,Tax Overpayment/Deposits,Tax Overpayment/Deposits,Other Current Asset,OtherCurrentAssets,True,0.0
+110070,299,Tech,Tech,Bank,CashOnHand,True,0.0
+143000,1150040008,Technology Equipment,Technology Equipment,Fixed Asset,MachineryAndEquipment,True,48258.73
+143010,1150040009,Technology Equpment- A/D,Technology Equipment:Technology Equpment- A/D,Fixed Asset,AccumulatedDepreciation,True,-16089.24
+110080,300,Tools,Tools,Bank,CashOnHand,True,0.0
+156000,165,Trade Name,Trade Name,Other Asset,OtherLongTermAssets,True,1190000.0
+156010,166,Trade Name - A/A,Trade Name:Trade Name - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-864167.17
+620000,84,Travel & Entertainment,Travel & Entertainment,Expense,Travel,True,0.0
+620010,132,Airfare,Travel & Entertainment:Airfare,Expense,Travel,True,0.0
+620020,294,Billable Travel Expenses,Travel & Entertainment:Billable Travel Expenses,Expense,Travel,True,0.0
+620030,241,Business/Client Entertainment,Travel & Entertainment:Business/Client Entertainment,Expense,Travel,True,0.0
+620040,133,Lodging,Travel & Entertainment:Lodging,Expense,Travel,True,0.0
+620050,135,Mileage,Travel & Entertainment:Mileage,Expense,Travel,True,0.0
+620060,264,Other,Travel & Entertainment:Other,Expense,Travel,True,0.0
+620070,33,Staff Entertainment,Travel & Entertainment:Staff Entertainment,Expense,Travel,True,0.0
+620080,243,Temporary Housing,Travel & Entertainment:Temporary Housing,Expense,Travel,True,0.0
+620090,244,Train,Travel & Entertainment:Train,Expense,Travel,True,0.0
+620100,134,Transportation,Travel & Entertainment:Transportation,Expense,Travel,True,0.0
+610090,287,TriNet Expense Clearing (old),TriNet Expense Clearing (old),Expense,Travel,True,0.0
+210050,288,TriNet Expense Reports,TriNet Expense Reports,Accounts Payable,AccountsPayable,True,-43559.29
+610100,260,Unapplied Cash Bill Payment Expense,Unapplied Cash Bill Payment Expense,Expense,UnappliedCashBillPaymentExpense,True,0.0
+410080,268,Unapplied Cash Payment Income,Unapplied Cash Payment Income,Income,UnappliedCashPaymentIncome,True,0.0
+130110,262,Unbilled A/R,Unbilled A/R,Other Current Asset,OtherCurrentAssets,True,88114.19
+130120,3,Uncategorized Asset,Uncategorized Asset,Other Current Asset,OtherCurrentAssets,True,0.0
+610110,2,Uncategorized Expense,Uncategorized Expense,Expense,OtherMiscellaneousServiceCost,True,0.0
+410090,1,Uncategorized Income,Uncategorized Income,Income,ServiceFeeIncome,True,0.0
+130130,61,Undeposited Funds,Undeposited Funds,Other Current Asset,UndepositedFunds,True,0.0

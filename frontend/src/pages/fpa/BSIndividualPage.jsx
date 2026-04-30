@@ -8,7 +8,6 @@
  * • Columns: Particulars | {company_name} | Insurance Brokers (blank) | Eliminations (blank) | Consolidated
  */
 
-import { useState } from "react";
 import {
   Box, Container, Typography, Button,
   Select, MenuItem, FormControl, InputLabel,
@@ -20,7 +19,7 @@ import FullScreenWrapper  from "../../components/fpa/FullScreenWrapper";
 import { useFpaResult }      from "../../context/FpaResultContext";
 
 export default function BSIndividualPage() {
-  const { result } = useFpaResult();
+  const { result, pageFilters, setPageFilter } = useFpaResult();
   if (!result) return null;
   const { bsiBlob, bsiPreview, companyName } = result;
 
@@ -29,7 +28,8 @@ export default function BSIndividualPage() {
   const months       = isNewShape ? (bsiPreview?.months ?? []) : [];
   const defaultMonth = isNewShape ? (bsiPreview?.as_of ?? "") : (bsiPreview?.as_of ?? "");
 
-  const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
+  const selectedMonth = pageFilters.bsIndividual?.selectedMonth ?? defaultMonth;
+  const setSelectedMonth = (v) => setPageFilter("bsIndividual", { selectedMonth: v });
 
   // Rows for the selected month
   const rows = isNewShape
@@ -58,11 +58,15 @@ export default function BSIndividualPage() {
     <Box className="page-enter">
 
       {/* ── Page header band ────────────────────────────────────────────────── */}
-      <Box sx={{ borderBottom: "1px solid #E2E8F0", bgcolor: "background.paper", px: { xs: 2, md: 4 }, py: 2.5 }}>
+      <Box
+        component="section"
+        aria-label="Page controls"
+        sx={{ borderBottom: "1px solid #E2E8F0", bgcolor: "background.paper", px: { xs: 2, md: 4 }, py: 2.5 }}
+      >
         <Container maxWidth="xl" disableGutters>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
             <Box>
-              <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
+              <Typography variant="h5" component="h1" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
                 Balance Sheet — Individual
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -74,9 +78,9 @@ export default function BSIndividualPage() {
               {/* Month selector */}
               {months.length > 0 && (
                 <FormControl size="small" sx={{ minWidth: 130 }}>
-                  <InputLabel id="bs-month-label">As of</InputLabel>
+                  <InputLabel id="bsi-month-label">As of</InputLabel>
                   <Select
-                    labelId="bs-month-label"
+                    labelId="bsi-month-label"
                     value={selectedMonth}
                     label="As of"
                     onChange={(e) => setSelectedMonth(e.target.value)}
@@ -95,7 +99,7 @@ export default function BSIndividualPage() {
                   startIcon={<AccountBalanceWalletIcon aria-hidden="true" />}
                   onClick={handleDownload}
                   aria-label={`Download ${companyName}_bs_individual.xlsx`}
-                  sx={{ background: "linear-gradient(135deg,#7C3AED,#6D28D9)", height: 40 }}
+                  sx={{ background: "linear-gradient(135deg,#400f61,#2d0a45)", height: 40 }}
                 >
                   Download .xlsx
                 </Button>

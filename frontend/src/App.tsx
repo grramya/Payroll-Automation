@@ -32,14 +32,6 @@ import FpaComparativePLBD from './pages/fpa/ComparativePLBDPage'
 function ProtectedApp() {
   const { isAuthenticated, user, logout } = useAuth()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [darkMode, setDarkMode] = useState(false)
-
-  const toggleDark = () => {
-    setDarkMode(d => {
-      document.documentElement.setAttribute('data-theme', d ? 'light' : 'dark')
-      return !d
-    })
-  }
 
   if (!isAuthenticated) return <Navigate to="/login" replace />
 
@@ -47,10 +39,10 @@ function ProtectedApp() {
     <AppProvider>
       <FpaResultProvider>
         <div className="app-shell">
-          <AppHeader user={user} onLogout={logout} darkMode={darkMode} onToggleDark={toggleDark} />
+          <AppHeader user={user} onLogout={logout} />
           <div className="app-body">
             <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(v => !v)} />
-            <main className="main-content">
+            <main id="main-content" className="main-content" tabIndex={-1}>
               <Routes>
                 <Route path="/" element={<HomePage />} />
 

@@ -77,6 +77,15 @@ class TokenStore:
         except Exception:
             pass
 
+    def save_to(self, path) -> None:
+        """Persist tokens to an explicit path (best-effort — never raises)."""
+        try:
+            path = type(config.TOKEN_FILE)(path)   # coerce to Path
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(self.to_dict(), indent=2), encoding="utf-8")
+        except Exception:
+            pass
+
     @classmethod
     def load(cls) -> Optional["TokenStore"]:
         """Load tokens from qbo/tokens.json. Returns None if not found."""
@@ -84,6 +93,18 @@ class TokenStore:
             try:
                 data = json.loads(config.TOKEN_FILE.read_text(encoding="utf-8"))
                 return cls(data)
+            except Exception:
+                pass
+        return None
+
+    @classmethod
+    def load_from(cls, path) -> Optional["TokenStore"]:
+        """Load tokens from an explicit path. Returns None if not found."""
+        from pathlib import Path as _Path
+        p = _Path(path)
+        if p.exists():
+            try:
+                return cls(json.loads(p.read_text(encoding="utf-8")))
             except Exception:
                 pass
         return None
@@ -345,6 +366,93 @@ def authenticate() -> TokenStore:
 
     redirect_url = input("  Paste the full redirect URL here: ").strip()
     return exchange_redirect_url(redirect_url)
+
+
+# =============================================================================
+# Multi-company helpers (main / broker)
+# =============================================================================
+
+def get_valid_token_for_company(company: str) -> "TokenStore":
+    """
+    Load and (if needed) auto-refresh tokens for a named company.
+
+    company — 'main' (payroll / Concertiv) or 'broker' (Insurance Brokers entity)
+
+    Raises FileNotFoundError if the company has never been authenticated.
+    """
+    token_file = config.get_token_file(company)
+    store = TokenStore.load_from(token_file)
+    if store is None:
+        raise FileNotFoundError(
+            f"No QBO tokens found for '{company}' company. "
+            "Please authenticate via the FP&A page."
+        )
+    if store.is_expired:
+        store = _refresh_for_company(store, token_file)
+    return store
+
+
+def _refresh_for_company(store: "TokenStore", token_file) -> "TokenStore":
+    """Refresh the access token and persist to the given token file."""
+    resp = requests.post(
+        config.TOKEN_URL,
+        data={"grant_type": "refresh_token", "refresh_token": store.refresh_token},
+        auth=HTTPBasicAuth(config.CLIENT_ID, config.CLIENT_SECRET),
+        headers={"Accept": "application/json"},
+        timeout=30,
+    )
+    if not resp.ok:
+        raise RuntimeError(
+            f"Token refresh failed [{resp.status_code}]: {resp.text}\n"
+            "Your refresh token may have expired — re-authenticate."
+        )
+    data = resp.json()
+    updated = {**store.to_dict(), **data, "expires_at": time.time() + int(data.get("expires_in", 3600))}
+    new_store = TokenStore(updated)
+    new_store.save_to(token_file)
+    return new_store
+
+
+def is_authenticated_for_company(company: str) -> bool:
+    """Return True if valid (or refreshable) tokens exist for the named company."""
+    try:
+        get_valid_token_for_company(company)
+        return True
+    except Exception:
+        return False
+
+
+def get_company_info(company: str) -> dict:
+    """Return connection status dict for a company, safe to send to the frontend."""
+    token_file = config.get_token_file(company)
+    store = TokenStore.load_from(token_file)
+    if store is None:
+        return {"connected": False, "realm_id": None, "expires_at": None}
+    realm_id = store.realm_id or (config.MAIN_REALM_ID if company == "main" else config.BROKER_REALM_ID)
+    return {
+        "connected":  not store.is_expired or bool(store.refresh_token),
+        "realm_id":   realm_id,
+        "expires_at": store.expires_at,
+    }
+
+
+def exchange_code_for_tokens_for_company(code: str, realm_id: str, company: str) -> "TokenStore":
+    """Exchange an OAuth authorization code for tokens and save to the company token file."""
+    resp = requests.post(
+        config.TOKEN_URL,
+        data={"grant_type": "authorization_code", "code": code, "redirect_uri": config.REDIRECT_URI},
+        auth=HTTPBasicAuth(config.CLIENT_ID, config.CLIENT_SECRET),
+        headers={"Accept": "application/json"},
+        timeout=30,
+    )
+    if not resp.ok:
+        raise RuntimeError(f"Token exchange failed [{resp.status_code}]: {resp.text}")
+    data = resp.json()
+    data["expires_at"] = time.time() + int(data.get("expires_in", 3600))
+    data["realm_id"]   = realm_id
+    store = TokenStore(data)
+    store.save_to(config.get_token_file(company))
+    return store
 
 
 # =============================================================================

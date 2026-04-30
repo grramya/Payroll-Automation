@@ -9,7 +9,6 @@
  * • Consolidated = company_name column (since Insurance Brokers = 0).
  */
 
-import { useState } from "react";
 import {
   Box, Container, Typography, Button,
   Select, MenuItem, FormControl, InputLabel,
@@ -21,14 +20,15 @@ import FullScreenWrapper from "../../components/fpa/FullScreenWrapper";
 import { useFpaResult }     from "../../context/FpaResultContext";
 
 export default function PLIndividualPage() {
-  const { result } = useFpaResult();
+  const { result, pageFilters, setPageFilter } = useFpaResult();
   if (!result) return null;
   const { plBlob, plPreview, companyName } = result;
 
   const months       = plPreview?.months ?? [];
   const defaultMonth = months[months.length - 1] ?? "";
 
-  const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
+  const selectedMonth = pageFilters.plIndividual?.selectedMonth ?? defaultMonth;
+  const setSelectedMonth = (v) => setPageFilter("plIndividual", { selectedMonth: v });
 
   const handleDownload = () => {
     if (!plBlob) return;
@@ -45,15 +45,14 @@ export default function PLIndividualPage() {
 
       {/* ── Page header band ────────────────────────────────────────────────── */}
       <Box
-        sx={{
-          borderBottom: "1px solid #E2E8F0", bgcolor: "background.paper",
-          px: { xs: 2, md: 4 }, py: 2.5,
-        }}
+        component="section"
+        aria-label="Page controls"
+        sx={{ borderBottom: "1px solid #E2E8F0", bgcolor: "background.paper", px: { xs: 2, md: 4 }, py: 2.5 }}
       >
         <Container maxWidth="xl" disableGutters>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
             <Box>
-              <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
+              <Typography variant="h5" component="h1" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
                 Base P&amp;L — Class (Individual)
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -65,9 +64,9 @@ export default function PLIndividualPage() {
               {/* Month selector */}
               {months.length > 0 && (
                 <FormControl size="small" sx={{ minWidth: 130 }}>
-                  <InputLabel id="pl-month-label">As of</InputLabel>
+                  <InputLabel id="pli-month-label">As of</InputLabel>
                   <Select
-                    labelId="pl-month-label"
+                    labelId="pli-month-label"
                     value={selectedMonth}
                     label="As of"
                     onChange={(e) => setSelectedMonth(e.target.value)}
@@ -86,7 +85,7 @@ export default function PLIndividualPage() {
                   startIcon={<DownloadIcon aria-hidden="true" />}
                   onClick={handleDownload}
                   aria-label={`Download ${companyName}_pl_individual.xlsx`}
-                  sx={{ background: "linear-gradient(135deg,#059669,#047857)", height: 40 }}
+                  sx={{ background: "linear-gradient(135deg,#400f61,#2d0a45)", height: 40 }}
                 >
                   Download .xlsx
                 </Button>
@@ -117,17 +116,10 @@ export default function PLIndividualPage() {
             />
           </FullScreenWrapper>
         ) : (
-          <Box
-            sx={{
-              p: 4, textAlign: "center", borderRadius: 3,
-              border: "1px dashed #CBD5E1", color: "text.secondary",
-            }}
-          >
-            <Typography variant="body2">
-              No P&amp;L data found. Ensure the uploaded file contains Profit &amp; Loss
-              accounts with Classification 2 mappings.
-            </Typography>
-          </Box>
+          <div role="status" className="empty-state">
+            No P&amp;L data found. Ensure the uploaded file contains Profit &amp; Loss
+            accounts with Classification 2 mappings.
+          </div>
         )}
       </Container>
     </Box>

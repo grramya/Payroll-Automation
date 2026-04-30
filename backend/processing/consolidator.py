@@ -26,6 +26,7 @@ from typing import List
 import threading
 
 import pandas as pd
+from filelock import FileLock
 from openpyxl            import load_workbook, Workbook
 from openpyxl.styles     import Font, PatternFill, Alignment, Border, Side, GradientFill
 from openpyxl.utils      import get_column_letter
@@ -39,9 +40,9 @@ CONSOLIDATED_DIR      = _BASE_DIR / "consolidated"
 CONSOLIDATED_PATH     = CONSOLIDATED_DIR / "Consolidated_Payroll.xlsx"
 CONSOLIDATED_INPUTS_PATH = CONSOLIDATED_DIR / "Consolidated_Inputs.xlsx"
 
-# ── Write lock — prevents two threads writing to the same file simultaneously ─
-_JE_LOCK    = threading.Lock()
-_INPUT_LOCK = threading.Lock()
+# ── Cross-process file locks (filelock works across threads AND gunicorn workers) ─
+_JE_LOCK    = FileLock(str(CONSOLIDATED_DIR / ".je.lock"),    timeout=30)
+_INPUT_LOCK = FileLock(str(CONSOLIDATED_DIR / ".input.lock"), timeout=30)
 
 # ── Palette ──────────────────────────────────────────────────────────────────
 _HDR_FILL   = PatternFill("solid", fgColor="1E7E34")   # deep green  – column headers
@@ -142,6 +143,11 @@ def append_input_to_consolidated(raw_file_bytes: bytes, journal_number: str) -> 
 
     Re-running the same cycle removes the old block first (idempotent).
     """
+    with _INPUT_LOCK:
+        return _append_input_to_consolidated_locked(raw_file_bytes, journal_number)
+
+
+def _append_input_to_consolidated_locked(raw_file_bytes: bytes, journal_number: str) -> Path:
     from io import BytesIO
     from copy import copy as _copy
     import openpyxl as _oxl

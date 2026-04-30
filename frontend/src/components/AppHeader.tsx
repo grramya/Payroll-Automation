@@ -1,104 +1,85 @@
-import { useState, useRef, useEffect } from 'react'
-import LightModeIcon from '@mui/icons-material/LightMode'
-import DarkModeIcon from '@mui/icons-material/DarkMode'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import type { User } from '../context/AuthContext'
 
 interface AppHeaderProps {
   user: User | null
   onLogout: () => void
-  darkMode: boolean
-  onToggleDark: () => void
 }
 
-export default function AppHeader({ user, onLogout, darkMode, onToggleDark }: AppHeaderProps) {
+export default function AppHeader({ user, onLogout }: AppHeaderProps) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const wrapRef   = useRef<HTMLDivElement>(null)
+  const btnRef    = useRef<HTMLButtonElement>(null)
 
+  const close = useCallback(() => setOpen(false), [])
+
+  // Close on outside click
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
+    function handlePointerDown(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) close()
+    }
+    document.addEventListener('mousedown', handlePointerDown)
+    return () => document.removeEventListener('mousedown', handlePointerDown)
+  }, [close])
+
+  // Close on Escape, return focus to trigger
+  useEffect(() => {
+    if (!open) return
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        close()
+        btnRef.current?.focus()
       }
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [open, close])
 
   return (
-    <header className="app-header">
-      <span className="material-icons-round app-header-logo">apps</span>
+    <header className="app-header" role="banner">
+      {/* Skip-nav: rendered first so keyboard users reach it immediately */}
+      <a href="#main-content" className="skip-nav">Skip to main content</a>
+
+      <span className="material-icons-round app-header-logo" aria-hidden="true">apps</span>
       <span className="app-header-title">Finance Suite</span>
 
       {user && (
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Dark / Light mode toggle */}
+        <div className="user-menu-wrap" ref={wrapRef}>
           <button
-            onClick={onToggleDark}
-            title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 36, height: 36, borderRadius: '50%',
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: 'var(--p)', transition: 'background .15s',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--p-light)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+            ref={btnRef}
+            className="user-avatar-btn"
+            onClick={() => setOpen(o => !o)}
+            aria-label={`${user.username} — account menu`}
+            aria-haspopup="menu"
+            aria-expanded={open}
           >
-            {darkMode
-              ? <LightModeIcon style={{ fontSize: 22 }} />
-              : <DarkModeIcon  style={{ fontSize: 22 }} />}
+            <span aria-hidden="true">{user.username.charAt(0).toUpperCase()}</span>
           </button>
 
-          {/* Profile avatar + dropdown */}
-          <div ref={ref} style={{ position: 'relative' }}>
-            <button
-              onClick={() => setOpen(o => !o)}
-              title={user.username}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                width: 36, height: 36, borderRadius: '50%',
-                background: 'var(--p)', border: 'none', cursor: 'pointer',
-                color: '#fff', fontWeight: 700, fontSize: 15,
-                fontFamily: 'inherit',
-              }}
+          {open && (
+            <div
+              role="menu"
+              aria-label="Account menu"
+              className="user-dropdown"
             >
-              {user.username.charAt(0).toUpperCase()}
-            </button>
-
-            {open && (
-              <div style={{
-                position: 'absolute', top: 44, right: 0,
-                background: 'var(--surface)', borderRadius: 10,
-                boxShadow: '0 4px 20px rgba(0,0,0,0.18)',
-                minWidth: 160, zIndex: 999,
-                overflow: 'hidden',
-                border: '1px solid var(--border)',
-              }}>
-                <div style={{
-                  padding: '10px 16px 8px',
-                  borderBottom: '1px solid var(--border)',
-                  fontSize: 13, fontWeight: 600, color: 'var(--p)',
-                }}>
-                  {user.username}
-                </div>
-                <button
-                  onClick={() => { setOpen(false); onLogout() }}
-                  style={{
-                    width: '100%', textAlign: 'left',
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '10px 16px', background: 'none', border: 'none',
-                    fontSize: 13, color: 'var(--text)', cursor: 'pointer',
-                    fontFamily: 'inherit',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--p-light)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-                >
-                  <span className="material-icons-round" style={{ fontSize: 16, color: 'var(--p)' }}>logout</span>
-                  Sign Out
-                </button>
+              <div
+                className="user-dropdown-name"
+                role="presentation"
+                aria-hidden="true"
+              >
+                {user.username}
               </div>
-            )}
-          </div>
+
+              <button
+                role="menuitem"
+                className="user-dropdown-item"
+                onClick={() => { close(); onLogout() }}
+              >
+                <span className="material-icons-round" aria-hidden="true">logout</span>
+                Sign Out
+              </button>
+            </div>
+          )}
         </div>
       )}
     </header>

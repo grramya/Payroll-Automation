@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
 import PageHeader from '../components/PageHeader'
@@ -12,6 +12,7 @@ export default function Step5ActivityLog() {
   const [columns, setColumns] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const gridRef = useRef<AgGridReact<JERow>>(null)
 
   useEffect(() => {
     fetchLog()
@@ -32,20 +33,33 @@ export default function Step5ActivityLog() {
 
   const colDefs = useMemo((): ColDef<JERow>[] => {
     if (!columns.length) return []
-    return columns.map((col) => ({
-      field: col,
-      headerName: col,
-      resizable: true,
-      sortable: true,
-      filter: true,
-      flex: col.toLowerCase().includes('detail') ? 2 : 1,
-      minWidth: 110,
-    }))
+    return columns.map((col) => {
+      const isDetails = col.toLowerCase().includes('detail')
+      return {
+        field: col,
+        headerName: col,
+        resizable: true,
+        sortable: true,
+        filter: true,
+        minWidth: isDetails ? 320 : 100,
+        width: isDetails ? 380 : undefined,
+        wrapText: isDetails,
+        autoHeight: isDetails,
+        tooltipField: isDetails ? undefined : col,
+        cellStyle: isDetails
+          ? { fontSize: '13px', whiteSpace: 'normal', lineHeight: '1.4', padding: '6px 8px' }
+          : { fontSize: '13px', whiteSpace: 'nowrap' },
+      }
+    })
   }, [columns])
 
   const defaultColDef = useMemo(() => ({
     cellStyle: { fontSize: '13px' },
   }), [])
+
+  function onFirstDataRendered() {
+    gridRef.current?.api?.autoSizeAllColumns()
+  }
 
   const total = rows.length
   const actionCol = columns.find((c) => c.toLowerCase().includes('action'))
@@ -99,12 +113,15 @@ export default function Step5ActivityLog() {
           {/* Table */}
           <div className="ag-theme-alpine" style={{ height: 520, width: '100%', marginBottom: 20 }}>
             <AgGridReact<JERow>
+              ref={gridRef}
               rowData={rows}
               columnDefs={colDefs}
               defaultColDef={defaultColDef}
               pagination
               paginationPageSize={25}
               animateRows
+              tooltipShowDelay={300}
+              onFirstDataRendered={onFirstDataRendered}
             />
           </div>
 

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import {
   Box, Container, Typography, Button, Chip,
 } from "@mui/material";
@@ -28,7 +28,7 @@ function monthStrToYYYYMM(s) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function BaseBSPage() {
-  const { result } = useFpaResult();
+  const { result, pageFilters, setPageFilter } = useFpaResult();
   if (!result) return null;
   const { bsBlob, bsPreview, companyName } = result;
 
@@ -39,8 +39,12 @@ export default function BaseBSPage() {
   const firstYear = months.length ? toFullYear(months[0].split("-")[1])                 : String(new Date().getFullYear());
   const lastYear  = months.length ? toFullYear(months[months.length - 1].split("-")[1]) : String(new Date().getFullYear());
 
-  const [fromDate, setFromDate] = useState(dayjs(`${firstYear}-01-01`));
-  const [toDate,   setToDate]   = useState(dayjs(`${lastYear}-12-31`));
+  const defaultFrom = dayjs(`${firstYear}-01-01`);
+  const defaultTo   = dayjs(`${lastYear}-12-31`);
+  const fromDate = pageFilters.baseBS?.fromDate ?? defaultFrom;
+  const toDate   = pageFilters.baseBS?.toDate   ?? defaultTo;
+  const setFromDate = (v) => setPageFilter("baseBS", { fromDate: v, toDate });
+  const setToDate   = (v) => setPageFilter("baseBS", { fromDate, toDate: v });
 
   // ── Filtered months ────────────────────────────────────────────────────────
   const filteredIndices = useMemo(() => {
@@ -86,11 +90,15 @@ export default function BaseBSPage() {
   return (
     <Box className="page-enter">
       {/* ── Page header band ─────────────────────────────────────────── */}
-      <Box sx={{ borderBottom: "1px solid #E2E8F0", bgcolor: "background.paper", px: { xs: 2, md: 4 }, py: 2.5 }}>
+      <Box
+        component="section"
+        aria-label="Page controls"
+        sx={{ borderBottom: "1px solid #E2E8F0", bgcolor: "background.paper", px: { xs: 2, md: 4 }, py: 2.5 }}
+      >
         <Container maxWidth="xl" disableGutters>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
             <Box>
-              <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
+              <Typography variant="h5" component="h1" sx={{ fontWeight: 700, letterSpacing: "-0.02em" }}>
                 Base Balance Sheet
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -104,19 +112,19 @@ export default function BaseBSPage() {
                 label="From"
                 value={fromDate}
                 onChange={(v) => setFromDate(v)}
-                slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, inputProps: { "aria-label": "Filter from date" } } }}
               />
               <DatePicker
                 label="To"
                 value={toDate}
                 onChange={(v) => setToDate(v)}
-                slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, inputProps: { "aria-label": "Filter to date" } } }}
               />
 
               <Chip
                 icon={isBalanced
-                  ? <CheckCircleIcon sx={{ fontSize: "14px !important" }} />
-                  : <ErrorIcon sx={{ fontSize: "14px !important" }} />}
+                  ? <CheckCircleIcon sx={{ fontSize: "14px !important" }} aria-hidden="true" />
+                  : <ErrorIcon sx={{ fontSize: "14px !important" }} aria-hidden="true" />}
                 label={isBalanced ? "Sheet balances ✓" : "Check mismatch"}
                 color={isBalanced ? "success" : "error"}
                 variant="outlined"
@@ -130,7 +138,7 @@ export default function BaseBSPage() {
                   startIcon={<AccountBalanceIcon aria-hidden="true" />}
                   onClick={handleDownload}
                   aria-label={`Download ${companyName}_base_bs.xlsx`}
-                  sx={{ background: "linear-gradient(135deg,#059669,#047857)", height: 40 }}
+                  sx={{ background: "linear-gradient(135deg,#400f61,#2d0a45)", height: 40 }}
                 >
                   Download .xlsx
                 </Button>
