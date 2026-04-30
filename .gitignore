@@ -29,7 +29,21 @@ backend/inputs/
 backend/logs/
 backend/JE/
 backend/consolidated/
+backend/cache/
+backend/sessions/
 *_output.xlsx
+
+# ── QBO sidecar meta files (generated at runtime) ──────────────────────────────
+backend/qbo/*.meta.json
+backend/qbo/*.lock
+
+# ── Debug / scratch files ───────────────────────────────────────────────────────
+backend/*_debug.json
+*_debug.json
+
+# ── Mapping data files (contain client financial data) ─────────────────────────
+"backend/Mapping table for FP&A_v5.xlsx"
+backend/Mapping\ table\ for\ FP&A*.xlsx
 
 # ── Temporary Excel lock files ─────────────────────────────────────────────────
 ~$*.xlsx
