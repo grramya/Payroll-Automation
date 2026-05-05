@@ -375,7 +375,7 @@ class QBOClient:
         """
         Attach a file (e.g. the payroll input .xlsx) to an existing Journal Entry in QBO.
 
-        Uses the QBO Attachable API to upload the file and link it to the JE,
+        Uses the QBO Attachable API (/upload) to upload the file and link it to the JE,
         so auditors can open the JE in QBO and see the source payroll file attached.
 
         Parameters
@@ -388,15 +388,13 @@ class QBOClient:
         -------
         dict — the created Attachable object from QBO
         """
-        import base64
-
-        # Step 1 — Upload the file bytes as a QBO Attachable
         upload_url = self._base_url() + "/upload"
 
-        boundary = "PayrollAutomationBoundary"
-        # Build multipart/form-data body manually
-        body_parts = []
-        # Part 1: metadata JSON
+        # QBO upload requires exactly two multipart parts in order:
+        #   1. file_metadata_01 — JSON describing the attachment and which entity to link it to
+        #   2. file_content_01  — the raw file bytes
+        # We use the requests library's built-in multipart encoder so it generates
+        # a safe unique boundary automatically (avoids collision with Excel binary content).
         metadata = {
             "AttachableRef": [
                 {
@@ -410,30 +408,21 @@ class QBOClient:
             "FileName":    filename,
             "ContentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         }
-        meta_json = json.dumps(metadata)
-        body_parts.append(
-            f"--{boundary}\r\n"
-            f'Content-Disposition: form-data; name="file_metadata_01"\r\n'
-            f"Content-Type: application/json\r\n\r\n"
-            f"{meta_json}\r\n"
-        )
-        # Part 2: file bytes
-        body_parts.append(
-            f"--{boundary}\r\n"
-            f'Content-Disposition: form-data; name="file_content_01"; filename="{filename}"\r\n'
-            f"Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\r\n\r\n"
-        )
-        body_str   = "".join(body_parts).encode("utf-8")
-        body_end   = f"\r\n--{boundary}--\r\n".encode("utf-8")
-        body_bytes = body_str + file_bytes + body_end
 
+        # Order matters — metadata must come first
+        files = [
+            ("file_metadata_01", (None, json.dumps(metadata), "application/json")),
+            ("file_content_01",  (filename, file_bytes,
+                                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")),
+        ]
+
+        # Do NOT set Content-Type manually — requests sets it with the correct boundary
         headers = {
-            "Authorization":  f"Bearer {self._store.access_token}",
-            "Content-Type":   f"multipart/form-data; boundary={boundary}",
-            "Accept":         "application/json",
+            "Authorization": f"Bearer {self._store.access_token}",
+            "Accept":        "application/json",
         }
 
-        resp = requests.post(upload_url, headers=headers, data=body_bytes, timeout=60)
+        resp   = requests.post(upload_url, headers=headers, files=files, timeout=60)
         result = self._handle_response(resp)
         return result.get("AttachableResponse", [{}])[0].get("Attachable", result)
 

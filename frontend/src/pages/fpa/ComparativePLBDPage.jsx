@@ -92,11 +92,8 @@ export default function ComparativePLBDPage() {
   // ── Defaults ─────────────────────────────────────────────────────────────
   const defaultQuarter = quarters[quarters.length - 1] ?? "";
   const defaultYear    = years[years.length - 1] ?? new Date().getFullYear();
-  const firstYear = quarters.length ? quarters[0].split("-")[1]                    : String(new Date().getFullYear());
-  const lastYear  = quarters.length ? quarters[quarters.length - 1].split("-")[1]  : String(new Date().getFullYear());
-
-  const defaultFrom = dayjs(`${firstYear}-01-01`);
-  const defaultTo   = dayjs(`${lastYear}-12-31`);
+  const defaultFrom = dayjs().startOf('year');
+  const defaultTo   = dayjs().endOf('month');
   const fromDate        = pageFilters.compPLBD?.fromDate        ?? defaultFrom;
   const toDate          = pageFilters.compPLBD?.toDate          ?? defaultTo;
   const selectedQuarter = pageFilters.compPLBD?.selectedQuarter ?? defaultQuarter;

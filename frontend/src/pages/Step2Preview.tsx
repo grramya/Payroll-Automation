@@ -8,7 +8,7 @@ import Spinner from '../components/Spinner'
 import Alert from '../components/Alert'
 import { useApp } from '../context/AppContext'
 import type { JERow, QBOPostResult } from '../api/api'
-import { saveJE, downloadJEUrl, postToQBO } from '../api/api'
+import { saveJE, postToQBO, apiClient } from '../api/api'
 
 export default function Step2Preview() {
   const navigate = useNavigate()
@@ -41,16 +41,32 @@ export default function Step2Preview() {
   const colDefs = useMemo((): ColDef<JERow>[] => {
     if (!jeColumns.length) return []
     const NON_EDITABLE = new Set(['Post?', 'Journal Number', 'Entry Date'])
-    return jeColumns.map((col) => ({
-      field: col,
-      headerName: col,
-      editable: !NON_EDITABLE.has(col),
-      resizable: true,
-      sortable: true,
-      filter: true,
-      minWidth: col.length > 20 ? 180 : 130,
-      flex: col === 'Journal Description' ? 2 : undefined,
-    }))
+    const CURRENCY_COLS = new Set(['Debit (exc. Tax)', 'Credit (exc. Tax)'])
+
+    return jeColumns.map((col) => {
+      const isCurrency = CURRENCY_COLS.has(col)
+      const colName = col
+      return {
+        field: col,
+        headerName: col,
+        // valueGetter overrides field for reading — works around AG Grid path-parsing
+        // issues with column names containing parentheses like "Debit (exc. Tax)"
+        valueGetter: (p: { data: JERow | undefined }) => p.data ? p.data[colName] : undefined,
+        editable: !NON_EDITABLE.has(col),
+        resizable: true,
+        sortable: true,
+        filter: true,
+        minWidth: col.length > 20 ? 180 : 130,
+        flex: col === 'Journal Description' ? 2 : undefined,
+        valueFormatter: isCurrency
+          ? (p: { value: unknown }) => {
+              if (p.value == null) return ''
+              const n = Number(p.value)
+              return isNaN(n) ? String(p.value) : n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            }
+          : undefined,
+      }
+    })
   }, [jeColumns])
 
   const defaultColDef = useMemo(() => ({
@@ -78,8 +94,33 @@ export default function Step2Preview() {
   }
 
   // ── Download ──────────────────────────────────────────────────────────────
-  function handleDownload() {
-    window.location.href = downloadJEUrl(sessionId)
+  async function handleDownload() {
+    if (!sessionId) return
+    setLoading(true, 'Preparing download…')
+    try {
+      const res = await apiClient.get(`/je/${sessionId}/download`, { responseType: 'blob' })
+      const disposition: string = res.headers['content-disposition'] ?? ''
+      const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+      const filename = match ? match[1].replace(/['"]/g, '') : 'JE.xlsx'
+      const url = URL.createObjectURL(res.data as Blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      a.style.display = 'none'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number } }
+      if (axiosErr.response?.status === 404) {
+        setApiError('Session expired. Please regenerate the Journal Entry.')
+      } else {
+        setApiError('Download failed. Please try again.')
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   // ── Post to QBO ───────────────────────────────────────────────────────────
@@ -263,7 +304,7 @@ export default function Step2Preview() {
             <span className="material-icons-round">save</span>
             Save Edits
           </button>
-          <button className="btn btn-secondary" onClick={handleDownload}>
+          <button className="btn btn-secondary" onClick={handleDownload} disabled={loading}>
             <span className="material-icons-round">download</span>
             Download Excel
           </button>

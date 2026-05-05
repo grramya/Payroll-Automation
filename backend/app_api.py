@@ -47,7 +47,7 @@ from processing.aggregator import (
     process_special_columns,
     aggregate_company_wide,
 )
-from processing.je_builder import build_je
+from processing.je_builder import build_je, export_je_to_bytes
 from processing.validator import validate_payroll_df, validate_mapping, validate_je
 from processing.consolidator import append_input_to_consolidated, append_to_consolidated
 from processing.logger import log_action_async
@@ -1205,9 +1205,8 @@ async def update_je(session_id: str, body: dict = Body(...), current_user: dict 
 async def download_je(session_id: str, current_user: dict = Depends(get_current_user)):
     s = _get_session(session_id, current_user)
     je_df = s["je_df"]
-    buf = BytesIO()
-    je_df.to_excel(buf, index=False)
-    buf.seek(0)
+    je_bytes = export_je_to_bytes(je_df)
+    buf = BytesIO(je_bytes)
     filename = s["je_filename"]
     try:
         append_to_consolidated(je_df, s.get("journal_number", ""))
@@ -1311,6 +1310,9 @@ async def post_to_qbo(session_id: str, current_user: dict = Depends(get_current_
     s = _get_session(session_id, current_user)
     je_df = s["je_df"]
 
+    pf_bytes = s.get("pf_bytes")
+    pf_name  = s.get("pf_name") or "Invoice_Supporting_Details.xlsx"
+
     def _do_post():
         try:
             client = QBOClient()
@@ -1321,7 +1323,6 @@ async def post_to_qbo(session_id: str, current_user: dict = Depends(get_current_
         class_map   = client.fetch_class_map()
         vendor_map  = client.fetch_vendor_map()
 
-        # Pre-flight: accounts list must be populated or posting will silently use wrong IDs
         if not account_map:
             raise HTTPException(
                 status_code=400,
@@ -1337,7 +1338,27 @@ async def post_to_qbo(session_id: str, current_user: dict = Depends(get_current_
             class_map=class_map,
             vendor_map=vendor_map,
         )
-        return client.create_journal_entry(payload)
+        result = client.create_journal_entry(payload)
+        je_id  = str(result.get("Id", ""))
+
+        # Attach the original payroll input file — required, not optional
+        if not pf_bytes:
+            raise HTTPException(
+                status_code=500,
+                detail=(
+                    f"Journal Entry posted to QBO (ID: {je_id}) but the original payroll file "
+                    "could not be attached because the file data is no longer in session. "
+                    "Please attach it manually in QBO."
+                ),
+            )
+
+        client.attach_file_to_je(
+            je_id=je_id,
+            filename=pf_name,
+            file_bytes=pf_bytes,
+        )
+
+        return result
 
     try:
         result = await asyncio.get_event_loop().run_in_executor(None, _do_post)

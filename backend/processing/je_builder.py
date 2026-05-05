@@ -155,9 +155,6 @@ def build_je(
     # Extract pay date for date-aware descriptions (e.g. "Salary for 03/15/2026")
     pay_date = _extract_pay_date(journal_number, entry_date)
 
-    # Descriptions that get a pay-date suffix appended
-    _DATE_SUFFIX_DESCS = {"Salary", "401k", "COGS - 401k"}
-
     all_lines = regular_lines + special_lines
     all_lines.sort(key=_sort_key)
 
@@ -172,11 +169,8 @@ def build_je(
         total_credit += credit
 
         raw_desc = line.get("Journal Description", "")
-        # Append pay date to Salary and 401k descriptions (Book3 format)
-        if raw_desc in _DATE_SUFFIX_DESCS:
-            final_desc = f"{raw_desc} for {pay_date}"
-        else:
-            final_desc = raw_desc
+        # Append pay date to every description
+        final_desc = f"{raw_desc} for {pay_date}" if raw_desc else raw_desc
 
         # Location = Class (identical in Book3 for all rows)
         class_val = line.get("Class") or None

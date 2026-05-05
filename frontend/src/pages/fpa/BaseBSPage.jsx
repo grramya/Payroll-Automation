@@ -35,12 +35,8 @@ export default function BaseBSPage() {
   const months = bsPreview?.months ?? [];
   const rows   = bsPreview?.rows   ?? [];
 
-  const toFullYear = (yr) => yr.length === 2 ? `20${yr}` : yr;
-  const firstYear = months.length ? toFullYear(months[0].split("-")[1])                 : String(new Date().getFullYear());
-  const lastYear  = months.length ? toFullYear(months[months.length - 1].split("-")[1]) : String(new Date().getFullYear());
-
-  const defaultFrom = dayjs(`${firstYear}-01-01`);
-  const defaultTo   = dayjs(`${lastYear}-12-31`);
+  const defaultFrom = dayjs().startOf('year');
+  const defaultTo   = dayjs().endOf('month');
   const fromDate = pageFilters.baseBS?.fromDate ?? defaultFrom;
   const toDate   = pageFilters.baseBS?.toDate   ?? defaultTo;
   const setFromDate = (v) => setPageFilter("baseBS", { fromDate: v, toDate });

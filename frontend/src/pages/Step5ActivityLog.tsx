@@ -31,24 +31,35 @@ export default function Step5ActivityLog() {
     }
   }
 
+  const colMinWidths: Record<string, number> = {
+    'timestamp': 170,
+    'user': 110,
+    'ip address': 130,
+    'hostname': 180,
+    'action': 130,
+    'input file': 210,
+    'output file': 210,
+    'journal number': 190,
+    'changes made': 260,
+  }
+
   const colDefs = useMemo((): ColDef<JERow>[] => {
     if (!columns.length) return []
     return columns.map((col) => {
-      const isDetails = col.toLowerCase().includes('detail')
+      const key = col.toLowerCase()
+      const isDetails = key.includes('detail')
+      const minWidth = colMinWidths[key] ?? (isDetails ? 320 : 130)
       return {
         field: col,
         headerName: col,
         resizable: true,
         sortable: true,
         filter: true,
-        minWidth: isDetails ? 320 : 100,
+        minWidth,
         width: isDetails ? 380 : undefined,
-        wrapText: isDetails,
-        autoHeight: isDetails,
-        tooltipField: isDetails ? undefined : col,
-        cellStyle: isDetails
-          ? { fontSize: '13px', whiteSpace: 'normal', lineHeight: '1.4', padding: '6px 8px' }
-          : { fontSize: '13px', whiteSpace: 'nowrap' },
+        wrapText: true,
+        autoHeight: true,
+        cellStyle: { fontSize: '13px', whiteSpace: 'normal', lineHeight: '1.5', padding: '6px 8px' },
       }
     })
   }, [columns])
@@ -120,7 +131,6 @@ export default function Step5ActivityLog() {
               pagination
               paginationPageSize={25}
               animateRows
-              tooltipShowDelay={300}
               onFirstDataRendered={onFirstDataRendered}
             />
           </div>

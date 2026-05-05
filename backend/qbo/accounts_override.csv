@@ -71,15 +71,15 @@ Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
 710020,25,Credit card rewards,Credit card rewards,Other Income,OtherMiscellaneousIncome,True,0.0
 230010,26,Customer Prepayments,Customer Prepayments,Other Current Liability,OtherCurrentLiabilities,True,-55000.0
 151000,160,Customer Relationships,Customer Relationships,Other Asset,OtherLongTermAssets,True,3700000.0
-151010,161,Customer Relationships - A/A,Customer Relationships:Customer Relationships - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-1253889.06
+151010,161,Customer Relationships - A/A,Customer Relationships:Customer Relationships - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-1274444.62
 240010,194,Deferred Contract Costs - LT,Deferred Contract Costs - LT,Long Term Liability,OtherLongTermLiabilities,True,0.0
 130040,186,Deferred Contract Costs - ST,Deferred Contract Costs - ST,Other Current Asset,OtherCurrentAssets,True,0.0
 130050,275,Deferred Financing Costs,Deferred Financing Costs,Other Current Asset,OtherCurrentAssets,True,0.0
 232000,188,Deferred Revenue,Deferred Revenue,Other Current Liability,DeferredRevenue,True,-287.53
 232010,292,Deferred Revenue - Conference,Deferred Revenue:Deferred Revenue - Conference,Other Current Liability,DeferredRevenue,True,0.0
 232020,191,Deferred Revenue - Project,Deferred Revenue:Deferred Revenue - Project,Other Current Liability,DeferredRevenue,True,0.0
-232030,189,Deferred Revenue - Subscription,Deferred Revenue:Deferred Revenue - Subscription,Other Current Liability,DeferredRevenue,True,-4315771.58
-232040,190,Deferred Revenue - Supplier,Deferred Revenue:Deferred Revenue - Supplier,Other Current Liability,DeferredRevenue,True,-25583.6
+232030,189,Deferred Revenue - Subscription,Deferred Revenue:Deferred Revenue - Subscription,Other Current Liability,DeferredRevenue,True,-3817236.92
+232040,190,Deferred Revenue - Supplier,Deferred Revenue:Deferred Revenue - Supplier,Other Current Liability,DeferredRevenue,True,-12250.13
 230020,278,Deferred Tax Liablity,Deferred Tax Liablity,Other Current Liability,OtherCurrentLiabilities,True,0.0
 810030,28,Depreciation Expense,Depreciation Expense,Other Expense,Depreciation,True,0.0
 152000,163,Developed Technology,Developed Technology,Other Asset,Licenses,True,0.0
@@ -93,7 +93,7 @@ Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
 230030,183,Federal Income Tax Payable,Federal Income Tax Payable,Other Current Liability,FederalIncomeTaxPayable,True,0.0
 240020,192,Finance Lease - L/T,Finance Lease - L/T,Long Term Liability,OtherLongTermLiabilities,True,0.0
 141000,34,Furniture & Fixtures,Furniture & Fixtures,Fixed Asset,FurnitureAndFixtures,True,5138.88
-141010,159,Furniture & Fixtures - A/D,Furniture & Fixtures:Furniture & Fixtures - A/D,Fixed Asset,AccumulatedDepreciation,True,-734.16
+141010,159,Furniture & Fixtures - A/D,Furniture & Fixtures:Furniture & Fixtures - A/D,Fixed Asset,AccumulatedDepreciation,True,-795.34
 612000,35,General Business Expenses,General Business Expenses,Expense,OtherBusinessExpenses,True,0.0
 612010,105,Bank Fees,General Business Expenses:Bank Fees,Expense,BankCharges,True,0.0
 612020,245,Credit Card Fees,General Business Expenses:Credit Card Fees,Expense,BankCharges,True,0.0
@@ -116,7 +116,7 @@ Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
 613110,254,Telephone & Internet,General Office Expenses:Telephone & Internet,Expense,Utilities,True,0.0
 130070,291,General Overpayments/Deposits,General Overpayments/Deposits,Other Current Asset,OtherCurrentAssets,True,0.0
 153000,36,Goodwill,Goodwill,Other Asset,Goodwill,True,14482540.0
-153010,162,Goodwill - A/A,Goodwill:Goodwill - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-7361957.68
+153010,162,Goodwill - A/A,Goodwill:Goodwill - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-7482645.51
 810050,290,Impairment Loss,Impairment Loss,Other Expense,Amortization,True,0.0
 610050,1150040015,Implementation / Setup Expense,Implementation / Setup Expense,Expense,OtherBusinessExpenses,True,0.0
 710040,39,Insurance claims,Insurance claims,Other Income,OtherMiscellaneousIncome,True,0.0
@@ -132,7 +132,7 @@ Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
 140020,43,Land,Land,Fixed Asset,Land,True,0.0
 230050,185,Lease Payable - Current,Lease Payable - Current,Other Current Liability,OtherCurrentLiabilities,True,-579597.1
 142000,37,Leasehold Improvements,Leasehold Improvements,Fixed Asset,LeaseholdImprovements,True,20657.16
-142010,1150040010,Leasehold Improvement-A/D,Leasehold Improvements:Leasehold Improvement-A/D,Fixed Asset,AccumulatedDepreciation,True,-3303.83
+142010,1150040010,Leasehold Improvement-A/D,Leasehold Improvements:Leasehold Improvement-A/D,Fixed Asset,AccumulatedDepreciation,True,-3626.6
 615000,45,Legal & Professional Fees,Legal & Professional Fees,Expense,LegalProfessionalFees,True,0.0
 615010,114,Accounting Fees,Legal & Professional Fees:Accounting Fees,Expense,LegalProfessionalFees,True,0.0
 615020,226,Consulting/Professional Fees,Legal & Professional Fees:Consulting/Professional Fees,Expense,LegalProfessionalFees,True,0.0
@@ -187,7 +187,7 @@ Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
 154000,179,ROU - Finance Leases,ROU - Finance Leases,Other Asset,OtherLongTermAssets,True,14318.41
 154010,180,ROU - Finance Leases - A/A,ROU - Finance Leases:ROU - Finance Leases - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-14318.41
 155000,181,ROU - Operating Leases,ROU - Operating Leases,Other Asset,OtherLongTermAssets,True,3891307.88
-155010,182,ROU - Operating Leases - A/A,ROU - Operating Leases:ROU - Operating Leases - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-1323271.07
+155010,182,ROU - Operating Leases - A/A,ROU - Operating Leases:ROU - Operating Leases - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-1375759.72
 619000,62,Salary & Benefits,Salary & Benefits,Expense,PayrollExpenses,True,0.0
 619010,223,401k - ER,Salary & Benefits:401k - ER,Expense,PayrollExpenses,True,0.0
 619020,219,Bonus,Salary & Benefits:Bonus,Expense,PayrollWageExpenses,True,0.0
@@ -224,10 +224,10 @@ Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
 130100,158,Tax Overpayment/Deposits,Tax Overpayment/Deposits,Other Current Asset,OtherCurrentAssets,True,0.0
 110070,299,Tech,Tech,Bank,CashOnHand,True,0.0
 143000,1150040008,Technology Equipment,Technology Equipment,Fixed Asset,MachineryAndEquipment,True,48258.73
-143010,1150040009,Technology Equpment- A/D,Technology Equipment:Technology Equpment- A/D,Fixed Asset,AccumulatedDepreciation,True,-16089.24
+143010,1150040009,Technology Equpment- A/D,Technology Equipment:Technology Equpment- A/D,Fixed Asset,AccumulatedDepreciation,True,-17430.01
 110080,300,Tools,Tools,Bank,CashOnHand,True,0.0
 156000,165,Trade Name,Trade Name,Other Asset,OtherLongTermAssets,True,1190000.0
-156010,166,Trade Name - A/A,Trade Name:Trade Name - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-864167.17
+156010,166,Trade Name - A/A,Trade Name:Trade Name - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-878333.84
 620000,84,Travel & Entertainment,Travel & Entertainment,Expense,Travel,True,0.0
 620010,132,Airfare,Travel & Entertainment:Airfare,Expense,Travel,True,0.0
 620020,294,Billable Travel Expenses,Travel & Entertainment:Billable Travel Expenses,Expense,Travel,True,0.0

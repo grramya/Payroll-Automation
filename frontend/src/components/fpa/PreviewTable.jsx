@@ -139,8 +139,7 @@ export default function PreviewTable({ rows }) {
                   <TableCell
                     key={col}
                     sx={{
-                      maxWidth: 200, overflow: "hidden",
-                      textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      whiteSpace: "nowrap",
                       color: "text.secondary", py: 1,
                       borderBottom: "1px solid #F1F5F9",
                     }}

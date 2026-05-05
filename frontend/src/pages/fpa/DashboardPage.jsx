@@ -5,8 +5,8 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon   from "@mui/icons-material/KeyboardArrowUp";
 import dayjs from "dayjs";
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, ResponsiveContainer, ReferenceLine,
+  AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid,
+  Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea,
 } from "recharts";
 import { useFpaResult } from "../../context/FpaResultContext";
 
@@ -32,8 +32,8 @@ const toYM = (s) => { const [m, y] = s.split("-"); return `${y.length===2?`20${y
 function SectionHeader({ title, subtitle }) {
   return (
     <Box sx={{ mb: 2 }}>
-      <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0F172A" }}>{title}</Typography>
-      {subtitle && <Typography sx={{ fontSize: "0.75rem", color: "#64748B", mt: 0.25 }}>{subtitle}</Typography>}
+      <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#212529", fontFamily: "Inter, Roboto, sans-serif" }}>{title}</Typography>
+      {subtitle && <Typography sx={{ fontSize: "0.75rem", color: "#6B7280", mt: 0.25, fontFamily: "Inter, Roboto, sans-serif" }}>{subtitle}</Typography>}
     </Box>
   );
 }
@@ -42,7 +42,7 @@ function Card({ children, sx = {} }) {
   return (
     <Box
       sx={{
-        bgcolor: "#fff", borderRadius: 2, border: "1px solid #E2E8F0",
+        bgcolor: "#fff", borderRadius: "4px", border: "1px solid #E5E7EB",
         boxShadow: "0 1px 3px rgba(0,0,0,0.06)", p: 2.5, ...sx,
       }}
     >
@@ -72,7 +72,7 @@ function ChartTooltip({ active, payload, label }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // KPI Tile
 // ─────────────────────────────────────────────────────────────────────────────
-function KpiTile({ label, value, deltaVal, format = "money", accent = "#236CFF" }) {
+function KpiTile({ label, value, deltaVal, format = "money", accent = "#94A3B8" }) {
   const positive = deltaVal == null ? null : deltaVal >= 0;
   const formattedVal = format === "pct" ? fmtPct(value) : fmtM(value);
   const isNeg = typeof value === "number" && value < 0;
@@ -80,22 +80,25 @@ function KpiTile({ label, value, deltaVal, format = "money", accent = "#236CFF" 
   return (
     <Box
       sx={{
-        flex: "1 1 160px", bgcolor: "#fff", borderRadius: 2,
-        border: "1px solid #E2E8F0", p: 2,
-        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-        borderTop: `3px solid ${accent}`,
+        flex: "1 1 160px", bgcolor: "#fff", borderRadius: "4px",
+        border: "1px solid #E5E7EB", p: 2,
+        boxShadow: "0 1px 4px rgba(0,0,0,0.07)",
+        borderTop: `4px solid ${accent}`,
       }}
     >
-      <Typography sx={{ fontSize: "0.68rem", fontWeight: 600, color: "#64748B", letterSpacing: "0.05em", textTransform: "uppercase", mb: 0.75 }}>
+      <Typography sx={{ fontSize: "0.68rem", fontWeight: 600, color: "#6B7280", letterSpacing: "0.05em", textTransform: "uppercase", mb: 0.75, fontFamily: "Inter, Roboto, sans-serif" }}>
         {label}
       </Typography>
-      <Typography sx={{ fontSize: "1.45rem", fontWeight: 800, color: isNeg ? "#DC2626" : "#0F172A", lineHeight: 1.1, fontFamily: "monospace" }}>
+      <Typography sx={{ fontSize: "1.45rem", fontWeight: 700, color: isNeg ? "#E8784A" : "#1A2E44", lineHeight: 1.1, fontFamily: "Inter, Roboto, sans-serif" }}>
         {formattedVal}
       </Typography>
       {deltaVal != null && (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
-          <Typography sx={{ fontSize: "0.7rem", fontWeight: 600, color: positive ? "#2CA01C" : "#DC2626" }}>
-            {positive ? "▲" : "▼"} {Math.abs(deltaVal).toFixed(1)}% MoM
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.25, mt: 0.6 }}>
+          <Typography component="span" sx={{ fontSize: "0.7rem", fontWeight: 600, color: positive ? "#29ABE2" : "#E8784A", fontFamily: "Inter, Roboto, sans-serif" }}>
+            {positive ? "▲" : "▼"} {Math.abs(deltaVal).toFixed(1)}%
+          </Typography>
+          <Typography component="span" sx={{ fontSize: "0.7rem", fontWeight: 400, color: "#6B7280", fontFamily: "Inter, Roboto, sans-serif" }}>
+            &nbsp;MoM
           </Typography>
         </Box>
       )}
@@ -106,26 +109,27 @@ function KpiTile({ label, value, deltaVal, format = "money", accent = "#236CFF" 
 // ─────────────────────────────────────────────────────────────────────────────
 // Efficiency ratio bar
 // ─────────────────────────────────────────────────────────────────────────────
-function RatioBar({ label, value, benchmark, color }) {
-  const pct     = Math.min(Math.max(value ?? 0, -100), 100);
-  const absPct  = Math.abs(pct);
-  const isGood  = benchmark != null ? (pct >= benchmark) : pct >= 0;
+function RatioBar({ label, value, benchmark }) {
+  const pct    = Math.min(Math.max(value ?? 0, -100), 100);
+  const absPct = Math.abs(pct);
+  const isGood = benchmark != null ? (pct >= benchmark) : pct >= 0;
+  const barColor = isGood ? "#29ABE2" : "#E8784A";
 
   return (
     <Box sx={{ mb: 2 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
-        <Typography sx={{ fontSize: "0.78rem", color: "#334155", fontWeight: 500 }}>{label}</Typography>
+        <Typography sx={{ fontSize: "0.78rem", color: "#212529", fontWeight: 600, fontFamily: "Inter, Roboto, sans-serif" }}>{label}</Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {benchmark != null && (
-            <Typography sx={{ fontSize: "0.68rem", color: "#94A3B8" }}>Target {benchmark}%</Typography>
+            <Typography sx={{ fontSize: "0.68rem", color: "#6B7280", fontFamily: "Inter, Roboto, sans-serif" }}>Target {benchmark}%</Typography>
           )}
-          <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color: isGood ? "#2CA01C" : "#DC2626", fontFamily: "monospace" }}>
+          <Typography sx={{ fontSize: "0.82rem", fontWeight: 600, color: barColor, fontFamily: "Inter, Roboto, sans-serif" }}>
             {fmtPct(pct)}
           </Typography>
         </Box>
       </Box>
-      <Box sx={{ height: 6, bgcolor: "#F1F5F9", borderRadius: 99, overflow: "hidden" }}>
-        <Box sx={{ height: "100%", width: `${absPct}%`, bgcolor: isGood ? color : "#DC2626", borderRadius: 99, transition: "width 0.6s ease" }} />
+      <Box sx={{ height: 6, bgcolor: "#D1D5DB", borderRadius: 99, overflow: "hidden" }}>
+        <Box sx={{ height: "100%", width: `${absPct}%`, bgcolor: barColor, borderRadius: 99, transition: "width 0.6s ease" }} />
       </Box>
     </Box>
   );
@@ -154,16 +158,27 @@ function DeptHeatmap({ months, data }) {
   );
   const maxVal = Math.max(...allVals, 1);
 
+  // FFF8F0 (Cream) → F5A623 (Amber) → C45C0A (Deep Orange)
   const cellBg = (val) => {
-    if (val == null) return "#F8FAFC";
-    const abs    = Math.abs(val);
-    const ratio  = abs / maxVal;
-    const r = Math.round(30  + ratio * (220 - 30));
-    const g = Math.round(52  + ratio * (20  - 52));
-    const b = Math.round(97  + ratio * (20  - 97));
-    // Darker = more spend (red-navy gradient)
-    const opacity = 0.1 + ratio * 0.75;
-    return `rgba(${r},${g},${b},${opacity})`;
+    if (val == null) return "#FFF8F0";
+    const ratio = Math.abs(val) / maxVal;
+    let r, g, b;
+    if (ratio <= 0.5) {
+      const t = ratio * 2;
+      r = Math.round(255 + t * (245 - 255));
+      g = Math.round(248 + t * (166 - 248));
+      b = Math.round(240 + t * (35  - 240));
+    } else {
+      const t = (ratio - 0.5) * 2;
+      r = Math.round(245 + t * (196 - 245));
+      g = Math.round(166 + t * (92  - 166));
+      b = Math.round(35  + t * (10  - 35));
+    }
+    return `rgb(${r},${g},${b})`;
+  };
+  const cellText = (val) => {
+    const ratio = val != null ? Math.abs(val) / maxVal : 0;
+    return ratio > 0.5 ? "#ffffff" : "#1A2E44";
   };
 
   return (
@@ -198,7 +213,7 @@ function DeptHeatmap({ months, data }) {
                       padding: "5px 6px", textAlign: "right",
                       background: cellBg(v),
                       borderTop: "1px solid rgba(0,0,0,0.04)",
-                      fontFamily: "monospace", color: "#1C2B41", fontWeight: 600,
+                      fontFamily: "monospace", color: cellText(v), fontWeight: 600,
                     }}
                   >
                     {abs != null ? fmtM(abs) : "—"}
@@ -256,22 +271,22 @@ function PeriodTable({ data, months }) {
     <Box sx={{ overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
         <thead>
-          <tr style={{ background: "#400f61" }}>
-            <th style={{ textAlign: "left", padding: "8px 12px", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: "0.72rem" }}>
+          <tr style={{ background: "#D4781A" }}>
+            <th style={{ textAlign: "left", padding: "8px 12px", color: "rgba(255,255,255,0.92)", fontWeight: 600, fontSize: "0.72rem" }}>
               Line Item
             </th>
             {cols.map((c) => (
-              <th key={c.label} style={{ textAlign: "right", padding: "8px 10px", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: "0.72rem", whiteSpace: "nowrap" }}>
+              <th key={c.label} style={{ textAlign: "right", padding: "8px 10px", color: "rgba(255,255,255,0.92)", fontWeight: 600, fontSize: "0.72rem", whiteSpace: "nowrap" }}>
                 {c.label}
               </th>
             ))}
             {prev && (
-              <th style={{ textAlign: "right", padding: "8px 10px", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: "0.72rem" }}>
+              <th style={{ textAlign: "right", padding: "8px 10px", color: "rgba(255,255,255,0.92)", fontWeight: 600, fontSize: "0.72rem" }}>
                 Δ MoM
               </th>
             )}
             {yearAgo && (
-              <th style={{ textAlign: "right", padding: "8px 10px", color: "rgba(255,255,255,0.85)", fontWeight: 600, fontSize: "0.72rem" }}>
+              <th style={{ textAlign: "right", padding: "8px 10px", color: "rgba(255,255,255,0.92)", fontWeight: 600, fontSize: "0.72rem" }}>
                 Δ YoY
               </th>
             )}
@@ -289,7 +304,7 @@ function PeriodTable({ data, months }) {
               ? (cur_v != null && yoy_v  != null ? cur_v - yoy_v  : null)
               : delta(cur_v, yoy_v);
             const fmt    = (v) => v == null ? "—" : pct ? fmtPct(v) : fmtM(v);
-            const dColor = (d) => d == null ? "#94A3B8" : d >= 0 ? "#2CA01C" : "#DC2626";
+            const dColor = (d) => d == null ? "#94A3B8" : d >= 0 ? "#29ABE2" : "#E8784A";
             const fmtDelta = (d) => d == null ? "—" : `${d >= 0 ? "▲" : "▼"} ${Math.abs(d).toFixed(1)}${pct ? " pp" : "%"}`;
 
             return (
@@ -301,7 +316,7 @@ function PeriodTable({ data, months }) {
                   const v = data[c.key]?.[key] ?? null;
                   const isNeg = typeof v === "number" && v < 0;
                   return (
-                    <td key={c.label} style={{ padding: "7px 10px", textAlign: "right", borderTop: "1px solid #F1F5F9", fontFamily: "monospace", color: isNeg ? "#DC2626" : "#0F172A", fontWeight: 600 }}>
+                    <td key={c.label} style={{ padding: "7px 10px", textAlign: "right", borderTop: "1px solid #F1F5F9", fontFamily: "monospace", color: isNeg ? "#E8784A" : "#0F172A", fontWeight: 600 }}>
                       {fmt(v)}
                     </td>
                   );
@@ -344,12 +359,8 @@ export default function DashboardPage() {
   const bsRows    = bsPreview?.rows   ?? [];
 
   // ── Date range — derived from data, persisted in context ─────────────────
-  const toFullYear = (yr) => yr?.length === 2 ? `20${yr}` : yr;
-  const firstYear  = plMonths.length ? toFullYear(plMonths[0].split("-")[1])                   : String(new Date().getFullYear());
-  const lastYear   = plMonths.length ? toFullYear(plMonths[plMonths.length - 1].split("-")[1]) : String(new Date().getFullYear());
-
-  const defaultFrom = dayjs(`${firstYear}-01-01`);
-  const defaultTo   = dayjs(`${lastYear}-12-31`);
+  const defaultFrom = dayjs().startOf('year');
+  const defaultTo   = dayjs().endOf('month');
   const fromDate = pageFilters.dashboard?.fromDate ?? defaultFrom;
   const toDate   = pageFilters.dashboard?.toDate   ?? defaultTo;
   const setFromDate = (v) => setPageFilter("dashboard", { fromDate: v, toDate });
@@ -418,6 +429,24 @@ export default function DashboardPage() {
     [filteredPlMonths, plData]
   );
 
+  // ── Area chart stroke colors (based on last data point sign) ────────────
+  const revTrendColors = useMemo(() => {
+    const last = revTrendData[revTrendData.length - 1] ?? {};
+    return { EBITDA: ((last.EBITDA ?? 0) >= 0 ? "#F5A623" : "#E8784A") };
+  }, [revTrendData]);
+
+  // ── Area chart zero-crossing gradient offset ─────────────────────────────
+  const revTrendBounds = useMemo(() => {
+    const vals = revTrendData.flatMap(d => [d.Revenue, d["Gross Profit"], d.EBITDA]);
+    const rawMax = vals.length ? Math.max(...vals) : 1;
+    const rawMin = vals.length ? Math.min(...vals) : 0;
+    const pad    = (rawMax - rawMin) * 0.05 || 1;
+    const max    = rawMax + pad;
+    const min    = Math.min(rawMin - pad, 0);
+    const offset = `${Math.max(0, Math.min(100, (max / (max - min)) * 100)).toFixed(1)}%`;
+    return { min, max, offset };
+  }, [revTrendData]);
+
   // ── Cash trend (filtered BS) ──────────────────────────────────────────────
   const findBsRow     = (label) => bsRows.find((r) => r.label === label);
   const cashRow           = findBsRow("Cash and Cash equivalents");
@@ -451,19 +480,19 @@ export default function DashboardPage() {
 
   // ── KPI tiles ─────────────────────────────────────────────────────────────
   const kpis = [
-    { label: "Revenue",      value: latestD["Total Revenue"],        deltaVal: delta(latestD["Total Revenue"],        prevD["Total Revenue"]),        accent: "#400f61" },
-    { label: "Gross Margin", value: latestD["Gross Profit (%)"],     deltaVal: null, format: "pct",                   accent: "#2CA01C" },
-    { label: "EBITDA",       value: latestD["EBITDA"],               deltaVal: delta(latestD["EBITDA"],               prevD["EBITDA"]),               accent: "#059669" },
-    { label: "Net Income",   value: latestD["Net Income"],           deltaVal: delta(latestD["Net Income"],           prevD["Net Income"]),           accent: "#400f61" },
-    { label: "Cash",         value: latestCash,                      deltaVal: delta(latestCash, prevCash),           accent: "#6d28d9" },
-    { label: "Op. Margin",   value: latestD["Operating Profit (%)"], deltaVal: null, format: "pct",                   accent: "#2d0a45" },
+    { label: "Revenue",      value: latestD["Total Revenue"],        deltaVal: delta(latestD["Total Revenue"],        prevD["Total Revenue"]),        accent: "#29ABE2" },
+    { label: "Gross Margin", value: latestD["Gross Profit (%)"],     deltaVal: null, format: "pct",                   accent: "#1A5276" },
+    { label: "EBITDA",       value: latestD["EBITDA"],               deltaVal: delta(latestD["EBITDA"],               prevD["EBITDA"]),               accent: "#F5A623" },
+    { label: "Net Income",   value: latestD["Net Income"],           deltaVal: delta(latestD["Net Income"],           prevD["Net Income"]),           accent: "#1A5276" },
+    { label: "Cash",         value: latestCash,                      deltaVal: delta(latestCash, prevCash),           accent: "#56CCF2" },
+    { label: "Op. Margin",   value: latestD["Operating Profit (%)"], deltaVal: null, format: "pct",                   accent: "#E8784A" },
   ];
 
   const efficiencyRatios = [
-    { label: "Gross Margin",      value: latestD["Gross Profit (%)"],     benchmark: 70, color: "#2CA01C" },
-    { label: "EBITDA Margin",     value: latestD["EBITDA (%)"],           benchmark: 10, color: "#059669" },
-    { label: "Operating Margin",  value: latestD["Operating Profit (%)"], benchmark: 15, color: "#400f61" },
-    { label: "Net Income Margin", value: latestD["Net Income (%)"],       benchmark: 10, color: "#2d0a45" },
+    { label: "Gross Margin",      value: latestD["Gross Profit (%)"],     benchmark: 70 },
+    { label: "EBITDA Margin",     value: latestD["EBITDA (%)"],           benchmark: 10 },
+    { label: "Operating Margin",  value: latestD["Operating Profit (%)"], benchmark: 15 },
+    { label: "Net Income Margin", value: latestD["Net Income (%)"],       benchmark: 10 },
   ];
 
   if (!result) return (
@@ -530,25 +559,17 @@ export default function DashboardPage() {
             <SectionHeader title="Revenue & Profitability Trend" subtitle="Monthly · Revenue, Gross Profit, EBITDA" />
             <ResponsiveContainer width="100%" height={240}>
               <AreaChart data={revTrendData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#400f61" stopOpacity={0.18} />
-                    <stop offset="95%" stopColor="#400f61" stopOpacity={0.01} />
-                  </linearGradient>
-                  <linearGradient id="gpGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#2CA01C" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#2CA01C" stopOpacity={0.01} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={(v) => fmtM(v)} tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} width={60} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#6B7280", fontFamily: "Inter, Roboto, sans-serif" }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={(v) => fmtM(v)} tick={{ fontSize: 10, fill: "#6B7280", fontFamily: "Inter, Roboto, sans-serif" }} axisLine={false} tickLine={false} width={60} />
                 <Tooltip content={<ChartTooltip />} />
-                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "0.72rem", paddingTop: 8 }} />
-                <ReferenceLine y={0} stroke="#E2E8F0" />
-                <Area type="monotone" dataKey="Revenue"      stroke="#400f61" strokeWidth={2} fill="url(#revGrad)" dot={false} />
-                <Area type="monotone" dataKey="Gross Profit" stroke="#2CA01C" strokeWidth={2} fill="url(#gpGrad)"  dot={false} />
-                <Area type="monotone" dataKey="EBITDA"       stroke="#059669" strokeWidth={1.5} fill="none" strokeDasharray="4 2" dot={false} />
+                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "0.72rem", paddingTop: 8, fontFamily: "Inter, Roboto, sans-serif" }} />
+                <ReferenceArea y1={0} y2={1e9}  fill="#EBF8FC" fillOpacity={1} ifOverflow="hidden" />
+                <ReferenceArea y1={-1e9} y2={0} fill="#FFF4ED" fillOpacity={1} ifOverflow="hidden" />
+                <ReferenceLine y={0} stroke="#B0D9E8" strokeDasharray="4 4" />
+                <Area type="monotone" dataKey="Revenue"      stroke="#29ABE2" strokeWidth={2.5} fill="none" dot={false} />
+                <Area type="monotone" dataKey="Gross Profit" stroke="#1A5276" strokeWidth={2}   fill="none" dot={false} />
+                <Area type="monotone" dataKey="EBITDA"       stroke={revTrendColors.EBITDA}      strokeWidth={1.5} fill="none" strokeDasharray="4 2" dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           </Card>
@@ -558,15 +579,17 @@ export default function DashboardPage() {
             <SectionHeader title="P&L Summary" subtitle="Last 8 months — grouped bars" />
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={plBarData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }} barGap={2} barCategoryGap="30%">
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 9, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={(v) => fmtM(v)} tick={{ fontSize: 9, fill: "#94A3B8" }} axisLine={false} tickLine={false} width={55} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 9, fill: "#6B7280", fontFamily: "Inter, Roboto, sans-serif" }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={(v) => fmtM(v)} tick={{ fontSize: 9, fill: "#6B7280", fontFamily: "Inter, Roboto, sans-serif" }} axisLine={false} tickLine={false} width={55} />
                 <Tooltip content={<ChartTooltip />} />
-                <Legend iconType="square" iconSize={8} wrapperStyle={{ fontSize: "0.72rem", paddingTop: 8 }} />
-                <ReferenceLine y={0} stroke="#E2E8F0" />
-                <Bar dataKey="Revenue"      fill="#400f61" radius={[2,2,0,0]} maxBarSize={18} />
-                <Bar dataKey="Gross Profit" fill="#2CA01C" radius={[2,2,0,0]} maxBarSize={18} />
-                <Bar dataKey="EBITDA"       fill="#059669" radius={[2,2,0,0]} maxBarSize={18} />
+                <Legend iconType="square" iconSize={8} wrapperStyle={{ fontSize: "0.72rem", paddingTop: 8, fontFamily: "Inter, Roboto, sans-serif" }} />
+                <ReferenceLine y={0} stroke="#B0D9E8" strokeDasharray="4 4" />
+                <Bar dataKey="Revenue"      fill="#29ABE2" radius={[2,2,0,0]} maxBarSize={18} />
+                <Bar dataKey="Gross Profit" fill="#1A5276" radius={[2,2,0,0]} maxBarSize={18} />
+                <Bar dataKey="EBITDA"       radius={[2,2,0,0]} maxBarSize={18}>
+                  {plBarData.map((entry, i) => <Cell key={i} fill={entry.EBITDA >= 0 ? "#F5A623" : "#E8784A"} />)}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </Card>
@@ -601,15 +624,15 @@ export default function DashboardPage() {
                   <AreaChart data={cashTrendData.slice(-12)} margin={{ top: 2, right: 4, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="cashGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"  stopColor="#6d28d9" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="#6d28d9" stopOpacity={0.01} />
+                        <stop offset="0%"   stopColor="#56CCF2" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="#56CCF2" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                    <YAxis tickFormatter={(v) => fmtM(v)} tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} width={60} />
+                    <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#6B7280", fontFamily: "Inter, Roboto, sans-serif" }} axisLine={false} tickLine={false} />
+                    <YAxis tickFormatter={(v) => fmtM(v)} tick={{ fontSize: 10, fill: "#6B7280", fontFamily: "Inter, Roboto, sans-serif" }} axisLine={false} tickLine={false} width={60} />
                     <Tooltip content={<ChartTooltip />} />
-                    <ReferenceLine y={0} stroke="#E2E8F0" />
-                    <Area type="monotone" dataKey="Cash" stroke="#6d28d9" strokeWidth={2} fill="url(#cashGrad)" dot={false} />
+                    <ReferenceLine y={0} stroke="#CBD5E1" strokeDasharray="4 4" />
+                    <Area type="monotone" dataKey="Cash" stroke="#26C6DA" strokeWidth={2.5} fill="url(#cashGrad)" dot={false} />
                   </AreaChart>
                 </ResponsiveContainer>
               </Box>
@@ -618,15 +641,15 @@ export default function DashboardPage() {
               <Box sx={{ flex: "0 0 260px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
                 <Divider sx={{ mb: 1.5, display: { xs: "block", sm: "none" } }} />
                 {[
-                  { label: "Cash",         value: latestCash,   color: "#400f61" },
-                  { label: "Total Assets", value: latestAssets, color: "#6d28d9" },
-                  { label: "Total Liab.",  value: latestLiab,   color: "#DC2626" },
-                  { label: "Equity",       value: latestEquity, color: "#2CA01C" },
-                  ...(runway ? [{ label: "Runway", value: `~${runway.toFixed(1)} mo`, raw: true, color: runway < 6 ? "#DC2626" : "#2CA01C" }] : []),
+                  { label: "Cash",         value: latestCash,   color: "#56CCF2" },
+                  { label: "Total Assets", value: latestAssets, color: "#29ABE2" },
+                  { label: "Total Liab.",  value: latestLiab,   color: "#E8784A" },
+                  { label: "Equity",       value: latestEquity, color: "#F5A623" },
+                  ...(runway ? [{ label: "Runway", value: `~${runway.toFixed(1)} mo`, raw: true, color: runway < 6 ? "#E8784A" : "#29ABE2" }] : []),
                 ].map(({ label, value, color, raw }) => (
-                  <Box key={label} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", py: 0.6, borderBottom: "1px solid #F1F5F9" }}>
-                    <Typography sx={{ fontSize: "0.75rem", color: "#64748B" }}>{label}</Typography>
-                    <Typography sx={{ fontSize: "0.82rem", fontWeight: 700, color, fontFamily: "monospace" }}>
+                  <Box key={label} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", py: 0.6, borderBottom: "1px solid #E5E7EB" }}>
+                    <Typography sx={{ fontSize: "0.75rem", color: "#6B7280", fontFamily: "Inter, Roboto, sans-serif" }}>{label}</Typography>
+                    <Typography sx={{ fontSize: "0.82rem", fontWeight: 600, color, fontFamily: "Inter, Roboto, sans-serif" }}>
                       {raw ? value : fmtM(value)}
                     </Typography>
                   </Box>

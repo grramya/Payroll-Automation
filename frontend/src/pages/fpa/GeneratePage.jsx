@@ -1,27 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
 import { apiClient as axios } from "../../api/api";
 import {
   Box, Container, Typography, TextField, Button,
-  LinearProgress, Alert, InputAdornment, alpha,
-  Tabs, Tab, Chip, Switch, FormControlLabel, Collapse,
+  Alert, InputAdornment,
+  Chip, Switch, FormControlLabel, Collapse,
   CircularProgress,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
-import BoltIcon from "@mui/icons-material/Bolt";
 import BusinessIcon from "@mui/icons-material/Business";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import TableChartIcon from "@mui/icons-material/TableChart";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import LinkIcon from "@mui/icons-material/Link";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
-import FileDropZone from "../../components/fpa/FileDropZone";
 import { useFpaResult } from "../../context/FpaResultContext";
 
 function b64ToBlob(b64) {
@@ -40,41 +32,6 @@ function formatAge(isoStr) {
   const hrs = Math.round(mins / 60);
   if (hrs < 24)   return `${hrs}h ago`;
   return `${Math.round(hrs / 24)}d ago`;
-}
-
-// ── Step indicator ─────────────────────────────────────────────────────────────
-function StepRow({ steps, active }) {
-  return (
-    <Box sx={{ display: "flex", alignItems: "center", mb: 4 }} role="list" aria-label="Steps">
-      {steps.map((label, i) => {
-        const done = i < active;
-        const cur  = i === active;
-        return (
-          <Box key={label} sx={{ display: "flex", alignItems: "center", flex: i < steps.length - 1 ? 1 : "none" }} role="listitem">
-            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.5 }}>
-              <Box sx={{
-                width: 32, height: 32, borderRadius: "50%",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontWeight: 700, fontSize: "0.78rem",
-                transition: "all 0.3s cubic-bezier(0.34,1.56,0.64,1)",
-                bgcolor: done ? "success.main" : cur ? "primary.main" : "#E2E8F0",
-                color: done || cur ? "white" : "#94A3B8",
-                boxShadow: cur ? "0 0 0 4px rgba(37,99,235,0.15)" : "none",
-              }}>
-                {done ? <CheckIcon sx={{ fontSize: 15 }} /> : i + 1}
-              </Box>
-              <Typography variant="caption" sx={{ fontWeight: cur ? 600 : 500, color: done ? "success.main" : cur ? "primary.main" : "text.disabled", fontSize: "0.68rem", whiteSpace: "nowrap" }}>
-                {label}
-              </Typography>
-            </Box>
-            {i < steps.length - 1 && (
-              <Box sx={{ flex: 1, height: 2, mx: 1.5, mb: 2.5, bgcolor: i < active ? "success.main" : "#E2E8F0", borderRadius: 99, transition: "background-color 0.5s ease" }} />
-            )}
-          </Box>
-        );
-      })}
-    </Box>
-  );
 }
 
 // ── Report navigation items ────────────────────────────────────────────────────
@@ -149,7 +106,6 @@ function SuccessOutput({ result, navigate, onRefresh }) {
 
   return (
     <div>
-      {/* Stale data warning */}
       {stale && (
         <div style={{
           display: "flex", alignItems: "center", gap: 10,
@@ -174,7 +130,6 @@ function SuccessOutput({ result, navigate, onRefresh }) {
         </div>
       )}
 
-      {/* Metric strip */}
       <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
         {metrics.map(({ label, value }) => (
           <div key={label} style={{ flex: "1 1 130px", minWidth: 110, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--r8)", padding: "11px 16px", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
@@ -184,7 +139,6 @@ function SuccessOutput({ result, navigate, onRefresh }) {
         ))}
       </div>
 
-      {/* Report grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 10 }}>
         {REPORT_ITEMS.map(({ path, icon, title, sub }) => (
           <ReportCard key={path} icon={icon} title={title} subtitle={sub(result)} onClick={() => navigate(path)} />
@@ -196,7 +150,7 @@ function SuccessOutput({ result, navigate, onRefresh }) {
 
 // ── QBO connect panel (one per company) ───────────────────────────────────────
 function QboConnectPanel({ company, label, connected, onConnected, onError }) {
-  const [step,        setStep]        = useState("idle");   // idle | waiting | pasting | done
+  const [step,        setStep]        = useState("idle");
   const [authUrl,     setAuthUrl]     = useState("");
   const [pasteMode,   setPasteMode]   = useState(false);
   const [pastedUrl,   setPastedUrl]   = useState("");
@@ -212,7 +166,6 @@ function QboConnectPanel({ company, label, connected, onConnected, onError }) {
       window.open(res.data.auth_url, "_blank", "noopener,noreferrer");
 
       if (!res.data.paste_mode) {
-        // Callback mode — poll until connected
         setStep("waiting");
         const interval = setInterval(async () => {
           try {
@@ -226,7 +179,6 @@ function QboConnectPanel({ company, label, connected, onConnected, onError }) {
         }, 2000);
         setTimeout(() => clearInterval(interval), 120000);
       } else {
-        // Paste mode — show input
         setStep("pasting");
       }
     } catch (err) {
@@ -276,7 +228,6 @@ function QboConnectPanel({ company, label, connected, onConnected, onError }) {
         )}
       </Box>
 
-      {/* Paste-mode instructions */}
       <Collapse in={step === "pasting"}>
         <Box sx={{ mt: 1.5, p: 2, bgcolor: "#F8FAFC", borderRadius: 2, border: "1px solid #E2E8F0" }}>
           <Typography variant="caption" sx={{ display: "block", mb: 1, fontWeight: 600, color: "text.primary" }}>
@@ -320,15 +271,6 @@ export default function GeneratePage() {
   const navigate = useNavigate();
   const { result, setResult, cacheStatus } = useFpaResult();
 
-  const [tab, setTab] = useState(0);
-
-  // ── Upload tab ─────────────────────────────────────────────────────────────
-  const [inputFile,    setInputFile]    = useState(null);
-  const [companyName,  setCompanyName]  = useState(result?.companyName ?? "");
-  const [uploadStatus, setUploadStatus] = useState(result ? "done" : "idle");
-  const [uploadError,  setUploadError]  = useState("");
-
-  // ── QBO tab ────────────────────────────────────────────────────────────────
   const [qboStatus,      setQboStatus]      = useState(null);
   const [qboCompanyName, setQboCompanyName] = useState(result?.companyName ?? "Concertiv");
   const [includeBroker,  setIncludeBroker]  = useState(false);
@@ -346,8 +288,8 @@ export default function GeneratePage() {
   }, []);
 
   useEffect(() => {
-    if (tab === 1) fetchQboStatus();
-  }, [tab, fetchQboStatus]);
+    fetchQboStatus();
+  }, [fetchQboStatus]);
 
   const applyResult = (data) => {
     const { cached_at, summary, preview, excel_b64, bs_excel_b64, bs_preview, bsi_excel_b64, bsi_preview,
@@ -356,7 +298,7 @@ export default function GeneratePage() {
     setResult({
       summary, previewRows: preview,
       cachedAt:        cached_at ?? null,
-      companyName: tab === 0 ? companyName.trim() : qboCompanyName.trim(),
+      companyName:     qboCompanyName.trim(),
       downloadBlob:    b64ToBlob(excel_b64),
       bsBlob:          bs_excel_b64         ? b64ToBlob(bs_excel_b64)         : null,
       bsPreview:       bs_preview          ?? null,
@@ -371,44 +313,8 @@ export default function GeneratePage() {
     });
   };
 
-  // ── Upload handlers ────────────────────────────────────────────────────────
-  const handleFile = (file) => {
-    setInputFile(file);
-    if (!file || companyName.trim()) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const wb  = XLSX.read(e.target.result, { type: "array", sheetRows: 5 });
-        const ws  = wb.Sheets[wb.SheetNames[0]];
-        const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-        for (const row of raw)
-          for (const cell of row) {
-            const s = String(cell).trim();
-            if (s && s.toLowerCase() !== "nan") { setCompanyName(s); return; }
-          }
-      } catch (_) {}
-    };
-    reader.readAsArrayBuffer(file);
-  };
-
-  const handleTransform = async () => {
-    setUploadStatus("loading"); setUploadError("");
-    const form = new FormData();
-    form.append("input_file", inputFile);
-    form.append("company_name", companyName.trim());
-    try {
-      const res = await axios.post("/fpa/transform", form);
-      applyResult(res.data);
-      setUploadStatus("done");
-    } catch (err) {
-      setUploadError(err.response?.data?.detail ?? err.message);
-      setUploadStatus("error");
-    }
-  };
-
   const handleReset = () => {
     abortRef.current?.abort();
-    setInputFile(null); setCompanyName(""); setUploadStatus("idle"); setUploadError("");
     setQboCompanyName("Concertiv");
     setQboFetchStatus("idle"); setQboError(""); setFetchRows([]); setFetchTotal(null);
     setResult(null);
@@ -479,9 +385,6 @@ export default function GeneratePage() {
   const mainConnected   = qboStatus?.main?.connected   ?? false;
   const brokerConnected = qboStatus?.broker?.connected ?? false;
   const canQboFetch     = mainConnected && qboCompanyName.trim() && qboFetchStatus !== "loading";
-  const fileReady       = !!inputFile;
-  const companyReady    = companyName.trim().length > 0;
-  const canTransform    = fileReady && companyReady && uploadStatus !== "loading";
   const isDone          = !!result;
 
   return (
@@ -494,12 +397,12 @@ export default function GeneratePage() {
         </div>
         <div>
           <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text)" }}>
-            {isDone ? "Financial Reports" : "Transform your data"}
+            {isDone ? "Financial Reports" : "Connect to QuickBooks Online"}
           </h1>
           <p style={{ margin: 0, fontSize: 13, color: "var(--muted)" }}>
             {isDone
               ? "Reports are ready — select a view to explore your data."
-              : "Upload a QuickBooks export or connect directly to QBO to generate reports."}
+              : "Connect your QBO account to fetch transactions and generate reports."}
           </p>
         </div>
       </div>
@@ -526,159 +429,99 @@ export default function GeneratePage() {
         </div>
       )}
 
-      {/* Generate form — only shown once cache check is complete and no data exists */}
+      {/* QBO fetch form — only shown once cache check is complete and no data exists */}
       {!isDone && cacheStatus !== "loading" && (
         <>
-          <Tabs value={tab} onChange={(_, v) => { setTab(v); handleReset(); }}
-            sx={{ mb: 3, borderBottom: "1px solid #E2E8F0" }}>
-            <Tab label="Upload File" sx={{ textTransform: "none", fontWeight: 600 }} />
-            <Tab label="Fetch from QBO" icon={<LinkIcon sx={{ fontSize: 16 }} />} iconPosition="start"
-              sx={{ textTransform: "none", fontWeight: 600 }} />
-          </Tabs>
+          <Box sx={{ mb: 2.5, p: { xs: 3, md: 4 }, bgcolor: "background.paper", borderRadius: 3, border: "1px solid #E2E8F0", borderLeftWidth: 4, borderLeftColor: "primary.main", boxShadow: 1 }}>
+            <Typography variant="subtitle1" sx={{ mb: 2 }}>QBO Connections</Typography>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2.5 }}>
+              <QboConnectPanel company="main" label="Main Company" connected={mainConnected}
+                onConnected={(s) => setQboStatus(s)} onError={(e) => setQboError(e)} />
+              <QboConnectPanel company="broker" label="Broker Company" connected={brokerConnected}
+                onConnected={(s) => setQboStatus(s)} onError={(e) => setQboError(e)} />
+            </Box>
+          </Box>
 
-          {/* ── Tab 0: Upload File ─────────────────────────────────────────── */}
-          {tab === 0 && (
-            <>
-              <StepRow steps={["Upload file", "Company name", "Generate"]} active={!fileReady ? 0 : 1} />
-
-              <Box component="section" sx={{ mb: 2.5, p: { xs: 3, md: 4 }, bgcolor: "background.paper", borderRadius: 3, border: "1px solid", borderColor: fileReady ? "success.main" : "#E2E8F0", borderLeftWidth: 4, borderLeftColor: fileReady ? "success.main" : "primary.main", boxShadow: 1 }}>
-                <Typography variant="subtitle1" sx={{ mb: 0.5 }}>Upload input file</Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
-                  QuickBooks export (.xlsx). Mapping rules are built-in.
-                </Typography>
-                <FileDropZone accept=".xlsx" file={inputFile} onFile={handleFile} label="Input File (.xlsx)" />
+          <Box sx={{ mb: 2.5, p: { xs: 3, md: 4 }, bgcolor: "background.paper", borderRadius: 3, border: "1px solid #E2E8F0", borderLeftWidth: 4, borderLeftColor: mainConnected ? "primary.main" : "#E2E8F0", boxShadow: 1, opacity: mainConnected ? 1 : 0.5, pointerEvents: mainConnected ? "auto" : "none" }}>
+            <Typography variant="subtitle1" sx={{ mb: 0.5 }}>Fetch parameters</Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
+              Fetches all transactions from the company's first entry through today.
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mb: 2 }}>
+              <TextField label="Company name" size="small" required
+                value={qboCompanyName} onChange={(e) => setQboCompanyName(e.target.value)}
+                InputProps={{ startAdornment: <InputAdornment position="start"><BusinessIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
+                sx={{ flex: "1 1 200px" }} />
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
+              <FormControlLabel
+                control={<Switch checked={includeBroker} onChange={(e) => setIncludeBroker(e.target.checked)} disabled={!brokerConnected} size="small" />}
+                label={<Typography variant="body2" color={brokerConnected ? "text.primary" : "text.disabled"}>Include Broker Company data</Typography>}
+              />
+              <Button variant="contained" size="large" disabled={!canQboFetch} onClick={handleQboFetch}
+                startIcon={qboFetchStatus !== "loading" && <CloudDownloadIcon />}
+                sx={{ height: 40, flexShrink: 0, background: canQboFetch ? "#236CFF" : undefined, "&:hover": { background: "#1650CC" } }}>
+                {qboFetchStatus === "loading" ? "Fetching…" : "Fetch from QBO"}
+              </Button>
+              {qboFetchStatus !== "idle" && (
+                <Button variant="ghost" size="small" onClick={handleReset} startIcon={<RestartAltIcon />}
+                  sx={{ height: 40, color: "text.secondary", "&:hover": { bgcolor: "#F1F5F9" } }}>
+                  Reset
+                </Button>
+              )}
+            </Box>
+            {qboFetchStatus === "loading" && fetchRows.length === 0 && (
+              <Box sx={{ mt: 2.5, display: "flex", alignItems: "center", gap: 1.5 }} role="status">
+                <CircularProgress size={16} />
+                <Typography variant="caption" color="text.secondary">Fetching from QuickBooks Online…</Typography>
               </Box>
-
-              <Box component="section" sx={{ mb: 2.5, p: { xs: 3, md: 4 }, bgcolor: "background.paper", borderRadius: 3, border: "1px solid", borderColor: "#E2E8F0", borderLeftWidth: 4, borderLeftColor: fileReady ? "primary.main" : "#E2E8F0", boxShadow: 1, opacity: fileReady ? 1 : 0.5, pointerEvents: fileReady ? "auto" : "none" }}>
-                <Typography variant="subtitle1" sx={{ mb: 0.5 }}>Company name</Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>Placed in cell A1 and the Company column of the output.</Typography>
-                <Box component="form" onSubmit={(e) => { e.preventDefault(); if (canTransform) handleTransform(); }}
-                  sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", alignItems: "flex-start" }} noValidate>
-                  <TextField
-                    label="Company name" required fullWidth size="small" placeholder="e.g. Acme Corp, Inc."
-                    value={companyName} onChange={(e) => setCompanyName(e.target.value)}
-                    InputProps={{ startAdornment: <InputAdornment position="start"><BusinessIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
-                    helperText={companyName.trim() ? `Output A1 → "${companyName.trim()}"` : " "}
-                    sx={{ flex: "1 1 220px" }}
-                  />
-                  <Button type="submit" variant="contained" size="large" disabled={!canTransform}
-                    startIcon={uploadStatus !== "loading" && <BoltIcon />}
-                    sx={{ height: 40, mt: 0.25, flexShrink: 0, background: canTransform ? "#236CFF" : undefined, "&:hover": { background: "#1650CC" } }}>
-                    {uploadStatus === "loading" ? "Generating…" : "Generate"}
-                  </Button>
-                  {uploadStatus !== "idle" && (
-                    <Button variant="ghost" size="small" onClick={handleReset} startIcon={<RestartAltIcon />}
-                      sx={{ height: 40, mt: 0.25, color: "text.secondary", "&:hover": { bgcolor: "#F1F5F9" } }}>
-                      Reset
-                    </Button>
-                  )}
+            )}
+            {fetchRows.length > 0 && (
+              <Box sx={{ mt: 2.5 }}>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    {fetchTotal?.toLocaleString()} transactions fetched
+                    {qboFetchStatus === "loading" && " — processing…"}
+                  </Typography>
+                  {qboFetchStatus === "loading" && <CircularProgress size={14} />}
                 </Box>
-                {uploadStatus === "loading" && (
-                  <Box sx={{ mt: 2.5 }} role="status">
-                    <LinearProgress sx={{ mb: 0.75 }} />
-                    <Typography variant="caption" color="text.secondary">Transforming data and building the balance sheet…</Typography>
-                  </Box>
-                )}
-                {uploadStatus === "error" && <Alert severity="error" sx={{ mt: 2 }}>{uploadError}</Alert>}
-              </Box>
-            </>
-          )}
-
-          {/* ── Tab 1: Fetch from QBO ──────────────────────────────────────── */}
-          {tab === 1 && (
-            <>
-              <Box sx={{ mb: 2.5, p: { xs: 3, md: 4 }, bgcolor: "background.paper", borderRadius: 3, border: "1px solid #E2E8F0", borderLeftWidth: 4, borderLeftColor: "primary.main", boxShadow: 1 }}>
-                <Typography variant="subtitle1" sx={{ mb: 2 }}>QBO Connections</Typography>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2.5 }}>
-                  <QboConnectPanel company="main" label="Main Company" connected={mainConnected}
-                    onConnected={(s) => setQboStatus(s)} onError={(e) => setQboError(e)} />
-                  <QboConnectPanel company="broker" label="Broker Company" connected={brokerConnected}
-                    onConnected={(s) => setQboStatus(s)} onError={(e) => setQboError(e)} />
-                </Box>
-              </Box>
-
-              <Box sx={{ mb: 2.5, p: { xs: 3, md: 4 }, bgcolor: "background.paper", borderRadius: 3, border: "1px solid #E2E8F0", borderLeftWidth: 4, borderLeftColor: mainConnected ? "primary.main" : "#E2E8F0", boxShadow: 1, opacity: mainConnected ? 1 : 0.5, pointerEvents: mainConnected ? "auto" : "none" }}>
-                <Typography variant="subtitle1" sx={{ mb: 0.5 }}>Fetch parameters</Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
-                  Fetches all transactions from the company's first entry through today.
-                </Typography>
-                <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mb: 2 }}>
-                  <TextField label="Company name" size="small" required
-                    value={qboCompanyName} onChange={(e) => setQboCompanyName(e.target.value)}
-                    InputProps={{ startAdornment: <InputAdornment position="start"><BusinessIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
-                    sx={{ flex: "1 1 200px" }} />
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-                  <FormControlLabel
-                    control={<Switch checked={includeBroker} onChange={(e) => setIncludeBroker(e.target.checked)} disabled={!brokerConnected} size="small" />}
-                    label={<Typography variant="body2" color={brokerConnected ? "text.primary" : "text.disabled"}>Include Broker Company data</Typography>}
-                  />
-                  <Button variant="contained" size="large" disabled={!canQboFetch} onClick={handleQboFetch}
-                    startIcon={qboFetchStatus !== "loading" && <CloudDownloadIcon />}
-                    sx={{ height: 40, flexShrink: 0, background: canQboFetch ? "#236CFF" : undefined, "&:hover": { background: "#1650CC" } }}>
-                    {qboFetchStatus === "loading" ? "Fetching…" : "Fetch from QBO"}
-                  </Button>
-                  {qboFetchStatus !== "idle" && (
-                    <Button variant="ghost" size="small" onClick={handleReset} startIcon={<RestartAltIcon />}
-                      sx={{ height: 40, color: "text.secondary", "&:hover": { bgcolor: "#F1F5F9" } }}>
-                      Reset
-                    </Button>
-                  )}
-                </Box>
-                {qboFetchStatus === "loading" && fetchRows.length === 0 && (
-                  <Box sx={{ mt: 2.5, display: "flex", alignItems: "center", gap: 1.5 }} role="status">
-                    <CircularProgress size={16} />
-                    <Typography variant="caption" color="text.secondary">Fetching from QuickBooks Online…</Typography>
-                  </Box>
-                )}
-                {fetchRows.length > 0 && (
-                  <Box sx={{ mt: 2.5 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        {fetchTotal?.toLocaleString()} transactions fetched
-                        {qboFetchStatus === "loading" && " — processing…"}
-                      </Typography>
-                      {qboFetchStatus === "loading" && <CircularProgress size={14} />}
-                    </Box>
-                    <Box sx={{ overflowX: "auto", borderRadius: 2, border: "1px solid #E2E8F0" }}>
-                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
-                        <thead>
-                          <tr style={{ background: "#F8FAFC" }}>
-                            {Object.keys(fetchRows[0] ?? {}).map((col) => (
-                              <th key={col} style={{ padding: "6px 10px", textAlign: "left", fontWeight: 600, color: "#475569", borderBottom: "1px solid #E2E8F0", whiteSpace: "nowrap" }}>
-                                {col}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {fetchRows.slice(0, 100).map((row, i) => (
-                            <tr key={i} style={{ borderBottom: "1px solid #F1F5F9", background: i % 2 === 0 ? "white" : "#FAFAFA" }}>
-                              {Object.values(row).map((val, j) => (
-                                <td key={j} style={{ padding: "5px 10px", color: "#334155", whiteSpace: "nowrap", maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis" }}>
-                                  {val == null ? <span style={{ color: "#CBD5E1" }}>—</span> : String(val)}
-                                </td>
-                              ))}
-                            </tr>
+                <Box sx={{ overflowX: "auto", borderRadius: 2, border: "1px solid #E2E8F0" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
+                    <thead>
+                      <tr style={{ background: "#F8FAFC" }}>
+                        {Object.keys(fetchRows[0] ?? {}).map((col) => (
+                          <th key={col} style={{ padding: "6px 10px", textAlign: "left", fontWeight: 600, color: "#475569", borderBottom: "1px solid #E2E8F0", whiteSpace: "nowrap" }}>
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {fetchRows.slice(0, 100).map((row, i) => (
+                        <tr key={i} style={{ borderBottom: "1px solid #F1F5F9", background: i % 2 === 0 ? "white" : "#FAFAFA" }}>
+                          {Object.values(row).map((val, j) => (
+                            <td key={j} style={{ padding: "5px 10px", color: "#334155", whiteSpace: "nowrap" }}>
+                              {val == null ? <span style={{ color: "#CBD5E1" }}>—</span> : String(val)}
+                            </td>
                           ))}
-                        </tbody>
-                      </table>
-                      {fetchRows.length > 100 && (
-                        <Box sx={{ p: 1, textAlign: "center", borderTop: "1px solid #E2E8F0" }}>
-                          <Typography variant="caption" color="text.secondary">
-                            Showing 100 of {fetchRows.length.toLocaleString()} rows
-                          </Typography>
-                        </Box>
-                      )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {fetchRows.length > 100 && (
+                    <Box sx={{ p: 1, textAlign: "center", borderTop: "1px solid #E2E8F0" }}>
+                      <Typography variant="caption" color="text.secondary">
+                        Showing 100 of {fetchRows.length.toLocaleString()} rows
+                      </Typography>
                     </Box>
-                  </Box>
-                )}
-                {qboFetchStatus === "error" && (
-                  <Alert severity="error" sx={{ mt: 2 }}>{qboError}</Alert>
-                )}
+                  )}
+                </Box>
               </Box>
-            </>
-          )}
+            )}
+            {qboFetchStatus === "error" && (
+              <Alert severity="error" sx={{ mt: 2 }}>{qboError}</Alert>
+            )}
+          </Box>
         </>
       )}
 
