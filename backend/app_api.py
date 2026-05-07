@@ -27,12 +27,20 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from auth import (
     init_db, authenticate_user, create_access_token,
-    get_current_user, get_user, hash_password, get_db,
-    oauth2_scheme, revoke_token,
+    get_current_user, get_user, hash_password,
+    oauth2_scheme, revoke_token, verify_password,
+    list_all_users, create_user_record, delete_user_record,
+    update_user_password, update_user_permissions,
+    get_user_password_hash,                      # Fix 5: for password verification without exposing hash
+)
+from database import (
+    get_db, JeSession, PortcoDataStore, QboOverrideItem, ActivityLogEntry,
+    JeSessionPayloadSchema, PortcoDataSchema, QboOverrideRowSchema,
 )
 
 import sys as _sys
 _sys.path.insert(0, str(Path(__file__).parent / "fpa"))
+_sys.path.insert(0, str(Path(__file__).parent / "portco"))
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -51,6 +59,7 @@ from processing.je_builder import build_je, export_je_to_bytes
 from processing.validator import validate_payroll_df, validate_mapping, validate_je
 from processing.consolidator import append_input_to_consolidated, append_to_consolidated
 from processing.logger import log_action_async
+from chat import router as chat_router
 
 app = FastAPI(title="Payroll JE Automation API", version="1.0.0")
 
@@ -113,17 +122,34 @@ _SESSION_DIR.mkdir(exist_ok=True)
 
 _SESSION_TTL_HOURS = 48  # sessions expire after 48 hours of inactivity
 
+# Fix 1: payroll file bytes are stored on the filesystem, not as BYTEA in the DB.
+# Files are named <session_id>.pf and co-located with other session artefacts.
+def _pf_path(session_id: str) -> Path:
+    return _SESSION_DIR / f"{session_id}.pf"
+
+def _save_pf_bytes(session_id: str, data: bytes) -> None:
+    _pf_path(session_id).write_bytes(data)
+
+def _load_pf_bytes(session_id: str) -> bytes | None:
+    p = _pf_path(session_id)
+    return p.read_bytes() if p.exists() else None
+
+def _delete_pf_bytes(session_id: str) -> None:
+    p = _pf_path(session_id)
+    if p.exists():
+        p.unlink(missing_ok=True)
+
 _SKIP_COLS = {
     "Company Code", "Company Name", "Employee ID", "Employee Name",
     "Department Long Descr", "Location Long Descr", "Pay Frequency Descr Long",
     "Invoice Number", "Pay End Date", "Check Date",
 }
 
-# ── File-backed session storage ────────────────────────────────────────────────
-# Sessions survive server restarts by persisting each session as a JSON file.
+# ── DB-backed session storage ─────────────────────────────────────────────────
+# Sessions survive server restarts via the je_sessions PostgreSQL table.
 # DataFrames are stored as records; raw bytes are base64-encoded.
 
-_sessions: dict[str, dict] = {}  # in-memory cache (populated from disk on startup)
+_sessions: dict[str, dict] = {}  # in-memory cache (populated from DB on startup)
 
 
 def _session_to_json(s: dict) -> dict:
@@ -134,13 +160,11 @@ def _session_to_json(s: dict) -> dict:
         out["je_df_columns"] = list(s["je_df"].columns)
     if "dept_summary" in s and s["dept_summary"] is not None:
         out["dept_summary_records"] = s["dept_summary"].to_dict(orient="records")
-    if "pf_bytes" in s and s["pf_bytes"]:
-        out["pf_bytes_b64"] = base64.b64encode(s["pf_bytes"]).decode()
     return out
 
 
 def _session_from_json(d: dict) -> dict:
-    """Reconstruct a session dict (with DataFrames/bytes) from the persisted JSON form."""
+    """Reconstruct a session dict (DataFrames only) from the persisted JSONB payload."""
     s = {k: v for k, v in d.items()
          if k not in ("je_df_records", "je_df_columns", "dept_summary_records", "pf_bytes_b64")}
     if "je_df_records" in d:
@@ -149,41 +173,60 @@ def _session_from_json(d: dict) -> dict:
         s["je_df"] = df
     if "dept_summary_records" in d:
         s["dept_summary"] = pd.DataFrame(d["dept_summary_records"])
-    if "pf_bytes_b64" in d:
-        s["pf_bytes"] = base64.b64decode(d["pf_bytes_b64"])
     return s
 
 
-def _session_file(session_id: str) -> Path:
-    return _SESSION_DIR / f"{session_id}.json"
-
-
 def _persist_session(session_id: str, s: dict) -> None:
-    """Write session to disk (non-blocking; errors are logged to stderr)."""
+    """Upsert session into the je_sessions table (non-blocking; errors logged)."""
     try:
-        data = _session_to_json(s)
-        data["_saved_at"] = datetime.now(tz=timezone.utc).isoformat()
-        _session_file(session_id).write_text(json.dumps(data), encoding="utf-8")
+        payload = _session_to_json(s)
+        JeSessionPayloadSchema(**payload)
+        pf = s.get("pf_bytes")
+        if pf:
+            _save_pf_bytes(session_id, pf)  # Fix 1: write to filesystem, not BYTEA
+        with get_db() as db:
+            row = db.query(JeSession).filter(JeSession.id == session_id).first()
+            if row:
+                row.payload  = payload
+                row.saved_at = datetime.now(tz=timezone.utc)
+            else:
+                db.add(JeSession(
+                    id=session_id,
+                    owner=s.get("owner", ""),
+                    payload=payload,
+                    saved_at=datetime.now(tz=timezone.utc),
+                ))
     except Exception as exc:
         print(f"[Session] Failed to persist {session_id}: {exc}", file=sys.stderr, flush=True)
 
 
-def _load_sessions_from_disk() -> None:
-    """On startup: load all non-expired session files into the in-memory cache."""
-    cutoff = time.time() - _SESSION_TTL_HOURS * 3600
-    for f in _SESSION_DIR.glob("*.json"):
-        try:
-            if f.stat().st_mtime < cutoff:
-                f.unlink(missing_ok=True)
-                continue
-            d = json.loads(f.read_text(encoding="utf-8"))
-            sid = f.stem
-            _sessions[sid] = _session_from_json(d)
-        except Exception as exc:
-            print(f"[Session] Could not load {f.name}: {exc}", file=sys.stderr, flush=True)
+def _load_sessions_from_db() -> None:
+    """On startup: load all non-expired sessions from DB into the in-memory cache."""
+    from datetime import timedelta
+    cutoff = datetime.now(tz=timezone.utc) - timedelta(hours=_SESSION_TTL_HOURS)
+    try:
+        with get_db() as db:
+            rows = db.query(JeSession).filter(JeSession.saved_at >= cutoff).all()
+            for row in rows:
+                s = _session_from_json(row.payload)
+                # Fix 1: load pf_bytes from filesystem; fall back to old b64 payload
+                # for sessions written before the BYTEA column was removed
+                pf = _load_pf_bytes(row.id)
+                if pf:
+                    s["pf_bytes"] = pf
+                elif "pf_bytes_b64" in (row.payload or {}):
+                    s["pf_bytes"] = base64.b64decode(row.payload["pf_bytes_b64"])
+                _sessions[row.id] = s
+            # Purge expired rows and their on-disk files
+            expired = db.query(JeSession).filter(JeSession.saved_at < cutoff).all()
+            for row in expired:
+                _delete_pf_bytes(row.id)
+            db.query(JeSession).filter(JeSession.saved_at < cutoff).delete()
+    except Exception as exc:
+        print(f"[Session] Could not load sessions from DB: {exc}", file=sys.stderr, flush=True)
 
 
-_load_sessions_from_disk()
+_load_sessions_from_db()
 
 
 # ── Per-user JE generation rate limiter ───────────────────────────────────────
@@ -492,6 +535,8 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
         "username": user["username"], "role": user["role"],
         "can_access_payroll": bool(user.get("can_access_payroll", 0)),
         "can_access_fpa": bool(user.get("can_access_fpa", 0)),
+        "can_access_portco": bool(user.get("can_access_portco", 0)),
+        "portco_dept": user.get("portco_dept"),
     }
 
 
@@ -504,11 +549,6 @@ async def logout(token: str = Depends(oauth2_scheme)):
 
 @app.post("/api/auth/reset-password")
 async def reset_password(body: dict = Body(...)):
-    """
-    Forgot-password flow — no JWT or old password required.
-    Caller provides username + new password. Identity is verified by
-    the admin-controlled environment (internal tool, no public exposure).
-    """
     username = body.get("username", "").strip()
     new_pw   = body.get("new_password", "")
 
@@ -517,13 +557,8 @@ async def reset_password(body: dict = Body(...)):
     if not new_pw or len(new_pw) < 4:
         raise HTTPException(status_code=400, detail="New password must be at least 4 characters.")
 
-    with get_db() as conn:
-        result = conn.execute(
-            "UPDATE users SET password = ? WHERE username = ?",
-            (hash_password(new_pw), username),
-        )
-        if result.rowcount == 0:
-            raise HTTPException(status_code=404, detail="No account found with that username.")
+    if not update_user_password(username, hash_password(new_pw)):
+        raise HTTPException(status_code=404, detail="No account found with that username.")
     return {"ok": True}
 
 
@@ -547,11 +582,7 @@ async def change_own_password(request: Request, body: dict = Body(...)):
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or current password.")
 
-    with get_db() as conn:
-        conn.execute(
-            "UPDATE users SET password = ? WHERE username = ?",
-            (hash_password(new_pw), username),
-        )
+    update_user_password(username, hash_password(new_pw))
     return {"ok": True}
 
 
@@ -562,6 +593,8 @@ async def me(current_user: dict = Depends(get_current_user)):
         "role": current_user["role"],
         "can_access_payroll": bool(current_user.get("can_access_payroll", 0)),
         "can_access_fpa": bool(current_user.get("can_access_fpa", 0)),
+        "can_access_portco": bool(current_user.get("can_access_portco", 0)),
+        "portco_dept": current_user.get("portco_dept"),
     }
 
 
@@ -571,14 +604,11 @@ async def change_password(body: dict = Body(...), current_user: dict = Depends(g
     new_pw = body.get("new_password", "")
     if not new_pw or len(new_pw) < 4:
         raise HTTPException(status_code=400, detail="New password must be at least 4 characters")
-    from auth import verify_password
-    if not verify_password(old_pw, current_user["password"]):
+    # Fix 5: fetch hash on demand rather than keeping it in the user dict
+    stored_hash = get_user_password_hash(current_user["username"]) or ""
+    if not verify_password(old_pw, stored_hash):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
-    with get_db() as conn:
-        conn.execute(
-            "UPDATE users SET password = ? WHERE username = ?",
-            (hash_password(new_pw), current_user["username"]),
-        )
+    update_user_password(current_user["username"], hash_password(new_pw))
     return {"ok": True}
 
 
@@ -596,32 +626,30 @@ def _require_admin(current_user: dict = Depends(get_current_user)):
 
 @app.get("/api/auth/users")
 async def list_users(_: dict = Depends(_require_admin)):
-    with get_db() as conn:
-        rows = conn.execute(
-            "SELECT id, username, role, created, can_access_payroll, can_access_fpa FROM users ORDER BY id"
-        ).fetchall()
-    return {"users": [dict(r) for r in rows]}
+    return {"users": list_all_users()}
 
+
+_VALID_PORTCO_DEPTS = {None, "proddev", "sales", "marketing", "cs", "onboarding", "finance"}
 
 @app.post("/api/auth/users")
 async def create_user(body: dict = Body(...), _: dict = Depends(_require_admin)):
     username = body.get("username", "").strip()
     password = body.get("password", "")
     role = body.get("role", "user")
-    can_payroll = 1 if body.get("can_access_payroll") else 0
-    can_fpa     = 1 if body.get("can_access_fpa") else 0
+    can_payroll  = 1 if body.get("can_access_payroll") else 0
+    can_fpa      = 1 if body.get("can_access_fpa") else 0
+    can_portco   = 1 if body.get("can_access_portco") else 0
+    portco_dept  = body.get("portco_dept") or None
     if not username:
         raise HTTPException(status_code=400, detail="Username is required")
     if not password or len(password) < 4:
         raise HTTPException(status_code=400, detail="Password must be at least 4 characters")
     if role not in ("admin", "user"):
         raise HTTPException(status_code=400, detail="Role must be 'admin' or 'user'")
+    if portco_dept not in _VALID_PORTCO_DEPTS:
+        raise HTTPException(status_code=400, detail="Invalid portco_dept value")
     try:
-        with get_db() as conn:
-            conn.execute(
-                "INSERT INTO users (username, password, role, can_access_payroll, can_access_fpa) VALUES (?, ?, ?, ?, ?)",
-                (username, hash_password(password), role, can_payroll, can_fpa),
-            )
+        create_user_record(username, hash_password(password), role, bool(can_payroll), bool(can_fpa), bool(can_portco), portco_dept)
     except Exception:
         raise HTTPException(status_code=409, detail="Username already exists")
     return {"ok": True}
@@ -631,10 +659,8 @@ async def create_user(body: dict = Body(...), _: dict = Depends(_require_admin))
 async def delete_user(username: str, current_user: dict = Depends(_require_admin)):
     if username == current_user["username"]:
         raise HTTPException(status_code=400, detail="Cannot delete your own account")
-    with get_db() as conn:
-        result = conn.execute("DELETE FROM users WHERE username = ?", (username,))
-        if result.rowcount == 0:
-            raise HTTPException(status_code=404, detail="User not found")
+    if not delete_user_record(username):
+        raise HTTPException(status_code=404, detail="User not found")
     return {"ok": True}
 
 
@@ -643,27 +669,21 @@ async def reset_user_password(username: str, body: dict = Body(...), _: dict = D
     new_pw = body.get("password", "")
     if not new_pw or len(new_pw) < 4:
         raise HTTPException(status_code=400, detail="Password must be at least 4 characters")
-    with get_db() as conn:
-        result = conn.execute(
-            "UPDATE users SET password = ? WHERE username = ?",
-            (hash_password(new_pw), username),
-        )
-        if result.rowcount == 0:
-            raise HTTPException(status_code=404, detail="User not found")
+    if not update_user_password(username, hash_password(new_pw)):
+        raise HTTPException(status_code=404, detail="User not found")
     return {"ok": True}
 
 
 @app.put("/api/auth/users/{username}/permissions")
-async def update_user_permissions(username: str, body: dict = Body(...), _: dict = Depends(_require_admin)):
-    can_payroll = 1 if body.get("can_access_payroll") else 0
-    can_fpa     = 1 if body.get("can_access_fpa") else 0
-    with get_db() as conn:
-        result = conn.execute(
-            "UPDATE users SET can_access_payroll = ?, can_access_fpa = ? WHERE username = ?",
-            (can_payroll, can_fpa, username),
-        )
-        if result.rowcount == 0:
-            raise HTTPException(status_code=404, detail="User not found")
+async def update_user_permissions_route(username: str, body: dict = Body(...), _: dict = Depends(_require_admin)):
+    can_payroll = bool(body.get("can_access_payroll"))
+    can_fpa     = bool(body.get("can_access_fpa"))
+    can_portco  = bool(body.get("can_access_portco"))
+    portco_dept = body.get("portco_dept") or None
+    if portco_dept not in _VALID_PORTCO_DEPTS:
+        raise HTTPException(status_code=400, detail="Invalid portco_dept value")
+    if not update_user_permissions(username, can_payroll, can_fpa, can_portco, portco_dept):
+        raise HTTPException(status_code=404, detail="User not found")
     return {"ok": True}
 
 
@@ -672,6 +692,12 @@ async def update_user_permissions(username: str, body: dict = Body(...), _: dict
 def _require_fpa(current_user: dict = Depends(get_current_user)):
     if not current_user.get("can_access_fpa") and current_user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="FP&A access not granted")
+    return current_user
+
+
+def _require_portco(current_user: dict = Depends(get_current_user)):
+    if not current_user.get("can_access_portco") and current_user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="PortCo Reporting access not granted")
     return current_user
 
 
@@ -1036,6 +1062,72 @@ async def fpa_qbo_cache(_: dict = Depends(get_current_user)):
         return _json.loads(_CACHE_FILE.read_text(encoding="utf-8"))
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PortCo Reporting
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.post("/api/portco/upload")
+async def portco_upload(
+    file: UploadFile = File(...),
+    _: dict = Depends(_require_portco),
+):
+    """Upload an MBR Excel file and return structured dashboard JSON."""
+    if not file.filename or not file.filename.lower().endswith((".xlsx", ".xlsm")):
+        raise HTTPException(status_code=422, detail="Please upload an Excel (.xlsx) file.")
+    try:
+        from portco.parser import parse_mbr_file
+        file_bytes = await file.read()
+        return parse_mbr_file(file_bytes)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to parse file: {exc}")
+
+
+# Resolve the sample MBR file path (one level up from backend/)
+_SAMPLE_MBR_PATH = BASE_DIR.parent / "MBR reporting sample (Dummy No's).xlsx"
+
+
+@app.get("/api/portco/load-sample")
+async def portco_load_sample(_: dict = Depends(_require_portco)):
+    """Read the bundled MBR sample Excel and return actuals + budget as MetricMaps.
+    MetricMap = { metric_id: { 'YYYY-MM': value } }
+    metric_id = '{Department} {Line Item}'
+    """
+    if not _SAMPLE_MBR_PATH.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Sample file not found at {_SAMPLE_MBR_PATH}",
+        )
+    try:
+        from portco.parser import parse_mbr_to_metric_map
+        return parse_mbr_to_metric_map(_SAMPLE_MBR_PATH.read_bytes())
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to parse sample: {exc}")
+
+
+@app.get("/api/portco/data")
+async def portco_get_data(_: dict = Depends(_require_portco)):
+    """Return the shared actuals + budget dataset for all PortCo users."""
+    with get_db() as db:
+        record = db.query(PortcoDataStore).first()
+        if record:
+            return record.data
+    return {"actuals": {}, "budget": {}, "year": datetime.now(tz=timezone.utc).year}
+
+
+@app.put("/api/portco/data")
+async def portco_save_data(body: dict = Body(...), _: dict = Depends(_require_portco)):
+    """Persist the shared actuals + budget dataset."""
+    # Fix 4: validate JSONB structure before writing
+    try:
+        PortcoDataSchema(**body)
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=f"Invalid portco data shape: {exc}")
+    # Fix 3: db.merge with id=1 enforces singleton — INSERT on first call, UPDATE thereafter
+    with get_db() as db:
+        db.merge(PortcoDataStore(id=1, data=body, updated_at=datetime.now(tz=timezone.utc)))
+    return {"ok": True}
 
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
@@ -1429,63 +1521,52 @@ async def qbo_disconnect(_: dict = _auth):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-_QBO_ACCOUNTS_CSV = BASE_DIR / "qbo" / "accounts_override.csv"
-_QBO_VENDORS_CSV  = BASE_DIR / "qbo" / "vendors_override.csv"
-
-
-def _csv_meta_path(csv_path: Path) -> Path:
-    return csv_path.with_name(csv_path.stem + ".meta.json")
-
-
-def _read_csv_meta(csv_path: Path) -> dict:
-    meta_path = _csv_meta_path(csv_path)
-    if meta_path.exists():
-        try:
-            return json.loads(meta_path.read_text(encoding="utf-8"))
-        except Exception:
-            pass
-    return {}
-
-
-def _write_csv_meta(csv_path: Path, source: str, row_count: int) -> None:
-    meta = {
-        "last_synced": datetime.now(tz=timezone.utc).isoformat(),
-        "source": source,
-        "row_count": row_count,
-    }
-    try:
-        _csv_meta_path(csv_path).write_text(json.dumps(meta), encoding="utf-8")
-    except Exception:
-        pass
-
-
-def _read_qbo_csv(path: Path) -> dict:
-    if path.exists():
-        df = pd.read_csv(str(path), dtype=str).fillna("")
-        meta = _read_csv_meta(path)
-        return {
-            "rows": _df_to_records(df),
-            "columns": list(df.columns),
-            "source": "local",
-            "last_synced": meta.get("last_synced"),
-            "sync_source": meta.get("source", "unknown"),
-        }
+def _read_qbo_override(override_type: str) -> dict:
+    """Read a QBO override (accounts/vendors/classes) from the DB."""
+    with get_db() as db:
+        items = db.query(QboOverrideItem).filter(QboOverrideItem.type == override_type).all()
+        if items:
+            rows        = [item.data for item in items]
+            cols        = list(rows[0].keys()) if rows else []
+            last_synced = max((i.synced_at for i in items if i.synced_at), default=None)
+            source      = items[0].source
+            return {
+                "rows":        rows,
+                "columns":     cols,
+                "source":      "local",
+                "last_synced": last_synced.isoformat() if last_synced else None,
+                "sync_source": source or "unknown",
+            }
     return {"rows": [], "columns": [], "source": "none", "last_synced": None, "sync_source": None}
 
 
-def _save_qbo_csv(path: Path, rows: list, source: str = "manual") -> None:
-    path.parent.mkdir(exist_ok=True)
-    pd.DataFrame(rows).to_csv(str(path), index=False)
-    _write_csv_meta(path, source=source, row_count=len(rows))
+def _save_qbo_override(override_type: str, rows: list, source: str = "manual") -> None:
+    """Replace all QBO overrides of the given type (delete-then-insert for atomicity)."""
+    try:
+        for row in rows:
+            QboOverrideRowSchema(**row)
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail=f"Invalid QBO override row: {exc}")
+    synced_at = datetime.now(tz=timezone.utc)
+    with get_db() as db:
+        db.query(QboOverrideItem).filter(QboOverrideItem.type == override_type).delete()
+        for row in rows:
+            db.add(QboOverrideItem(type=override_type, data=row, source=source, synced_at=synced_at))
 
 
-def _fetch_and_cache_qbo(csv_path: Path, fetch_fn) -> dict:
-    """Fetch live from QBO, update the local CSV cache, and return the data."""
-    df = fetch_fn()
-    records = _df_to_records(df)
-    _save_qbo_csv(csv_path, records, source="qbo")
-    synced_at = datetime.now(tz=timezone.utc).isoformat()
-    return {"rows": records, "columns": list(df.columns), "source": "qbo", "last_synced": synced_at, "sync_source": "qbo"}
+def _fetch_and_cache_qbo(override_type: str, fetch_fn) -> dict:
+    """Fetch live from QBO, persist to DB, and return the data."""
+    df        = fetch_fn()
+    records   = _df_to_records(df)
+    synced_at = datetime.now(tz=timezone.utc)  # Fix 1: DateTime stored in DB
+    _save_qbo_override(override_type, records, source="qbo")
+    return {
+        "rows":        records,
+        "columns":     list(df.columns),
+        "source":      "qbo",
+        "last_synced": synced_at.isoformat(),   # serialise for JSON response
+        "sync_source": "qbo",
+    }
 
 
 @app.get("/api/qbo/accounts")
@@ -1495,7 +1576,7 @@ async def qbo_accounts(_: dict = _auth):
         from qbo.api import QBOClient
         if not is_authenticated():
             raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
-        return _fetch_and_cache_qbo(_QBO_ACCOUNTS_CSV, QBOClient().get_accounts_dataframe)
+        return _fetch_and_cache_qbo("accounts", QBOClient().get_accounts_dataframe)
     except HTTPException:
         raise
     except Exception as e:
@@ -1504,7 +1585,7 @@ async def qbo_accounts(_: dict = _auth):
 
 @app.put("/api/qbo/accounts")
 async def save_qbo_accounts(body: dict = Body(...), _: dict = _auth):
-    _save_qbo_csv(_QBO_ACCOUNTS_CSV, body.get("rows", []))
+    _save_qbo_override("accounts", body.get("rows", []))
     return {"ok": True}
 
 
@@ -1515,7 +1596,7 @@ async def sync_qbo_accounts(_: dict = _auth):
         from qbo.api import QBOClient
         if not is_authenticated():
             raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
-        return _fetch_and_cache_qbo(_QBO_ACCOUNTS_CSV, QBOClient().get_accounts_dataframe)
+        return _fetch_and_cache_qbo("accounts", QBOClient().get_accounts_dataframe)
     except HTTPException:
         raise
     except Exception as e:
@@ -1529,7 +1610,7 @@ async def qbo_vendors(_: dict = _auth):
         from qbo.api import QBOClient
         if not is_authenticated():
             raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
-        return _fetch_and_cache_qbo(_QBO_VENDORS_CSV, QBOClient().get_vendors_dataframe)
+        return _fetch_and_cache_qbo("vendors", QBOClient().get_vendors_dataframe)
     except HTTPException:
         raise
     except Exception as e:
@@ -1538,7 +1619,7 @@ async def qbo_vendors(_: dict = _auth):
 
 @app.put("/api/qbo/vendors")
 async def save_qbo_vendors(body: dict = Body(...), _: dict = _auth):
-    _save_qbo_csv(_QBO_VENDORS_CSV, body.get("rows", []))
+    _save_qbo_override("vendors", body.get("rows", []))
     return {"ok": True}
 
 
@@ -1549,14 +1630,11 @@ async def sync_qbo_vendors(_: dict = _auth):
         from qbo.api import QBOClient
         if not is_authenticated():
             raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
-        return _fetch_and_cache_qbo(_QBO_VENDORS_CSV, QBOClient().get_vendors_dataframe)
+        return _fetch_and_cache_qbo("vendors", QBOClient().get_vendors_dataframe)
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-_QBO_CLASSES_CSV = BASE_DIR / "qbo" / "classes_override.csv"
 
 
 @app.get("/api/qbo/classes")
@@ -1566,7 +1644,7 @@ async def qbo_classes(_: dict = _auth):
         from qbo.api import QBOClient
         if not is_authenticated():
             raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
-        return _fetch_and_cache_qbo(_QBO_CLASSES_CSV, QBOClient().get_classes_dataframe)
+        return _fetch_and_cache_qbo("classes", QBOClient().get_classes_dataframe)
     except HTTPException:
         raise
     except Exception as e:
@@ -1575,7 +1653,7 @@ async def qbo_classes(_: dict = _auth):
 
 @app.put("/api/qbo/classes")
 async def save_qbo_classes(body: dict = Body(...), _: dict = _auth):
-    _save_qbo_csv(_QBO_CLASSES_CSV, body.get("rows", []))
+    _save_qbo_override("classes", body.get("rows", []))
     return {"ok": True}
 
 
@@ -1586,7 +1664,7 @@ async def sync_qbo_classes(_: dict = _auth):
         from qbo.api import QBOClient
         if not is_authenticated():
             raise HTTPException(status_code=401, detail="Not authenticated with QuickBooks")
-        return _fetch_and_cache_qbo(_QBO_CLASSES_CSV, QBOClient().get_classes_dataframe)
+        return _fetch_and_cache_qbo("classes", QBOClient().get_classes_dataframe)
     except HTTPException:
         raise
     except Exception as e:
@@ -1595,21 +1673,59 @@ async def sync_qbo_classes(_: dict = _auth):
 
 @app.get("/api/activity-log")
 async def get_activity_log(_: dict = _auth):
-    log_path = BASE_DIR / "logs" / "Activity_Log.xlsx"
-    if not log_path.exists():
-        return {"rows": [], "columns": []}
-    log_df = pd.read_excel(log_path, dtype=str).fillna("")
-    log_df = log_df.iloc[::-1].reset_index(drop=True)
-    return {"rows": _df_to_records(log_df), "columns": list(log_df.columns)}
+    with get_db() as db:
+        rows = (
+            db.query(ActivityLogEntry)
+            .order_by(ActivityLogEntry.id.desc())
+            .all()
+        )
+    records = [
+        {
+            "Timestamp":      r.timestamp.isoformat() if r.timestamp else "",
+            "User":           r.username or "",
+            "IP Address":     r.ip_address or "",
+            "Hostname":       r.hostname or "",
+            "Action":         r.action,
+            "Input File":     r.input_file or "",
+            "Output File":    r.output_file or "",
+            "Journal Number": r.journal_number or "",
+            "Details":        r.details or "",
+            "Changes Made":   r.changes_made or "",
+        }
+        for r in rows
+    ]
+    cols = ["Timestamp", "User", "IP Address", "Hostname", "Action",
+            "Input File", "Output File", "Journal Number", "Details", "Changes Made"]
+    return {"rows": records, "columns": cols}
 
 
 @app.get("/api/activity-log/download")
 async def download_activity_log(_: dict = _auth):
-    log_path = BASE_DIR / "logs" / "Activity_Log.xlsx"
-    if not log_path.exists():
-        raise HTTPException(status_code=404, detail="No activity log found")
+    with get_db() as db:
+        rows = db.query(ActivityLogEntry).order_by(ActivityLogEntry.id).all()
+    if not rows:
+        raise HTTPException(status_code=404, detail="No activity log entries found")
+    records = [
+        {
+            "Timestamp":      r.timestamp.isoformat() if r.timestamp else "",
+            "User":           r.username or "",
+            "IP Address":     r.ip_address or "",
+            "Hostname":       r.hostname or "",
+            "Action":         r.action,
+            "Input File":     r.input_file or "",
+            "Output File":    r.output_file or "",
+            "Journal Number": r.journal_number or "",
+            "Details":        r.details or "",
+            "Changes Made":   r.changes_made or "",
+        }
+        for r in rows
+    ]
+    buf = BytesIO()
+    with pd.ExcelWriter(buf, engine="openpyxl") as writer:
+        pd.DataFrame(records).to_excel(writer, index=False, sheet_name="Activity Log")
+    buf.seek(0)
     return StreamingResponse(
-        BytesIO(log_path.read_bytes()),
+        buf,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": 'attachment; filename="Activity_Log.xlsx"'},
     )
@@ -1637,3 +1753,7 @@ async def download_consolidated_inputs(_: dict = _auth):
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": 'attachment; filename="Consolidated_Inputs.xlsx"'},
     )
+
+
+# ── AI chatbot ─────────────────────────────────────────────────────────────────
+app.include_router(chat_router)

@@ -8,11 +8,12 @@ export default function HomePage() {
   const isAdmin    = user?.role === 'admin'
   const canPayroll = isAdmin || user?.can_access_payroll
   const canFpa     = isAdmin || user?.can_access_fpa
+  const canPortco  = isAdmin || user?.can_access_portco
 
-  const firstName = user?.name?.split(' ')[0] ?? user?.username ?? 'there'
+  const firstName = user?.username ?? 'there'
 
   return (
-    <div style={styles.page}>
+    <div className="page-wrap-narrow" style={styles.page}>
       {/* Greeting */}
       <div style={styles.greeting}>
         <div>
@@ -22,7 +23,7 @@ export default function HomePage() {
       </div>
 
       {/* Module cards */}
-      <div style={styles.cardGrid}>
+      <div className="module-card-grid" style={styles.cardGrid}>
         {canPayroll && (
           <ModuleCard
             icon="receipt_long"
@@ -45,7 +46,18 @@ export default function HomePage() {
           />
         )}
 
-        {!canPayroll && !canFpa && (
+        {canPortco && (
+          <ModuleCard
+            icon="business_center"
+            iconBg="#512D6D"
+            title="PortCo Reporting"
+            description="Monthly Business Review reporting for portfolio companies — department-level actuals vs budget with quarterly and YTD analysis."
+            features={['Department actuals & budget entry', 'Auto-generated department reports', 'Q1–Q4 vs Budget comparisons', 'Executive summary dashboard']}
+            onClick={() => navigate('/portco/exec')}
+          />
+        )}
+
+        {!canPayroll && !canFpa && !canPortco && (
           <div className="card" style={{ textAlign: 'center', padding: '48px 32px', color: 'var(--muted)' }}>
             <span className="material-icons-round" style={{ fontSize: 40, marginBottom: 12, display: 'block' }}>lock</span>
             <p>You do not have access to any modules. Contact your administrator.</p>
@@ -134,8 +146,6 @@ const styles: Record<string, React.CSSProperties> = {
     margin: 0,
   },
   cardGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
     gap: 24,
   },
   moduleCard: {

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
@@ -9,6 +9,8 @@ import { downloadConsolidatedJEUrl, downloadConsolidatedInputsUrl } from '../api
 interface SidebarProps {
   collapsed: boolean
   onToggle: () => void
+  mobileOpen?: boolean
+  onMobileClose?: () => void
 }
 
 const PAYROLL_STEPS = [
@@ -28,7 +30,7 @@ const FPA_RESULT_ITEMS = [
   { path: '/fpa/comparative-pl-bd', icon: 'bar_chart',       label: 'Comp P&L (BD)' },
 ]
 
-export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const { sessionId } = useApp()
   const { user } = useAuth()
   const { result: fpaResult } = useFpaResult()
@@ -36,31 +38,67 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const isAdmin    = user?.role === 'admin'
   const canPayroll = isAdmin || user?.can_access_payroll
   const canFpa     = isAdmin || user?.can_access_fpa
+  const canPortco  = isAdmin || user?.can_access_portco
 
   const [payrollOpen, setPayrollOpen] = useState(false)
   const [fpaOpen, setFpaOpen]         = useState(false)
+  const [portcoOpen, setPortcoOpen]   = useState(false)
+  const [openDepts, setOpenDepts]     = useState<Record<string, boolean>>({})
+
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [mobileOpen])
+
+  const userDept = user?.portco_dept ?? null  // null = access to all
+
+  // Department definitions for nav — restricted users only see their own dept
+  const PORTCO_DEPTS = [
+    { key: 'proddev',    label: 'Product Dev'      },
+    { key: 'sales',      label: 'Sales'            },
+    { key: 'marketing',  label: 'Marketing'        },
+    { key: 'cs',         label: 'Customer Success' },
+    { key: 'onboarding', label: 'Onboarding'       },
+    { key: 'finance',    label: 'Finance'          },
+  ].filter(d => !userDept || d.key === userDept)
 
   return (
-    <div style={{ position: 'relative', flexShrink: 0 }}>
+    <>
+      {/* Mobile backdrop — sits behind the sidebar overlay, above the main content */}
+      <div
+        className={`sidebar-backdrop${mobileOpen ? ' visible' : ''}`}
+        onClick={onMobileClose}
+        aria-hidden="true"
+      />
 
-      {/* Toggle tab */}
-      <button
-        onClick={onToggle}
-        style={styles.toggleTab}
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        aria-expanded={!collapsed}
-        aria-controls="app-sidebar"
-      >
-        <span className="material-icons-round" style={{ fontSize: 16 }} aria-hidden="true">
-          {collapsed ? 'chevron_right' : 'chevron_left'}
-        </span>
-      </button>
+      <div style={{ position: 'relative', flexShrink: 0 }}>
 
-      <aside
-        id="app-sidebar"
-        aria-label="Main navigation"
-        style={{ ...styles.aside, width: collapsed ? 64 : 228 }}
-      >
+        {/* Toggle tab — desktop collapse/expand, hidden on mobile via CSS */}
+        <div className="sidebar-toggle-tab-wrap">
+          <button
+            onClick={onToggle}
+            style={styles.toggleTab}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-expanded={!collapsed}
+            aria-controls="app-sidebar"
+          >
+            <span className="material-icons-round" style={{ fontSize: 16 }} aria-hidden="true">
+              {collapsed ? 'chevron_right' : 'chevron_left'}
+            </span>
+          </button>
+        </div>
+
+        <aside
+          id="app-sidebar"
+          aria-label="Main navigation"
+          className={mobileOpen ? 'sidebar-mobile-open' : undefined}
+          style={{ ...styles.aside, width: collapsed ? 64 : 228 }}
+        >
         {/* Brand */}
         <div style={{ ...styles.brand, justifyContent: collapsed ? 'center' : 'flex-start' }}>
           <span className="material-icons-round" style={styles.brandIcon} aria-hidden="true">apps</span>
@@ -100,6 +138,18 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   style={({ isActive }) => ({ ...styles.iconBtn, ...(isActive ? styles.iconBtnActive : {}) })}
                 >
                   <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">analytics</span>
+                </NavLink>
+              </>
+            )}
+            {canPortco && (
+              <>
+                {!canFpa && <div style={{ ...styles.divider, width: '100%' }} role="separator" />}
+                <NavLink
+                  to={userDept ? `/portco/${userDept}/actuals` : "/portco/exec"}
+                  aria-label="PortCo Reporting"
+                  style={({ isActive }: { isActive: boolean }) => ({ ...styles.iconBtn, ...(isActive ? styles.iconBtnActive : {}) })}
+                >
+                  <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">business_center</span>
                 </NavLink>
               </>
             )}
@@ -272,6 +322,97 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               </>
             )}
 
+            <div style={styles.divider} role="separator" />
+
+            {/* ── PortCo Reporting ── */}
+            {canPortco && (
+              <>
+                <button
+                  onClick={() => setPortcoOpen(v => !v)}
+                  style={styles.sectionToggle}
+                  aria-expanded={portcoOpen}
+                  aria-controls="portco-section"
+                >
+                  <span style={styles.sectionLabel}>PortCo Reporting</span>
+                  <span className="material-icons-round" style={{ fontSize: 14, color: 'var(--sb-muted)' }} aria-hidden="true">
+                    {portcoOpen ? 'expand_less' : 'expand_more'}
+                  </span>
+                </button>
+
+                <div id="portco-section" hidden={!portcoOpen}>
+                  {/* Executive Summary — admins / all-dept users only */}
+                  {!userDept && (
+                    <NavLink
+                      to="/portco/exec"
+                      style={({ isActive }) => ({ ...styles.navItem, ...styles.nestedItem, ...(isActive ? styles.navItemActive : {}) })}
+                    >
+                      <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">summarize</span>
+                      <span style={styles.navLabel}>Executive Summary</span>
+                    </NavLink>
+                  )}
+
+                  {/* Per-department: Actuals + Budget (input) + Report (output) */}
+                  {PORTCO_DEPTS.map(({ key, label }) => {
+                    const isExpanded = openDepts[key] ?? false
+                    return (
+                      <div key={key}>
+                        <button
+                          onClick={() => setOpenDepts(prev => ({ ...prev, [key]: !isExpanded }))}
+                          style={{
+                            ...styles.navItem, ...styles.nestedItem,
+                            width: '100%', background: 'none', border: 'none',
+                            cursor: 'pointer', fontFamily: 'inherit',
+                          }}
+                          aria-expanded={isExpanded}
+                        >
+                          <span style={styles.navLabel}>{label}</span>
+                          <span className="material-icons-round" style={{ fontSize: 12, opacity: 0.55 }} aria-hidden="true">
+                            {isExpanded ? 'expand_less' : 'expand_more'}
+                          </span>
+                        </button>
+
+                        {isExpanded && (
+                          <>
+                            <NavLink
+                              to={`/portco/${key}/actuals`}
+                              style={({ isActive }) => ({
+                                ...styles.navItem, paddingLeft: 36, fontSize: 12,
+                                ...(isActive ? styles.navItemActive : {}),
+                              })}
+                            >
+                              <span className="material-icons-round" style={{ ...styles.navIcon, fontSize: 14 }} aria-hidden="true">edit_note</span>
+                              <span style={styles.navLabel}>Actuals</span>
+                            </NavLink>
+                            <NavLink
+                              to={`/portco/${key}/budget`}
+                              style={({ isActive }) => ({
+                                ...styles.navItem, paddingLeft: 36, fontSize: 12,
+                                ...(isActive ? styles.navItemActive : {}),
+                              })}
+                            >
+                              <span className="material-icons-round" style={{ ...styles.navIcon, fontSize: 14 }} aria-hidden="true">calculate</span>
+                              <span style={styles.navLabel}>Budget</span>
+                            </NavLink>
+                            <NavLink
+                              to={`/portco/${key}`}
+                              end
+                              style={({ isActive }) => ({
+                                ...styles.navItem, paddingLeft: 36, fontSize: 12,
+                                ...(isActive ? styles.navItemActive : {}),
+                              })}
+                            >
+                              <span className="material-icons-round" style={{ ...styles.navIcon, fontSize: 14 }} aria-hidden="true">bar_chart</span>
+                              <span style={styles.navLabel}>Report</span>
+                            </NavLink>
+                          </>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+
             {/* ── Admin ── */}
             {isAdmin && (
               <>
@@ -297,7 +438,8 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </div>
 
       </aside>
-    </div>
+      </div>
+    </>
   )
 }
 

@@ -1,20 +1,20 @@
 Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
-210010,7,Accounts Payable,Accounts Payable,Accounts Payable,AccountsPayable,True,-215775.62
+210010,7,Accounts Payable,Accounts Payable,Accounts Payable,AccountsPayable,True,-272117.89
 210020,265,Accounts Payable (A/P) - GBP,Accounts Payable (A/P) - GBP,Accounts Payable,AccountsPayable,True,0.0
 210030,167,Accounts Payable - Other,Accounts Payable - Other,Accounts Payable,AccountsPayable,True,0.0
 210040,286,Accounts Payable - Other - GBP,Accounts Payable - Other - GBP,Accounts Payable,AccountsPayable,True,0.0
-120010,8,Accounts Receivable,Accounts Receivable,Accounts Receivable,AccountsReceivable,True,912935.55
+120010,8,Accounts Receivable,Accounts Receivable,Accounts Receivable,AccountsReceivable,True,1115799.58
 120020,281,Accounts Receivable (A/R) - AED,Accounts Receivable (A/R) - AED,Accounts Receivable,AccountsReceivable,True,0.0
 120030,280,Accounts Receivable (A/R) - EUR,Accounts Receivable (A/R) - EUR,Accounts Receivable,AccountsReceivable,True,0.0
 120040,261,Accounts Receivable (A/R) - GBP,Accounts Receivable (A/R) - GBP,Accounts Receivable,AccountsReceivable,True,0.0
 231000,170,Accrued Expenses,Accrued Expenses,Other Current Liability,OtherCurrentLiabilities,True,0.0
 231010,171,Accrued 401k,Accrued Expenses:Accrued 401k,Other Current Liability,OtherCurrentLiabilities,True,0.0
-231020,174,Accrued Bonus,Accrued Expenses:Accrued Bonus,Other Current Liability,OtherCurrentLiabilities,True,-357250.29
+231020,174,Accrued Bonus,Accrued Expenses:Accrued Bonus,Other Current Liability,OtherCurrentLiabilities,True,-169791.97
 231030,175,Accrued Commission,Accrued Expenses:Accrued Commission,Other Current Liability,OtherCurrentLiabilities,True,0.0
-231040,178,Accrued Expense,Accrued Expenses:Accrued Expense,Other Current Liability,OtherCurrentLiabilities,True,-103768.46
+231040,178,Accrued Expense,Accrued Expenses:Accrued Expense,Other Current Liability,OtherCurrentLiabilities,True,-88768.46
 231050,173,Accrued Interest Payable,Accrued Expenses:Accrued Interest Payable,Other Current Liability,OtherCurrentLiabilities,True,0.0
-231060,305,Accrued Legal fees,Accrued Expenses:Accrued Legal fees,Other Current Liability,OtherCurrentLiabilities,True,-10000.0
-231070,172,Accrued Payroll,Accrued Expenses:Accrued Payroll,Other Current Liability,OtherCurrentLiabilities,True,438715.75
+231060,305,Accrued Legal fees,Accrued Expenses:Accrued Legal fees,Other Current Liability,OtherCurrentLiabilities,True,-20000.0
+231070,172,Accrued Payroll,Accrued Expenses:Accrued Payroll,Other Current Liability,OtherCurrentLiabilities,True,0.0
 231080,277,Accrued Transaction Fees,Accrued Expenses:Accrued Transaction Fees,Other Current Liability,OtherCurrentLiabilities,True,0.0
 231090,263,Accrued Vacation,Accrued Expenses:Accrued Vacation,Other Current Liability,OtherCurrentLiabilities,True,0.0
 130010,279,Accrued Interest Receivable,Accrued Interest Receivable,Other Current Asset,OtherCurrentAssets,True,0.0
@@ -27,7 +27,7 @@ Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
 311060,199,APIC - Stock Options,Additional Paid-In Capital:APIC - Stock Options,Equity,PaidInCapitalOrSurplus,True,-966776.17
 311070,200,APIC - Warrants,Additional Paid-In Capital:APIC - Warrants,Equity,PaidInCapitalOrSurplus,True,0.0
 130020,13,Allowance for Doubtful Accounts,Allowance for Doubtful Accounts,Other Current Asset,AllowanceForBadDebts,True,0.0
-220010,1150040001,Amex CC,Amex CC,Credit Card,CreditCard,True,-8776.33
+220010,1150040001,Amex CC,Amex CC,Credit Card,CreditCard,True,1796.62
 810010,14,Amortization Expense,Amortization Expense,Other Expense,Amortization,True,0.0
 610010,15,Bad Debt,Bad Debt,Expense,BadDebts,True,0.0
 110010,289,Bill.com Money Out Clearing,Bill.com Money Out Clearing,Bank,CashOnHand,True,0.0
@@ -41,7 +41,7 @@ Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
 220040,168,Chase CC - A.Ryan 7546,Chase CC - A.Ryan 7546,Credit Card,CreditCard,True,0.0
 220050,266,Chase CC - K.Bird 0562,Chase CC - K.Bird 0562,Credit Card,CreditCard,True,0.0
 220060,169,Chase CC - T.Irby 5733,Chase CC - T.Irby 5733,Credit Card,CreditCard,True,0.0
-110020,267,Chase Operating - 8856,Chase Operating - 8856,Bank,Checking,True,1213033.23
+110020,267,Chase Operating - 8856,Chase Operating - 8856,Bank,Checking,True,1223446.95
 110030,154,Chase Savings - 5357,Chase Savings - 5357,Bank,Savings,True,0.17
 310010,21,Common Stock,Common Stock,Equity,CommonStock,True,-1752.59
 130030,157,Concertiv CD - 5377,Concertiv CD - 5377,Other Current Asset,OtherCurrentAssets,True,0.0
@@ -78,8 +78,8 @@ Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
 232000,188,Deferred Revenue,Deferred Revenue,Other Current Liability,DeferredRevenue,True,-287.53
 232010,292,Deferred Revenue - Conference,Deferred Revenue:Deferred Revenue - Conference,Other Current Liability,DeferredRevenue,True,0.0
 232020,191,Deferred Revenue - Project,Deferred Revenue:Deferred Revenue - Project,Other Current Liability,DeferredRevenue,True,0.0
-232030,189,Deferred Revenue - Subscription,Deferred Revenue:Deferred Revenue - Subscription,Other Current Liability,DeferredRevenue,True,-3817236.92
-232040,190,Deferred Revenue - Supplier,Deferred Revenue:Deferred Revenue - Supplier,Other Current Liability,DeferredRevenue,True,-12250.13
+232030,189,Deferred Revenue - Subscription,Deferred Revenue:Deferred Revenue - Subscription,Other Current Liability,DeferredRevenue,True,-4184839.32
+232040,190,Deferred Revenue - Supplier,Deferred Revenue:Deferred Revenue - Supplier,Other Current Liability,DeferredRevenue,True,-17860.09
 230020,278,Deferred Tax Liablity,Deferred Tax Liablity,Other Current Liability,OtherCurrentLiabilities,True,0.0
 810030,28,Depreciation Expense,Depreciation Expense,Other Expense,Depreciation,True,0.0
 152000,163,Developed Technology,Developed Technology,Other Asset,Licenses,True,0.0
@@ -130,7 +130,7 @@ Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
 810060,255,Interest Expense - Lease,Interest Expense - Lease,Other Expense,OtherMiscellaneousExpense,True,0.0
 130090,42,Inventory Asset,Inventory Asset,Other Current Asset,Inventory,True,0.0
 140020,43,Land,Land,Fixed Asset,Land,True,0.0
-230050,185,Lease Payable - Current,Lease Payable - Current,Other Current Liability,OtherCurrentLiabilities,True,-579597.1
+230050,185,Lease Payable - Current,Lease Payable - Current,Other Current Liability,OtherCurrentLiabilities,True,-582644.65
 142000,37,Leasehold Improvements,Leasehold Improvements,Fixed Asset,LeaseholdImprovements,True,20657.16
 142010,1150040010,Leasehold Improvement-A/D,Leasehold Improvements:Leasehold Improvement-A/D,Fixed Asset,AccumulatedDepreciation,True,-3626.6
 615000,45,Legal & Professional Fees,Legal & Professional Fees,Expense,LegalProfessionalFees,True,0.0
@@ -162,14 +162,14 @@ Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
 240030,274,Note Payable,Note Payable,Long Term Liability,NotesPayable,True,0.0
 310040,1150040002,Note Receivable,Note Receivable,Equity,AccumulatedAdjustment,True,0.0
 310050,59,Opening balance equity,Opening balance equity,Equity,OpeningBalanceEquity,True,0.0
-240040,193,Operating Lease - L/T,Operating Lease - L/T,Long Term Liability,OtherLongTermLiabilities,True,-2276576.9
+240040,193,Operating Lease - L/T,Operating Lease - L/T,Long Term Liability,OtherLongTermLiabilities,True,-2226661.77
 810070,153,Other Miscellaneous Expense,Other Miscellaneous Expense,Other Expense,OtherMiscellaneousExpense,True,0.0
 810080,64,Penalties & Late Fees,Penalties & Late Fees,Other Expense,PenaltiesSettlements,True,0.0
 131000,66,Prepaid Expenses,Prepaid Expenses,Other Current Asset,PrepaidExpenses,True,0.0
-131010,176,Prepaid Expense,Prepaid Expenses:Prepaid Expense,Other Current Asset,PrepaidExpenses,True,166907.74
+131010,176,Prepaid Expense,Prepaid Expenses:Prepaid Expense,Other Current Asset,PrepaidExpenses,True,152743.58
 131020,276,Prepaid Expense Adjustments,Prepaid Expenses:Prepaid Expense Adjustments,Other Current Asset,PrepaidExpenses,True,0.0
-131030,155,Prepaid Insurance,Prepaid Expenses:Prepaid Insurance,Other Current Asset,PrepaidExpenses,True,25488.19
-131040,156,Prepaid Marketing,Prepaid Expenses:Prepaid Marketing,Other Current Asset,PrepaidExpenses,True,36473.1
+131030,155,Prepaid Insurance,Prepaid Expenses:Prepaid Insurance,Other Current Asset,PrepaidExpenses,True,21318.96
+131040,156,Prepaid Marketing,Prepaid Expenses:Prepaid Marketing,Other Current Asset,PrepaidExpenses,True,32825.78
 610060,225,Professional/Consultants - Outsourced/India,Professional/Consultants - Outsourced/India,Expense,CostOfLabor,True,0.0
 610070,152,Purchases,Purchases,Expense,SuppliesMaterials,True,0.0
 810090,272,Reconciliation Discrepancies,Reconciliation Discrepancies,Other Expense,OtherMiscellaneousExpense,True,0.0
@@ -186,8 +186,8 @@ Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
 411040,204,Revenue - Supplier,Revenue:Revenue - Supplier,Income,ServiceFeeIncome,True,0.0
 154000,179,ROU - Finance Leases,ROU - Finance Leases,Other Asset,OtherLongTermAssets,True,14318.41
 154010,180,ROU - Finance Leases - A/A,ROU - Finance Leases:ROU - Finance Leases - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-14318.41
-155000,181,ROU - Operating Leases,ROU - Operating Leases,Other Asset,OtherLongTermAssets,True,3891307.88
-155010,182,ROU - Operating Leases - A/A,ROU - Operating Leases:ROU - Operating Leases - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-1375759.72
+155000,181,ROU - Operating Leases,ROU - Operating Leases,Other Asset,OtherLongTermAssets,True,3900757.05
+155010,182,ROU - Operating Leases - A/A,ROU - Operating Leases:ROU - Operating Leases - A/A,Other Asset,AccumulatedAmortizationOfOtherAssets,True,-1428248.37
 619000,62,Salary & Benefits,Salary & Benefits,Expense,PayrollExpenses,True,0.0
 619010,223,401k - ER,Salary & Benefits:401k - ER,Expense,PayrollExpenses,True,0.0
 619020,219,Bonus,Salary & Benefits:Bonus,Expense,PayrollWageExpenses,True,0.0
@@ -211,11 +211,11 @@ Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
 510010,150,Shipping,Shipping,Cost of Goods Sold,ShippingFreightDeliveryCos,True,0.0
 410070,282,Shipping Income,Shipping Income,Income,ServiceFeeIncome,True,0.0
 610080,1150040013,Staff Welfare,Staff Welfare,Expense,OfficeGeneralAdministrativeExpenses,True,0.0
-230070,184,State Income Tax Payable,State Income Tax Payable,Other Current Liability,StateLocalIncomeTaxPayable,True,4439.23
+230070,184,State Income Tax Payable,State Income Tax Payable,Other Current Liability,StateLocalIncomeTaxPayable,True,3225.62
 240050,1150040003,Stock Repurchase Liability,Stock Repurchase Liability,Long Term Liability,OtherLongTermLiabilities,True,0.0
 110040,1150040006,SVB - Cash Sweep,SVB - Cash Sweep,Bank,MoneyMarket,True,0.0
 110050,1150040007,SVB - Restricted Cash 5715,SVB - Restricted Cash 5715,Bank,RentsHeldInTrust,True,281583.75
-110060,1150040005,SVB Checking -2846,SVB Checking -2846,Bank,Checking,True,6564.78
+110060,1150040005,SVB Checking -2846,SVB Checking -2846,Bank,Checking,True,6746.22
 710080,80,Tax exempt investment interest,Tax exempt investment interest,Other Income,TaxExemptInterest,True,0.0
 811000,256,Tax Expense,Tax Expense,Other Expense,OtherMiscellaneousExpense,True,0.0
 811010,257,Federal Income Tax,Tax Expense:Federal Income Tax,Other Expense,OtherMiscellaneousExpense,True,0.0
@@ -243,7 +243,7 @@ Account Number,Account ID,Account Name,Full Name,Type,Sub-Type,Active,Balance
 210050,288,TriNet Expense Reports,TriNet Expense Reports,Accounts Payable,AccountsPayable,True,-43559.29
 610100,260,Unapplied Cash Bill Payment Expense,Unapplied Cash Bill Payment Expense,Expense,UnappliedCashBillPaymentExpense,True,0.0
 410080,268,Unapplied Cash Payment Income,Unapplied Cash Payment Income,Income,UnappliedCashPaymentIncome,True,0.0
-130110,262,Unbilled A/R,Unbilled A/R,Other Current Asset,OtherCurrentAssets,True,88114.19
+130110,262,Unbilled A/R,Unbilled A/R,Other Current Asset,OtherCurrentAssets,True,83351.0
 130120,3,Uncategorized Asset,Uncategorized Asset,Other Current Asset,OtherCurrentAssets,True,0.0
 610110,2,Uncategorized Expense,Uncategorized Expense,Expense,OtherMiscellaneousServiceCost,True,0.0
 410090,1,Uncategorized Income,Uncategorized Income,Income,ServiceFeeIncome,True,0.0

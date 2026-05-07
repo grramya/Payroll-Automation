@@ -15,19 +15,25 @@ Token lifetimes (QBO):
     Refresh token — expires after 100 days (timer resets on every refresh)
 """
 
-import json
+import sys
 import time
 import secrets
 import webbrowser
 import threading
 import urllib.parse
+from datetime import datetime, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from pathlib import Path
 from typing import Optional
 
 import requests
 from requests.auth import HTTPBasicAuth
 
 from qbo import config
+
+# Import DB models — add project root to path so database.py is findable
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from database import get_db, QboToken, encrypt_token, decrypt_token
 
 
 # =============================================================================
@@ -67,52 +73,88 @@ class TokenStore:
             "expires_at":    self.expires_at,
         }
 
-    def save(self) -> None:
-        """Persist tokens to qbo/tokens.json on disk (best-effort — never raises)."""
+    @staticmethod
+    def _company_from_path(path) -> str:
+        """Derive the company key ('main' or 'broker') from a token file path."""
+        stem = Path(path).stem   # e.g. 'tokens' or 'tokens_broker'
+        return stem.split("_", 1)[1] if "_" in stem else "main"
+
+    def _upsert(self, company: str) -> None:
         try:
-            config.TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
-            config.TOKEN_FILE.write_text(
-                json.dumps(self.to_dict(), indent=2), encoding="utf-8"
-            )
+            d = self.to_dict()
+            expires_dt = datetime.fromtimestamp(d["expires_at"], tz=timezone.utc)
+            # Fix 3: encrypt tokens at rest before writing to the DB
+            enc_access  = encrypt_token(d["access_token"])
+            enc_refresh = encrypt_token(d["refresh_token"])
+            with get_db() as db:
+                row = db.query(QboToken).filter(QboToken.company == company).first()
+                if row:
+                    row.access_token  = enc_access
+                    row.refresh_token = enc_refresh
+                    row.realm_id      = d["realm_id"]
+                    row.token_type    = d["token_type"]
+                    row.expires_at    = expires_dt
+                else:
+                    db.add(QboToken(
+                        company=company,
+                        access_token=enc_access,
+                        refresh_token=enc_refresh,
+                        realm_id=d["realm_id"],
+                        token_type=d["token_type"],
+                        expires_at=expires_dt,
+                    ))
         except Exception:
             pass
 
+    def save(self) -> None:
+        """Persist tokens for the main company."""
+        self._upsert("main")
+
     def save_to(self, path) -> None:
-        """Persist tokens to an explicit path (best-effort — never raises)."""
+        """Persist tokens for the company derived from path."""
+        self._upsert(self._company_from_path(path))
+
+    @classmethod
+    def _load(cls, company: str) -> Optional["TokenStore"]:
         try:
-            path = type(config.TOKEN_FILE)(path)   # coerce to Path
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(json.dumps(self.to_dict(), indent=2), encoding="utf-8")
+            with get_db() as db:
+                row = db.query(QboToken).filter(QboToken.company == company).first()
+                if row:
+                    expires_float = (
+                        row.expires_at.timestamp()
+                        if isinstance(row.expires_at, datetime)
+                        else float(row.expires_at or 0)
+                    )
+                    # Fix 3: decrypt tokens after reading from the DB
+                    return cls({
+                        "access_token":  decrypt_token(row.access_token),
+                        "refresh_token": decrypt_token(row.refresh_token),
+                        "realm_id":      row.realm_id,
+                        "token_type":    row.token_type,
+                        "expires_at":    expires_float,
+                    })
         except Exception:
             pass
+        return None
 
     @classmethod
     def load(cls) -> Optional["TokenStore"]:
-        """Load tokens from qbo/tokens.json. Returns None if not found."""
-        if config.TOKEN_FILE.exists():
-            try:
-                data = json.loads(config.TOKEN_FILE.read_text(encoding="utf-8"))
-                return cls(data)
-            except Exception:
-                pass
-        return None
+        """Load tokens for the main company."""
+        return cls._load("main")
 
     @classmethod
     def load_from(cls, path) -> Optional["TokenStore"]:
-        """Load tokens from an explicit path. Returns None if not found."""
-        from pathlib import Path as _Path
-        p = _Path(path)
-        if p.exists():
-            try:
-                return cls(json.loads(p.read_text(encoding="utf-8")))
-            except Exception:
-                pass
-        return None
+        """Load tokens for the company derived from path."""
+        return cls._load(cls._company_from_path(path))
 
     @classmethod
     def delete(cls) -> None:
-        """Delete tokens from disk (used on logout)."""
-        config.TOKEN_FILE.unlink(missing_ok=True)
+        """Delete main company tokens (used on logout)."""
+        try:
+            with get_db() as db:
+                db.query(QboToken).filter(QboToken.company == "main").delete()
+        except Exception:
+            pass
 
 
 # =============================================================================

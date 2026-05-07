@@ -69,14 +69,13 @@ export default function Step4QuickBooks() {
   const [vendors,      setVendors]      = useState<TableState>(emptyTable())
   const [classes,      setClasses]      = useState<TableState>(emptyTable())
 
-  // Map snake_case API fields to camelCase TableState
-  function mapApiData(d: Record<string, unknown>): Partial<TableState> {
+  function mapApiData(d: QBOTableData): Partial<TableState> {
     return {
-      rows: (d.rows as JERow[]) ?? [],
-      columns: (d.columns as string[]) ?? [],
-      source: (d.source as TableState['source']) ?? 'none',
-      lastSynced: (d.last_synced as string | null) ?? null,
-      syncSource: (d.sync_source as string | null) ?? null,
+      rows: d.rows ?? [],
+      columns: d.columns ?? [],
+      source: d.source ?? 'none',
+      lastSynced: d.last_synced ?? null,
+      syncSource: d.sync_source ?? null,
     }
   }
 

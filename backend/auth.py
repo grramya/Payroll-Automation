@@ -1,12 +1,9 @@
-"""auth.py — SQLite-backed authentication for Payroll JE Automation."""
+"""auth.py — PostgreSQL-backed authentication for Finance Suite."""
 from __future__ import annotations
 
-import sqlite3
 import uuid
 import sys
-from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -17,64 +14,31 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-SECRET_KEY = os.environ.get("PJE_SECRET_KEY", "payroll-je-secret-key-change-in-production")
-ALGORITHM  = "HS256"
-ACCESS_TOKEN_EXPIRE_HOURS = 8  # tokens expire after 8 hours
+from database import (
+    get_db, init_db as _db_init,
+    User, RevokedToken, ActivityLogEntry,
+)
 
-_data_dir = Path(os.environ.get("PJE_DATA_DIR", str(Path(__file__).parent)))
-DB_PATH   = _data_dir / "auth.db"
+SECRET_KEY                = os.environ.get("PJE_SECRET_KEY", "payroll-je-secret-key-change-in-production")
+ALGORITHM                 = "HS256"
+ACCESS_TOKEN_EXPIRE_HOURS = 8
 
 pwd_context   = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
-# ── Database ───────────────────────────────────────────────────────────────────
-@contextmanager
-def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    try:
-        yield conn
-        conn.commit()
-    finally:
-        conn.close()
+# ── Bootstrap ─────────────────────────────────────────────────────────────────
 
+def init_db() -> None:
+    """Create all tables and seed the admin user on first run."""
+    _db_init()
 
-def init_db():
-    """Create tables and default admin user if they don't exist."""
-    with get_db() as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-                username            TEXT    UNIQUE NOT NULL,
-                password            TEXT    NOT NULL,
-                role                TEXT    NOT NULL DEFAULT 'user',
-                created             TEXT    NOT NULL DEFAULT (datetime('now')),
-                can_access_payroll  INTEGER NOT NULL DEFAULT 0,
-                can_access_fpa      INTEGER NOT NULL DEFAULT 0
-            )
-        """)
-        # Persistent JWT blacklist — survives server restarts
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS revoked_tokens (
-                jti        TEXT PRIMARY KEY,
-                revoked_at TEXT NOT NULL DEFAULT (datetime('now')),
-                expires_at TEXT NOT NULL
-            )
-        """)
-        # Migrate existing DB: add permission columns if they don't exist yet
-        existing_cols = {row[1] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
-        if "can_access_payroll" not in existing_cols:
-            conn.execute("ALTER TABLE users ADD COLUMN can_access_payroll INTEGER NOT NULL DEFAULT 0")
-        if "can_access_fpa" not in existing_cols:
-            conn.execute("ALTER TABLE users ADD COLUMN can_access_fpa INTEGER NOT NULL DEFAULT 0")
+    admin_pw = os.environ.get("PJE_ADMIN_PASSWORD", "")
 
-        # Create or sync admin user
-        existing = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
-        admin_pw = os.environ.get("PJE_ADMIN_PASSWORD", "")
+    with get_db() as db:
+        count = db.query(User).filter(User.deleted_at.is_(None)).count()
 
-        if existing == 0:
-            # First run — create admin
+        if count == 0:
             if not admin_pw:
                 admin_pw = str(uuid.uuid4())
                 print(
@@ -87,72 +51,84 @@ def init_db():
                     flush=True,
                     file=sys.stderr,
                 )
-            conn.execute(
-                "INSERT INTO users (username, password, role, can_access_payroll, can_access_fpa) VALUES (?, ?, ?, 1, 1)",
-                ("admin", pwd_context.hash(admin_pw), "admin"),
-            )
+            db.add(User(
+                username="admin",
+                password=pwd_context.hash(admin_pw),
+                role="admin",
+                created=datetime.now(tz=timezone.utc),  # Fix 1: DateTime, not strftime
+                can_access_payroll=True,
+                can_access_fpa=True,
+                can_access_portco=True,
+            ))
         else:
-            # Ensure existing admin has full access
-            conn.execute(
-                "UPDATE users SET can_access_payroll=1, can_access_fpa=1 WHERE role='admin' AND (can_access_payroll=0 AND can_access_fpa=0)"
-            )
-            # If PJE_ADMIN_PASSWORD is set in .env, always keep the admin hash in sync with it
+            db.query(User).filter(User.role == "admin", User.deleted_at.is_(None)).update({
+                "can_access_payroll": True,
+                "can_access_fpa":     True,
+                "can_access_portco":  True,
+            })
             if admin_pw:
-                conn.execute(
-                    "UPDATE users SET password = ? WHERE username = 'admin'",
-                    (pwd_context.hash(admin_pw),),
-                )
+                db.query(User).filter(
+                    User.username == "admin", User.deleted_at.is_(None)
+                ).update({"password": pwd_context.hash(admin_pw)})
 
-    # Purge expired tokens from the blacklist on startup
     _purge_expired_revoked_tokens()
+    _purge_old_activity_log()          # Fix 7: prune log entries older than 1 year
 
 
 def _purge_expired_revoked_tokens() -> None:
-    """Remove tokens whose expiry has passed — they can no longer be used anyway."""
     try:
-        with get_db() as conn:
-            conn.execute(
-                "DELETE FROM revoked_tokens WHERE expires_at < datetime('now')"
-            )
+        now = datetime.now(tz=timezone.utc)   # Fix 1: proper DateTime comparison
+        with get_db() as db:
+            db.query(RevokedToken).filter(RevokedToken.expires_at < now).delete()
     except Exception:
         pass
 
 
-# ── Token blacklist — persisted in SQLite ──────────────────────────────────────
+def _purge_old_activity_log() -> None:
+    """Fix 7: delete activity_log rows older than 1 year to prevent unbounded growth."""
+    try:
+        cutoff = datetime.now(tz=timezone.utc) - timedelta(days=365)
+        with get_db() as db:
+            db.query(ActivityLogEntry).filter(ActivityLogEntry.timestamp < cutoff).delete()
+    except Exception:
+        pass
+
+
+# ── Token blacklist ────────────────────────────────────────────────────────────
 
 def revoke_token(token: str) -> None:
-    """Add a JWT to the SQLite blacklist so it is rejected on every future request."""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        jti = payload.get("jti", "")
-        exp = payload.get("exp")
+        payload    = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        jti        = payload.get("jti", "")
+        exp        = payload.get("exp")
         if not jti:
             return
-        expires_at_str = (
-            datetime.fromtimestamp(exp, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-            if exp else "2099-12-31 00:00:00"
+        # Fix 1: store as DateTime, not as a formatted string
+        expires_at = (
+            datetime.fromtimestamp(exp, tz=timezone.utc)
+            if exp else datetime(2099, 12, 31, tzinfo=timezone.utc)
         )
-        with get_db() as conn:
-            conn.execute(
-                "INSERT OR IGNORE INTO revoked_tokens (jti, expires_at) VALUES (?, ?)",
-                (jti, expires_at_str),
-            )
+        with get_db() as db:
+            if not db.query(RevokedToken).filter(RevokedToken.jti == jti).first():
+                db.add(RevokedToken(
+                    jti=jti,
+                    revoked_at=datetime.now(tz=timezone.utc),
+                    expires_at=expires_at,
+                ))
     except Exception:
         pass
 
 
 def _is_token_revoked(jti: str) -> bool:
     try:
-        with get_db() as conn:
-            row = conn.execute(
-                "SELECT 1 FROM revoked_tokens WHERE jti = ?", (jti,)
-            ).fetchone()
-            return row is not None
+        with get_db() as db:
+            return db.query(RevokedToken).filter(RevokedToken.jti == jti).first() is not None
     except Exception:
         return False
 
 
 # ── Password helpers ───────────────────────────────────────────────────────────
+
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
@@ -162,10 +138,10 @@ def hash_password(plain: str) -> str:
 
 
 # ── JWT helpers ────────────────────────────────────────────────────────────────
+
 def create_access_token(data: dict) -> str:
-    payload = data.copy()
-    expire = datetime.now(tz=timezone.utc) + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
-    payload["exp"] = expire
+    payload        = data.copy()
+    payload["exp"] = datetime.now(tz=timezone.utc) + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
     payload["jti"] = str(uuid.uuid4())
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -182,25 +158,120 @@ def decode_token(token: str) -> dict:
 
 
 # ── User helpers ───────────────────────────────────────────────────────────────
+
+def _row_to_dict(user: User) -> dict:
+    # Fix 5: password hash excluded — never expose it outside verification
+    return {
+        "id":                 user.id,
+        "username":           user.username,
+        "role":               user.role,
+        "created":            user.created.isoformat() if user.created else None,  # Fix 1: serialize DateTime
+        "can_access_payroll": int(bool(user.can_access_payroll)),
+        "can_access_fpa":     int(bool(user.can_access_fpa)),
+        "can_access_portco":  int(bool(user.can_access_portco)),
+        "portco_dept":        user.portco_dept,
+    }
+
+
+def get_user_password_hash(username: str) -> str | None:
+    """Return the stored password hash for a non-deleted user, or None if not found."""
+    with get_db() as db:
+        user = db.query(User).filter(
+            User.username == username,
+            User.deleted_at.is_(None),              # Fix 9: exclude soft-deleted
+        ).first()
+        return user.password if user else None
+
+
 def get_user(username: str) -> dict | None:
-    with get_db() as conn:
-        row = conn.execute(
-            "SELECT * FROM users WHERE username = ?", (username,)
-        ).fetchone()
-        return dict(row) if row else None
+    with get_db() as db:
+        user = db.query(User).filter(
+            User.username == username,
+            User.deleted_at.is_(None),              # Fix 9
+        ).first()
+        return _row_to_dict(user) if user else None
 
 
 def authenticate_user(username: str, password: str) -> dict | None:
-    user = get_user(username)
-    if not user or not verify_password(password, user["password"]):
-        return None
-    return user
+    with get_db() as db:
+        user = db.query(User).filter(
+            User.username == username,
+            User.deleted_at.is_(None),              # Fix 9
+        ).first()
+        # Fix 5: verify directly against the ORM object — never put hash in the dict
+        if not user or not verify_password(password, user.password):
+            return None
+        return _row_to_dict(user)
+
+
+def list_all_users() -> list[dict]:
+    with get_db() as db:
+        return [
+            _row_to_dict(u)
+            for u in db.query(User)
+            .filter(User.deleted_at.is_(None))      # Fix 9
+            .order_by(User.id)
+            .all()
+        ]
+
+
+def create_user_record(
+    username: str, password_hash: str, role: str,
+    can_payroll: bool, can_fpa: bool, can_portco: bool,
+    portco_dept: str | None,
+) -> None:
+    with get_db() as db:
+        db.add(User(
+            username=username,
+            password=password_hash,
+            role=role,
+            created=datetime.now(tz=timezone.utc),  # Fix 1
+            can_access_payroll=can_payroll,
+            can_access_fpa=can_fpa,
+            can_access_portco=can_portco,
+            portco_dept=portco_dept,
+        ))
+
+
+def delete_user_record(username: str) -> bool:
+    """Fix 9: soft-delete — set deleted_at instead of removing the row."""
+    with get_db() as db:
+        return db.query(User).filter(
+            User.username == username,
+            User.deleted_at.is_(None),
+        ).update({"deleted_at": datetime.now(tz=timezone.utc)}) > 0
+
+
+def update_user_password(username: str, new_hash: str) -> bool:
+    with get_db() as db:
+        return db.query(User).filter(
+            User.username == username,
+            User.deleted_at.is_(None),              # Fix 9
+        ).update({"password": new_hash}) > 0
+
+
+def update_user_permissions(
+    username: str,
+    can_payroll: bool, can_fpa: bool, can_portco: bool,
+    portco_dept: str | None,
+) -> bool:
+    with get_db() as db:
+        return db.query(User).filter(
+            User.username == username,
+            User.deleted_at.is_(None),              # Fix 9
+        ).update({
+            "can_access_payroll": can_payroll,
+            "can_access_fpa":     can_fpa,
+            "can_access_portco":  can_portco,
+            "portco_dept":        portco_dept,
+        }) > 0
 
 
 # ── FastAPI dependency ─────────────────────────────────────────────────────────
+
 def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
-    payload = decode_token(token)
-    jti = payload.get("jti", "")
+    payload  = decode_token(token)
+    jti      = payload.get("jti", "")
     if jti and _is_token_revoked(jti):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

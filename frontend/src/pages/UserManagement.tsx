@@ -13,11 +13,13 @@ export default function UserManagement() {
   const [success, setSuccess] = useState('')
 
   // Add user form
-  const [newUsername, setNewUsername] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [newRole, setNewRole] = useState('user')
-  const [newCanPayroll, setNewCanPayroll] = useState(false)
-  const [newCanFpa, setNewCanFpa]         = useState(false)
+  const [newUsername, setNewUsername]   = useState('')
+  const [newPassword, setNewPassword]   = useState('')
+  const [newRole, setNewRole]           = useState('user')
+  const [newCanPayroll, setNewCanPayroll]   = useState(false)
+  const [newCanFpa, setNewCanFpa]           = useState(false)
+  const [newCanPortco, setNewCanPortco]     = useState(false)
+  const [newPortcoDept, setNewPortcoDept]   = useState<string>('')
   const [showNewPw, setShowNewPw] = useState(false)
   const [adding, setAdding] = useState(false)
   const [addError, setAddError] = useState('')
@@ -54,13 +56,15 @@ export default function UserManagement() {
     if (newPassword.length < 4) { setAddError('Password must be at least 4 characters.'); return }
     setAdding(true)
     try {
-      await createUser(newUsername.trim(), newPassword, newRole, newCanPayroll, newCanFpa)
+      await createUser(newUsername.trim(), newPassword, newRole, newCanPayroll, newCanFpa, newCanPortco, newPortcoDept || null)
       setSuccess(`User "${newUsername.trim()}" created successfully.`)
       setNewUsername('')
       setNewPassword('')
       setNewRole('user')
       setNewCanPayroll(false)
       setNewCanFpa(false)
+      setNewCanPortco(false)
+      setNewPortcoDept('')
       fetchUsers()
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string } } }
@@ -83,18 +87,34 @@ export default function UserManagement() {
     }
   }
 
-  async function handleTogglePermission(username: string, field: 'payroll' | 'fpa', current: number) {
+  async function handleTogglePermission(username: string, field: 'payroll' | 'fpa' | 'portco', current: number) {
     const u = users.find(x => x.username === username)
     if (!u) return
     setPermSaving(username + field)
     try {
       const payroll = field === 'payroll' ? !current : Boolean(u.can_access_payroll)
       const fpa     = field === 'fpa'     ? !current : Boolean(u.can_access_fpa)
-      await updateUserPermissions(username, payroll, fpa)
+      const portco  = field === 'portco'  ? !current : Boolean(u.can_access_portco)
+      await updateUserPermissions(username, payroll, fpa, portco, u.portco_dept)
       setSuccess(`Permissions updated for "${username}".`)
       fetchUsers()
     } catch {
       setError('Failed to update permissions.')
+    } finally {
+      setPermSaving(null)
+    }
+  }
+
+  async function handlePortcoDept(username: string, dept: string | null) {
+    const u = users.find(x => x.username === username)
+    if (!u) return
+    setPermSaving(username + 'portcodept')
+    try {
+      await updateUserPermissions(username, Boolean(u.can_access_payroll), Boolean(u.can_access_fpa), Boolean(u.can_access_portco), dept)
+      setSuccess(`PortCo dept updated for "${username}".`)
+      fetchUsers()
+    } catch {
+      setError('Failed to update PortCo dept.')
     } finally {
       setPermSaving(null)
     }
@@ -192,7 +212,7 @@ export default function UserManagement() {
 
             <div style={s.field}>
               <label style={s.label}>App Access</label>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center', paddingTop: 10 }}>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center', paddingTop: 10, flexWrap: 'wrap' }}>
                 <label style={s.checkLabel}>
                   <input type="checkbox" checked={newCanPayroll} onChange={e => setNewCanPayroll(e.target.checked)} style={s.checkbox} />
                   Payroll JE
@@ -201,6 +221,31 @@ export default function UserManagement() {
                   <input type="checkbox" checked={newCanFpa} onChange={e => setNewCanFpa(e.target.checked)} style={s.checkbox} />
                   FP&amp;A
                 </label>
+                <label style={s.checkLabel}>
+                  <input type="checkbox" checked={newCanPortco} onChange={e => setNewCanPortco(e.target.checked)} style={s.checkbox} />
+                  PortCo
+                </label>
+              </div>
+            </div>
+
+            <div style={s.field}>
+              <label style={s.label}>PortCo Dept (optional)</label>
+              <div style={s.inputWrap}>
+                <span className="material-icons-round" style={s.inputIcon}>business_center</span>
+                <select
+                  style={{ ...s.input, cursor: 'pointer' }}
+                  value={newPortcoDept}
+                  onChange={e => setNewPortcoDept(e.target.value)}
+                  disabled={!newCanPortco}
+                >
+                  <option value="">All Departments</option>
+                  <option value="proddev">Product Development</option>
+                  <option value="sales">Sales</option>
+                  <option value="marketing">Marketing</option>
+                  <option value="cs">Customer Success</option>
+                  <option value="onboarding">Onboarding</option>
+                  <option value="finance">Finance</option>
+                </select>
               </div>
             </div>
 
@@ -238,6 +283,8 @@ export default function UserManagement() {
                 <th style={s.th}>Role</th>
                 <th style={{ ...s.th, textAlign: 'center' }}>Payroll JE</th>
                 <th style={{ ...s.th, textAlign: 'center' }}>FP&amp;A</th>
+                <th style={{ ...s.th, textAlign: 'center' }}>PortCo</th>
+                <th style={{ ...s.th, textAlign: 'center' }}>PortCo Dept</th>
                 <th style={s.th}>Created</th>
                 <th style={{ ...s.th, textAlign: 'right' }}>Actions</th>
               </tr>
@@ -245,8 +292,9 @@ export default function UserManagement() {
             <tbody>
               {users.map(u => {
                 const isAdmin = u.role === 'admin'
-                const savingP = permSaving === u.username + 'payroll'
-                const savingF = permSaving === u.username + 'fpa'
+                const savingP  = permSaving === u.username + 'payroll'
+                const savingF  = permSaving === u.username + 'fpa'
+                const savingPC = permSaving === u.username + 'portco'
                 return (
                   <tr key={u.id} style={s.tr}>
                     <td style={s.td}>
@@ -285,6 +333,43 @@ export default function UserManagement() {
                           >
                             {savingF ? '…' : u.can_access_fpa ? '✓ On' : 'Off'}
                           </button>
+                        )
+                      }
+                    </td>
+                    <td style={{ ...s.td, textAlign: 'center' }}>
+                      {isAdmin
+                        ? <span style={s.adminBadge}>Always</span>
+                        : (
+                          <button
+                            style={{ ...s.toggleBtn, ...(u.can_access_portco ? s.toggleOn : s.toggleOff) }}
+                            onClick={() => handleTogglePermission(u.username, 'portco', u.can_access_portco)}
+                            disabled={!!savingPC}
+                            title={u.can_access_portco ? 'Revoke PortCo access' : 'Grant PortCo access'}
+                          >
+                            {savingPC ? '…' : u.can_access_portco ? '✓ On' : 'Off'}
+                          </button>
+                        )
+                      }
+                    </td>
+                    <td style={{ ...s.td, textAlign: 'center' }}>
+                      {isAdmin
+                        ? <span style={s.adminBadge}>All</span>
+                        : (
+                          <select
+                            style={s.deptSelect}
+                            value={u.portco_dept ?? ''}
+                            disabled={!u.can_access_portco || permSaving === u.username + 'portcodept'}
+                            onChange={e => handlePortcoDept(u.username, e.target.value || null)}
+                            title="PortCo department restriction"
+                          >
+                            <option value="">All Depts</option>
+                            <option value="proddev">Product Dev</option>
+                            <option value="sales">Sales</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="cs">Customer Success</option>
+                            <option value="onboarding">Onboarding</option>
+                            <option value="finance">Finance</option>
+                          </select>
                         )
                       }
                     </td>
@@ -459,6 +544,12 @@ const s: Record<string, CSSProperties> = {
     display: 'inline-block', fontSize: 11, fontWeight: 600,
     color: '#400f61', background: '#f5eefa', borderRadius: 20,
     padding: '2px 10px',
+  },
+  deptSelect: {
+    fontSize: 11, padding: '3px 6px', borderRadius: 6,
+    border: '1.5px solid #d4b8f0', background: '#fafafa',
+    color: '#400f61', fontFamily: 'inherit', cursor: 'pointer',
+    maxWidth: 120,
   },
   checkLabel: {
     display: 'flex', alignItems: 'center', gap: 6,

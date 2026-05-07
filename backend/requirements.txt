@@ -16,5 +16,16 @@ python-multipart>=0.0.9
 passlib[bcrypt]>=1.7.4
 python-jose[cryptography]>=3.3.0
 
+# PostgreSQL + ORM
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+alembic>=1.13.0
+
+# Token encryption at rest
+cryptography>=42.0.0
+
 # Cross-process file locking (consolidator, logger, session files)
 filelock>=3.14.0
+
+# AI chatbot
+anthropic>=0.50.0

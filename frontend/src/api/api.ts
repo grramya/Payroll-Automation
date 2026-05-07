@@ -27,6 +27,20 @@ http.interceptors.response.use(
   }
 )
 
+// ── PortCo sample data ────────────────────────────────────────────────────────
+
+export type MetricMap = Record<string, Record<string, number>>
+
+export interface PortcoSampleData {
+  actuals: MetricMap
+  budget:  MetricMap
+}
+
+export async function loadPortcoSampleData(): Promise<PortcoSampleData> {
+  const res = await http.get<PortcoSampleData>('/portco/load-sample')
+  return res.data
+}
+
 // ── Shared types ───────────────────────────────────────────────────────────────
 
 export interface JESummary {
@@ -80,6 +94,8 @@ export interface UserRecord {
   created?: string
   can_access_payroll: number
   can_access_fpa: number
+  can_access_portco: number
+  portco_dept: string | null
 }
 
 export interface UsersData {
@@ -210,6 +226,9 @@ export async function disconnectQBO(): Promise<void> {
 export interface QBOTableData {
   rows: JERow[]
   columns: string[]
+  source?: 'local' | 'qbo' | 'none'
+  last_synced?: string | null
+  sync_source?: string | null
 }
 
 export async function getQBOAccounts(): Promise<QBOTableData> {
@@ -288,8 +307,10 @@ export async function createUser(
   role: string,
   can_access_payroll = false,
   can_access_fpa = false,
+  can_access_portco = false,
+  portco_dept: string | null = null,
 ): Promise<void> {
-  await http.post('/auth/users', { username, password, role, can_access_payroll, can_access_fpa })
+  await http.post('/auth/users', { username, password, role, can_access_payroll, can_access_fpa, can_access_portco, portco_dept })
 }
 
 export async function deleteUser(username: string): Promise<void> {
@@ -304,8 +325,10 @@ export async function updateUserPermissions(
   username: string,
   can_access_payroll: boolean,
   can_access_fpa: boolean,
+  can_access_portco: boolean,
+  portco_dept: string | null = null,
 ): Promise<void> {
-  await http.put(`/auth/users/${username}/permissions`, { can_access_payroll, can_access_fpa })
+  await http.put(`/auth/users/${username}/permissions`, { can_access_payroll, can_access_fpa, can_access_portco, portco_dept })
 }
 
 // ── FP&A ───────────────────────────────────────────────────────────────────────

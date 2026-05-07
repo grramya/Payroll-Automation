@@ -8,6 +8,8 @@ export interface User {
   role: string
   can_access_payroll: boolean
   can_access_fpa: boolean
+  can_access_portco: boolean
+  portco_dept?: string | null
 }
 
 interface LoginResponse {
@@ -16,6 +18,8 @@ interface LoginResponse {
   role: string
   can_access_payroll: boolean
   can_access_fpa: boolean
+  can_access_portco: boolean
+  portco_dept?: string | null
 }
 
 interface AuthContextValue {
@@ -60,21 +64,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
 
-    localStorage.setItem(TOKEN_KEY, data.access_token)
-    localStorage.setItem(USER_KEY,  JSON.stringify({
+    const userObj: User = {
       username: data.username,
       role: data.role,
       can_access_payroll: data.can_access_payroll,
       can_access_fpa: data.can_access_fpa,
-    }))
+      can_access_portco: data.can_access_portco,
+      portco_dept: data.portco_dept ?? null,
+    }
+
+    localStorage.setItem(TOKEN_KEY, data.access_token)
+    localStorage.setItem(USER_KEY, JSON.stringify(userObj))
 
     setToken(data.access_token)
-    setUser({
-      username: data.username,
-      role: data.role,
-      can_access_payroll: data.can_access_payroll,
-      can_access_fpa: data.can_access_fpa,
-    })
+    setUser(userObj)
   }, [])
 
   const logout = useCallback(async () => {

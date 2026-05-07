@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { ToastProvider } from './context/ToastContext'
 import { AppProvider } from './context/AppContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { FpaResultProvider } from './context/FpaResultContext'
+import { PortcoProvider } from './context/PortcoContext'
 import type { User } from './context/AuthContext'
 import Toaster from './components/Toaster'
 import AppHeader from './components/AppHeader'
@@ -29,19 +30,42 @@ import FpaPLIndividual    from './pages/fpa/PLIndividualPage'
 import FpaComparativePL   from './pages/fpa/ComparativePLPage'
 import FpaComparativePLBD from './pages/fpa/ComparativePLBDPage'
 
+// PortCo Reporting — single SPA entry point (tabs handled internally)
+import PortcoApp from './pages/portco/index'
+
+import ChatWidget from './components/chat/ChatWidget'
+
 function ProtectedApp() {
   const { isAuthenticated, user, logout } = useAuth()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const location = useLocation()
+
+  // Close mobile sidebar on every route change
+  useEffect(() => {
+    setMobileSidebarOpen(false)
+  }, [location.pathname])
 
   if (!isAuthenticated) return <Navigate to="/login" replace />
 
   return (
     <AppProvider>
       <FpaResultProvider>
+      <PortcoProvider>
         <div className="app-shell">
-          <AppHeader user={user} onLogout={logout} />
+          <AppHeader
+            user={user}
+            onLogout={logout}
+            onMobileToggle={() => setMobileSidebarOpen(v => !v)}
+            mobileOpen={mobileSidebarOpen}
+          />
           <div className="app-body">
-            <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(v => !v)} />
+            <Sidebar
+              collapsed={sidebarCollapsed}
+              onToggle={() => setSidebarCollapsed(v => !v)}
+              mobileOpen={mobileSidebarOpen}
+              onMobileClose={() => setMobileSidebarOpen(false)}
+            />
             <main id="main-content" className="main-content" tabIndex={-1}>
               <Routes>
                 <Route path="/" element={<HomePage />} />
@@ -64,13 +88,18 @@ function ProtectedApp() {
                 <Route path="/fpa/comparative-pl"   element={<FpaRoute user={user}><FpaComparativePL /></FpaRoute>} />
                 <Route path="/fpa/comparative-pl-bd" element={<FpaRoute user={user}><FpaComparativePLBD /></FpaRoute>} />
 
+                {/* PortCo Reporting — single route, tabs are internal */}
+                <Route path="/portco/*" element={<PortcoRoute user={user}><PortcoApp /></PortcoRoute>} />
+
                 {/* Admin */}
                 <Route path="/users" element={<AdminRoute user={user}><UserManagement /></AdminRoute>} />
               </Routes>
             </main>
           </div>
         </div>
+      </PortcoProvider>
       </FpaResultProvider>
+      <ChatWidget />
     </AppProvider>
   )
 }
@@ -106,5 +135,10 @@ function PayrollRoute({ user, children }: { user: User | null; children: ReactNo
 
 function FpaRoute({ user, children }: { user: User | null; children: ReactNode }) {
   const ok = user?.role === 'admin' || user?.can_access_fpa
+  return ok ? <>{children}</> : <Navigate to="/" replace />
+}
+
+function PortcoRoute({ user, children }: { user: User | null; children: ReactNode }) {
+  const ok = user?.role === 'admin' || user?.can_access_portco
   return ok ? <>{children}</> : <Navigate to="/" replace />
 }

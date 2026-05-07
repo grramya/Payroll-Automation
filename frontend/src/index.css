@@ -525,3 +525,152 @@ h3 { font-size: 15px; font-weight: 600; line-height: 1.4; }
   font-size: 14px;
   line-height: 1.6;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   RESPONSIVE / ADAPTIVE UI
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Hamburger button (hidden on desktop, shown on mobile) ─────────────────── */
+.hamburger-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--p);
+  padding: 6px;
+  border-radius: var(--r8);
+  flex-direction: column;
+  gap: 5px;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.hamburger-btn:hover { background: var(--p-light); }
+.hamburger-btn:focus-visible {
+  outline: 2px solid var(--p);
+  outline-offset: 2px;
+}
+.hamburger-btn span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: transform .2s, opacity .2s;
+}
+
+/* ── Mobile sidebar backdrop ───────────────────────────────────────────────── */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .4);
+  z-index: 198;
+  display: none;
+}
+.sidebar-backdrop.visible { display: block; }
+
+/* ── Responsive main-content padding ──────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .main-content { padding: 20px 24px; }
+}
+/* (768px rule is already defined above — overriding to 16px which matches) */
+
+/* ── Module card grid ──────────────────────────────────────────────────────── */
+.module-card-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 1023px) {
+  .module-card-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 639px) {
+  .module-card-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Responsive table wrapper ──────────────────────────────────────────────── */
+.responsive-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Touch targets ─────────────────────────────────────────────────────────── */
+.btn     { min-height: 40px; }
+.btn-sm  { min-height: 36px; }
+
+/* ── Mobile breakpoint (≤768px) ────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Show hamburger, hide sidebar toggle tab on mobile */
+  .hamburger-btn { display: flex; }
+
+  /* App header title smaller on mobile */
+  .app-header-title { font-size: 14px; }
+
+  /* Responsive typography */
+  h1 { font-size: 18px; }
+
+  /* Card padding tightened */
+  .card { padding: 16px 16px; }
+
+  /* Sidebar becomes a fixed overlay that slides in from the left */
+  #app-sidebar {
+    position: fixed !important;
+    top: var(--header-h) !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    z-index: 199 !important;
+    transform: translateX(-100%) !important;
+    transition: transform .25s ease !important;
+    width: 240px !important;
+  }
+
+  /* When mobile sidebar is open */
+  #app-sidebar.sidebar-mobile-open {
+    transform: translateX(0) !important;
+  }
+
+  /* The wrapping div around the sidebar toggle tab — hide toggle tab on mobile */
+  .sidebar-toggle-tab-wrap { display: none; }
+
+  /* main-content: no left margin on mobile (sidebar is overlay, not inline) */
+  .main-content { margin-left: 0 !important; padding: 16px !important; }
+
+  /* Sidebar box-shadow when overlaid */
+  #app-sidebar.sidebar-mobile-open {
+    box-shadow: 4px 0 24px rgba(0,0,0,.18) !important;
+  }
+
+  /* Hamburger active state — top/bottom lines rotate to X */
+  .hamburger-btn.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .hamburger-btn.active span:nth-child(2) { opacity: 0; }
+  .hamburger-btn.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* Greeting tightens on mobile */
+  .main-content .greeting-wrap { margin-bottom: 24px; padding-bottom: 20px; }
+
+  /* Page max-width becomes fluid on mobile */
+  .page-wrap-narrow { max-width: 100% !important; }
+}
+
+/* ── Tablet adjustments (768px – 1024px) ────────────────────────────────────── */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .main-content { padding: 20px 24px; }
+  .module-card-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Large desktop (≥1440px) ─────────────────────────────────────────────────── */
+@media (min-width: 1440px) {
+  .main-content { padding: 32px 48px; }
+}
+
+/* ── Fluid page containers ───────────────────────────────────────────────────── */
+.page-wrap { max-width: 1200px; margin: 0 auto; }
+.page-wrap-narrow { max-width: 960px; margin: 0 auto; }
+
+/* ── App body: ensure sidebar doesn't push on mobile ────────────────────────── */
+@media (max-width: 768px) {
+  .app-body { overflow: visible; }
+  /* Give main-content the full width; sidebar is fixed overlay */
+  .app-body > div:first-child { width: 0 !important; flex-shrink: 0; overflow: visible; }
+}

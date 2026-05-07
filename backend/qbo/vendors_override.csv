@@ -2,7 +2,7 @@ Vendor ID,Display Name,Print on Check Name,Company Name,Active,Balance
 581,080 CAFE T2BENGALURU AIRPORT SERVICES LTD,080 CAFE T2BENGALURU AIRPORT SERVICES LTD,080 CAFE T2BENGALURU AIRPORT SERVICES LTD,True,0.0
 93,104 West 27th Street LLC,104 West 27th Street LLC,104 West 27th Street LLC,True,0.0
 472,17 Mile Media LLC,17 Mile Media LLC,17 Mile Media LLC,True,0.0
-656,180 Madison PRISA II LLC,180 Madison PRISA II LLC,180 Madison PRISA II LLC,True,56836.05
+656,180 Madison PRISA II LLC,180 Madison PRISA II LLC,180 Madison PRISA II LLC,True,113651.87
 728,1936 WINES & SPIRITSPARK 34 LIQUOR STORE INC,1936 WINES & SPIRITSPARK 34 LIQUOR STORE INC,1936 WINES & SPIRITSPARK 34 LIQUOR STORE INC,True,0.0
 94,1Password,1Password,1Password,True,0.0
 733,3 GUYS RESTAURANTZANIMAD FOOD CORP,3 GUYS RESTAURANTZANIMAD FOOD CORP,3 GUYS RESTAURANTZANIMAD FOOD CORP,True,0.0
@@ -44,7 +44,7 @@ Vendor ID,Display Name,Print on Check Name,Company Name,Active,Balance
 918,AUTH0 BY OKTA,AUTH0 BY OKTA,AUTH0 BY OKTA,True,0.0
 718,AUX MERVEILLEUX DE FRED WEST VILLAGE AKAAUX MERVEI,AUX MERVEILLEUX DE FRED WEST VILLAGE AKAAUX MERVEI,AUX MERVEILLEUX DE FRED WEST VILLAGE AKAAUX MERVEI,True,0.0
 587,"Action Carting Environmental Services, Inc","Action Carting Environmental Services, Inc","Action Carting Environmental Services, Inc",True,0.0
-532,Adam Bhatti,Adam Bhatti,,True,464.0
+532,Adam Bhatti,Adam Bhatti,,True,0.0
 96,Adam Weinstein,Adam Weinstein,Adam Weinstein,True,0.0
 97,Adobe,Adobe,Adobe,True,0.0
 98,Air Canada,Air Canada,Air Canada,True,0.0
@@ -52,7 +52,7 @@ Vendor ID,Display Name,Print on Check Name,Company Name,Active,Balance
 451,Alexa Denherder,Alexa Denherder,,True,0.0
 627,Althea Clarke,Althea Clarke,,True,0.0
 99,Amazon,Amazon,Amazon,True,0.0
-100,Amazon Web Services (AWS),Amazon Web Services (AWS),Amazon Web Services (AWS),True,0.0
+100,Amazon Web Services (AWS),Amazon Web Services (AWS),Amazon Web Services (AWS),True,2895.04
 101,American Airlines,American Airlines,American Airlines,True,0.0
 385,American Cancer Society,American Cancer Society,American Cancer Society,True,0.0
 593,American Express-1,American Express-1,American Express-1,True,0.0
@@ -74,7 +74,7 @@ Vendor ID,Display Name,Print on Check Name,Company Name,Active,Balance
 112,AtoZSigns,AtoZSigns,AtoZSigns,True,0.0
 259,Audra Ryan,Audra Ryan,,True,0.0
 113,Avalon,Avalon,Avalon,True,0.0
-840,"Avrin, Andrew","Avrin, Andrew",,True,877.47
+840,"Avrin, Andrew","Avrin, Andrew",,True,0.0
 910,B&H PHOTO-VIDEO RETAILB & H PHOTO-VIDEO,B&H PHOTO-VIDEO RETAILB & H PHOTO-VIDEO,B&H PHOTO-VIDEO RETAILB & H PHOTO-VIDEO,True,0.0
 114,B&H Photo,B&H Photo,B&H Photo,True,0.0
 665,BARBUTOBARBUTO WEST LLC,BARBUTOBARBUTO WEST LLC,BARBUTOBARBUTO WEST LLC,True,0.0
@@ -135,6 +135,7 @@ Vendor ID,Display Name,Print on Check Name,Company Name,Active,Balance
 128,CITA Insurance Services,CITA Insurance Services,CITA Insurance Services,True,0.0
 831,CITY HIVE INC,CITY HIVE INC,CITY HIVE INC,True,0.0
 825,"CLAYTON HOTEL233 CLAYTON PARTNERS, LLC","CLAYTON HOTEL233 CLAYTON PARTNERS, LLC","CLAYTON HOTEL233 CLAYTON PARTNERS, LLC",True,0.0
+961,CLINTON HALL - 36SWEET 36 HOSPITALITY LLC,CLINTON HALL - 36SWEET 36 HOSPITALITY LLC,CLINTON HALL - 36SWEET 36 HOSPITALITY LLC,True,0.0
 599,COCO DI MAMA LIMITED,COCO DI MAMA LIMITED,COCO DI MAMA LIMITED,True,0.0
 774,COOKIE GOODCOOKIE GOOD LLC,COOKIE GOODCOOKIE GOOD LLC,COOKIE GOODCOOKIE GOOD LLC,True,0.0
 939,COSTCO WHOLESALE CORPORATION,COSTCO WHOLESALE CORPORATION,COSTCO WHOLESALE CORPORATION,True,0.0
@@ -168,7 +169,7 @@ Vendor ID,Display Name,Print on Check Name,Company Name,Active,Balance
 131,"Concertiv, Inc.","Concertiv, Inc.","Concertiv, Inc.",True,0.0
 336,Consolidated Edison,Consolidated Edison,,True,0.0
 428,ConvertCalculator,ConvertCalculator,ConvertCalculator,True,0.0
-456,"Cordeiro, Andrew","Cordeiro, Andrew",,True,870.75
+456,"Cordeiro, Andrew","Cordeiro, Andrew",,True,0.0
 133,Coveralls,Coveralls,Coveralls,True,0.0
 431,Craig R. Anderson,Craig R. Anderson,,True,0.0
 851,"Creattie, Inc.","Creattie, Inc.","Creattie, Inc.",True,0.0
@@ -246,6 +247,7 @@ Vendor ID,Display Name,Print on Check Name,Company Name,Active,Balance
 688,FIGMA INC,FIGMA INC,FIGMA INC,True,0.0
 857,"FIGMA, INC.","FIGMA, INC.","FIGMA, INC.",True,0.0
 748,FLEMING'S PRIME STEAKHOUSOSI FLEMINGS LLC,FLEMING'S PRIME STEAKHOUSOSI FLEMINGS LLC,FLEMING'S PRIME STEAKHOUSOSI FLEMINGS LLC,True,0.0
+960,"FOODIE FOR ALL, LLC","FOODIE FOR ALL, LLC","FOODIE FOR ALL, LLC",True,0.0
 759,FORUM HEALTH & PERSONAL CARE LLC,FORUM HEALTH & PERSONAL CARE LLC,FORUM HEALTH & PERSONAL CARE LLC,True,0.0
 657,FOUR SEASONS NEW YORKFSR INTERNATIONAL HOTELS INC,FOUR SEASONS NEW YORKFSR INTERNATIONAL HOTELS INC,FOUR SEASONS NEW YORKFSR INTERNATIONAL HOTELS INC,True,0.0
 165,FRB II Trust,FRB II Trust,FRB II Trust,True,0.0
@@ -297,9 +299,9 @@ Vendor ID,Display Name,Print on Check Name,Company Name,Active,Balance
 178,Hannah Swinerton,Hannah Swinerton,,True,0.0
 179,Hannah Werner,Hannah Werner,,True,0.0
 180,Harris Beach PLLC,Harris Beach PLLC,Harris Beach PLLC,True,0.0
-686,Harry Blackall,Harry Blackall,,True,189.32
+686,Harry Blackall,Harry Blackall,,True,0.0
 181,Heroku,Heroku,Heroku,True,0.0
-707,Highline Building Services,Highline Building Services,Highline Building Services,True,3608.43
+707,Highline Building Services,Highline Building Services,Highline Building Services,True,6439.18
 182,Hilton Hotel,Hilton Hotel,Hilton Hotel,True,0.0
 391,How To SaaS Inc.,How To SaaS Inc.,How To SaaS Inc.,True,0.0
 183,Howard Fischer Associates,Howard Fischer Associates,Howard Fischer Associates,True,0.0
@@ -307,7 +309,7 @@ Vendor ID,Display Name,Print on Check Name,Company Name,Active,Balance
 185,Hudson News,Hudson News,Hudson News,True,0.0
 186,Hunter,Hunter,Hunter,True,0.0
 187,Hyatt Hotels,Hyatt Hotels,Hyatt Hotels,True,0.0
-511,"Hydration Labs, Inc","Hydration Labs, Inc","Hydration Labs, Inc",True,0.0
+511,"Hydration Labs, Inc","Hydration Labs, Inc","Hydration Labs, Inc",True,1269.48
 189,IATA,IATA,IATA,True,0.0
 947,IATA 15148740202,IATA 15148740202,IATA 15148740202,True,0.0
 697,IATA 15148740202INT'L AIR TRANSPORT ASSOC,IATA 15148740202INT'L AIR TRANSPORT ASSOC,IATA 15148740202INT'L AIR TRANSPORT ASSOC,True,0.0
@@ -442,7 +444,7 @@ Vendor ID,Display Name,Print on Check Name,Company Name,Active,Balance
 659,Matthew Grimes,Matthew Grimes,,True,0.0
 361,Max Kral,Max Kral,,True,0.0
 556,Melanie Anglars,Melanie Anglars,,True,0.0
-224,Meltzer Hellrung LLC,Meltzer Hellrung LLC,Meltzer Hellrung LLC,True,0.0
+224,Meltzer Hellrung LLC,Meltzer Hellrung LLC,Meltzer Hellrung LLC,True,3585.0
 445,Michael Mofina,Michael Mofina,,True,0.0
 225,Michael's,Michael's,Michael's,True,0.0
 362,Microsoft,Microsoft,,True,0.0
@@ -472,7 +474,7 @@ Vendor ID,Display Name,Print on Check Name,Company Name,Active,Balance
 242,NYS Tax & Finance,NYS Tax & Finance,NYS Tax & Finance,True,0.0
 705,Natalie Davis,Natalie Davis,,True,0.0
 235,Nathan Free,Nathan Free,,True,0.0
-693,Neal Chatrath,Neal Chatrath,,True,3235.88
+693,Neal Chatrath,Neal Chatrath,,True,0.0
 237,Nespresso,Nespresso,Nespresso,True,0.0
 512,New York Department of Labour,New York Department of Labour,New York Department of Labour,True,0.0
 238,New York State Department of Financial Services,New York State Department of Financial Services,New York State Department of Financial Services,True,0.0
@@ -509,7 +511,7 @@ Vendor ID,Display Name,Print on Check Name,Company Name,Active,Balance
 577,PRET A MANGER 0105EMPIRE JOINTSTAR INC,PRET A MANGER 0105EMPIRE JOINTSTAR INC,PRET A MANGER 0105EMPIRE JOINTSTAR INC,True,0.0
 922,PRICELINE.COM,PRICELINE.COM,PRICELINE.COM,True,0.0
 645,PRONTOELEVATE GOURMET BRANDS SFO GROUP,PRONTOELEVATE GOURMET BRANDS SFO GROUP,PRONTOELEVATE GOURMET BRANDS SFO GROUP,True,0.0
-734,Paarus Sohi,Paarus Sohi,,True,2598.59
+734,Paarus Sohi,Paarus Sohi,,True,0.0
 245,Paddle.net,Paddle.net,Paddle.net,True,0.0
 450,Panera Bread,Panera Bread,,True,0.0
 738,Paul Coverdale,Paul Coverdale,,True,0.0
@@ -603,7 +605,7 @@ Vendor ID,Display Name,Print on Check Name,Company Name,Active,Balance
 270,Siren,Siren,Siren,True,0.0
 271,Slack,Slack,Slack,True,0.0
 438,Slashbit Inc.,Slashbit Inc.,Slashbit Inc.,True,0.0
-886,Sloan Danenhower,Sloan Danenhower,Sloan Danenhower,True,2817.81
+886,Sloan Danenhower,Sloan Danenhower,Sloan Danenhower,True,0.0
 492,Smith Nomad,Smith Nomad,Smith Nomad,True,0.0
 371,Sofia Perez Wolfes,Sofia Perez Wolfes,,True,0.0
 360,Software & Information Industry Association,Software & Information Industry Association,Software & Information Industry Association,True,0.0

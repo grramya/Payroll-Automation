@@ -1,13 +1,5 @@
-# =============================================================================
-# processing/logger.py — Audit logging for Payroll JE Automation
-# =============================================================================
-"""
-Logs every significant user action to logs/Activity_Log.xlsx.
-
-Captured fields per entry:
-  Timestamp, User, IP Address, Hostname, Action,
-  Input File, Output File, Journal Number, Details, Changes Made
-"""
+"""processing/logger.py — Audit logging for Finance Suite (PostgreSQL-backed)."""
+from __future__ import annotations
 
 import os
 import sys
@@ -16,14 +8,13 @@ import threading
 import traceback
 import pandas as pd
 from pathlib import Path
-from datetime import datetime
-from filelock import FileLock
+from datetime import datetime, timezone
 
-LOG_DIR  = Path(__file__).parent.parent / "logs"
-LOG_FILE = LOG_DIR / "Activity_Log.xlsx"
-LOG_DIR.mkdir(exist_ok=True)  # ensure dir exists before FileLock creates its file
+# Add project root so database.py is importable from this sub-package
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from database import get_db, ActivityLogEntry
 
-# Column order for the log sheet
+# Column order (kept for Excel download compatibility)
 _COLUMNS = [
     "Timestamp", "User", "IP Address", "Hostname",
     "Action", "Input File", "Output File",
@@ -31,12 +22,7 @@ _COLUMNS = [
 ]
 
 
-# ---------------------------------------------------------------------------
-# System info helpers
-# ---------------------------------------------------------------------------
-
 def _get_system_info() -> tuple[str, str, str]:
-    """Return (username, hostname, ip)."""
     username = (
         os.environ.get("USERNAME")
         or os.environ.get("USER")
@@ -54,16 +40,7 @@ def _get_system_info() -> tuple[str, str, str]:
     return username, hostname, ip
 
 
-# ---------------------------------------------------------------------------
-# Diff helper — compare original vs edited JE DataFrames
-# ---------------------------------------------------------------------------
-
 def compute_je_diff(original_df: pd.DataFrame, edited_df: pd.DataFrame) -> str:
-    """
-    Return a human-readable summary of changes between the original generated
-    JE and the (possibly edited) version the user downloaded.
-    Returns "No changes" if both DataFrames are identical.
-    """
     if original_df is None:
         return "Original not available"
 
@@ -71,10 +48,9 @@ def compute_je_diff(original_df: pd.DataFrame, edited_df: pd.DataFrame) -> str:
     orig_len = len(original_df)
     edit_len = len(edited_df)
 
-    # Added rows
     if edit_len > orig_len:
         for i in range(orig_len, edit_len):
-            row = edited_df.iloc[i]
+            row     = edited_df.iloc[i]
             desc    = row.get("Journal Description", "")
             account = row.get("Account", "")
             debit   = row.get("Debit (exc. Tax)", "")
@@ -84,36 +60,27 @@ def compute_je_diff(original_df: pd.DataFrame, edited_df: pd.DataFrame) -> str:
                 f" | Debit: {debit} | Credit: {credit}"
             )
 
-    # Deleted rows
     if edit_len < orig_len:
         for i in range(edit_len, orig_len):
-            row = original_df.iloc[i]
+            row     = original_df.iloc[i]
             desc    = row.get("Journal Description", "")
             account = row.get("Account", "")
             changes.append(f"[Deleted row {i+1}] Desc: '{desc}' | Account: '{account}'")
 
-    # Modified cells in common rows
-    min_len = min(orig_len, edit_len)
+    min_len     = min(orig_len, edit_len)
     shared_cols = [c for c in original_df.columns if c in edited_df.columns]
     for i in range(min_len):
         for col in shared_cols:
             orig_val = original_df.iloc[i][col]
             edit_val = edited_df.iloc[i][col]
-            # Normalise for comparison (NaN, None, empty)
             o_str = "" if pd.isna(orig_val) or orig_val is None else str(orig_val).strip()
             e_str = "" if pd.isna(edit_val) or edit_val is None else str(edit_val).strip()
             if o_str != e_str:
                 desc = original_df.iloc[i].get("Journal Description", f"Row {i+1}")
-                changes.append(
-                    f"[Row {i+1} – '{desc}'] {col}: '{o_str}' → '{e_str}'"
-                )
+                changes.append(f"[Row {i+1} – '{desc}'] {col}: '{o_str}' → '{e_str}'")
 
     return " | ".join(changes) if changes else "No changes"
 
-
-# ---------------------------------------------------------------------------
-# Core logger
-# ---------------------------------------------------------------------------
 
 def log_action(
     action: str,
@@ -123,66 +90,28 @@ def log_action(
     details:        str = "",
     changes:        str = "",
 ) -> None:
-    """
-    Append one row to Activity_Log.xlsx.
-    Thread-safe; silently ignores any write errors so it never
-    interrupts the main application flow.
-    """
+    """Insert one audit row into the activity_log table."""
     try:
-        LOG_DIR.mkdir(exist_ok=True)
         username, hostname, ip = _get_system_info()
-
-        entry = {
-            "Timestamp":      datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "User":           username,
-            "IP Address":     ip,
-            "Hostname":       hostname,
-            "Action":         action,
-            "Input File":     input_file,
-            "Output File":    output_file,
-            "Journal Number": journal_number,
-            "Details":        details,
-            "Changes Made":   changes,
-        }
-
-        _LOCK.acquire()
-        try:
-            if LOG_FILE.exists():
-                existing = pd.read_excel(LOG_FILE, dtype=str)
-                # Ensure all expected columns are present
-                for col in _COLUMNS:
-                    if col not in existing.columns:
-                        existing[col] = ""
-                df = pd.concat(
-                    [existing[_COLUMNS], pd.DataFrame([entry])[_COLUMNS]],
-                    ignore_index=True,
-                )
-            else:
-                df = pd.DataFrame([entry])[_COLUMNS]
-
-            with pd.ExcelWriter(LOG_FILE, engine="openpyxl") as writer:
-                df.to_excel(writer, index=False, sheet_name="Activity Log")
-                ws = writer.sheets["Activity Log"]
-                # Auto-width columns
-                for col_cells in ws.columns:
-                    max_len = max(
-                        (len(str(c.value)) for c in col_cells if c.value), default=10
-                    )
-                    ws.column_dimensions[col_cells[0].column_letter].width = min(max_len + 4, 60)
-        finally:
-            _LOCK.release()
-
+        with get_db() as db:
+            db.add(ActivityLogEntry(
+                timestamp=datetime.now(tz=timezone.utc),
+                username=username,    # Fix 4: column renamed from 'user'
+                ip_address=ip,
+                hostname=hostname,
+                action=action,
+                input_file=input_file,
+                output_file=output_file,
+                journal_number=journal_number,
+                details=details,
+                changes_made=changes,
+            ))
     except Exception as _exc:
-        # Never crash the app, but always surface the failure so operators notice
         print(
             f"[Activity Log] WRITE FAILED: {_exc}\n{traceback.format_exc()}",
             file=sys.stderr,
             flush=True,
         )
-
-
-# Cross-process lock — works across gunicorn workers and background threads
-_LOCK = FileLock(str(LOG_DIR / ".activity_log.lock"), timeout=15)
 
 
 def log_action_async(**kwargs) -> None:

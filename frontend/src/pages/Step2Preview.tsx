@@ -75,7 +75,7 @@ export default function Step2Preview() {
 
   // ── Save edits ────────────────────────────────────────────────────────────
   async function handleSave() {
-    if (!gridRef.current) return
+    if (!sessionId || !gridRef.current) return
     const rows: JERow[] = []
     gridRef.current.api.forEachNode((node) => { if (node.data) rows.push(node.data) })
     setLoading(true, 'Saving edits…')
@@ -125,6 +125,7 @@ export default function Step2Preview() {
 
   // ── Post to QBO ───────────────────────────────────────────────────────────
   async function confirmPostQBO() {
+    if (!sessionId) return
     setShowQboConfirm(false)
     setApiError('')
     setQboResult(null)
@@ -344,7 +345,7 @@ export default function Step2Preview() {
               This will create a <strong>permanent Journal Entry</strong> in your QuickBooks Online company:
             </p>
             <ul style={{ fontSize: 13.5, color: 'var(--text)', paddingLeft: 20, marginBottom: 20, lineHeight: 1.8 }}>
-              <li>Journal: <strong>{jeRows[0]?.['Journal Number'] ?? '—'}</strong></li>
+              <li>Journal: <strong>{String(jeRows[0]?.['Journal Number'] ?? '—')}</strong></li>
               <li>Lines: <strong>{jeRows.length}</strong></li>
             </ul>
             <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>

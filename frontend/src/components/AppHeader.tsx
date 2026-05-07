@@ -4,9 +4,11 @@ import type { User } from '../context/AuthContext'
 interface AppHeaderProps {
   user: User | null
   onLogout: () => void
+  onMobileToggle?: () => void
+  mobileOpen?: boolean
 }
 
-export default function AppHeader({ user, onLogout }: AppHeaderProps) {
+export default function AppHeader({ user, onLogout, onMobileToggle, mobileOpen }: AppHeaderProps) {
   const [open, setOpen] = useState(false)
   const wrapRef   = useRef<HTMLDivElement>(null)
   const btnRef    = useRef<HTMLButtonElement>(null)
@@ -39,6 +41,18 @@ export default function AppHeader({ user, onLogout }: AppHeaderProps) {
     <header className="app-header" role="banner">
       {/* Skip-nav: rendered first so keyboard users reach it immediately */}
       <a href="#main-content" className="skip-nav">Skip to main content</a>
+
+      {/* Hamburger — visible only on mobile via CSS */}
+      <button
+        className={`hamburger-btn${mobileOpen ? ' active' : ''}`}
+        onClick={onMobileToggle}
+        aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+        aria-expanded={mobileOpen}
+      >
+        <span aria-hidden="true" />
+        <span aria-hidden="true" />
+        <span aria-hidden="true" />
+      </button>
 
       <span className="material-icons-round app-header-logo" aria-hidden="true">apps</span>
       <span className="app-header-title">Finance Suite</span>
