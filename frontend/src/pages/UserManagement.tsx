@@ -159,7 +159,7 @@ export default function UserManagement() {
           Add New User
         </div>
         <form onSubmit={handleAdd} style={s.form}>
-          <div style={s.formRow}>
+          <div style={{ ...s.formRow, alignItems: 'flex-start' }}>
             <div style={s.field}>
               <label style={s.label}>Username</label>
               <div style={s.inputWrap}>
@@ -212,44 +212,42 @@ export default function UserManagement() {
 
             <div style={s.field}>
               <label style={s.label}>App Access</label>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center', paddingTop: 10, flexWrap: 'wrap' }}>
-                <label style={s.checkLabel}>
-                  <input type="checkbox" checked={newCanPayroll} onChange={e => setNewCanPayroll(e.target.checked)} style={s.checkbox} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 10 }}>
+                <label style={{ ...s.checkLabel, fontSize: 15 }}>
+                  <input type="checkbox" checked={newCanPayroll} onChange={e => setNewCanPayroll(e.target.checked)} style={{ ...s.checkbox, width: 17, height: 17 }} />
                   Payroll JE
                 </label>
-                <label style={s.checkLabel}>
-                  <input type="checkbox" checked={newCanFpa} onChange={e => setNewCanFpa(e.target.checked)} style={s.checkbox} />
+                <label style={{ ...s.checkLabel, fontSize: 15 }}>
+                  <input type="checkbox" checked={newCanFpa} onChange={e => setNewCanFpa(e.target.checked)} style={{ ...s.checkbox, width: 17, height: 17 }} />
                   FP&amp;A
                 </label>
-                <label style={s.checkLabel}>
-                  <input type="checkbox" checked={newCanPortco} onChange={e => setNewCanPortco(e.target.checked)} style={s.checkbox} />
-                  PortCo
-                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  <label style={{ ...s.checkLabel, fontSize: 15 }}>
+                    <input type="checkbox" checked={newCanPortco} onChange={e => setNewCanPortco(e.target.checked)} style={{ ...s.checkbox, width: 17, height: 17 }} />
+                    PortCo
+                  </label>
+                  <div style={{ ...s.inputWrap, minWidth: 160 }}>
+                    <span className="material-icons-round" style={s.inputIcon}>business_center</span>
+                    <select
+                      style={{ ...s.input, cursor: 'pointer' }}
+                      value={newPortcoDept}
+                      onChange={e => setNewPortcoDept(e.target.value)}
+                      disabled={!newCanPortco}
+                    >
+                      <option value="">All Departments</option>
+                      <option value="proddev">Product Development</option>
+                      <option value="sales">Sales</option>
+                      <option value="marketing">Marketing</option>
+                      <option value="cs">Customer Success</option>
+                      <option value="onboarding">Onboarding</option>
+                      <option value="finance">Finance</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div style={s.field}>
-              <label style={s.label}>PortCo Dept (optional)</label>
-              <div style={s.inputWrap}>
-                <span className="material-icons-round" style={s.inputIcon}>business_center</span>
-                <select
-                  style={{ ...s.input, cursor: 'pointer' }}
-                  value={newPortcoDept}
-                  onChange={e => setNewPortcoDept(e.target.value)}
-                  disabled={!newCanPortco}
-                >
-                  <option value="">All Departments</option>
-                  <option value="proddev">Product Development</option>
-                  <option value="sales">Sales</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="cs">Customer Success</option>
-                  <option value="onboarding">Onboarding</option>
-                  <option value="finance">Finance</option>
-                </select>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignSelf: 'flex-end' }}>
               <button type="submit" style={s.addBtn} disabled={adding}>
                 {adding ? 'Adding…' : 'Add User'}
               </button>

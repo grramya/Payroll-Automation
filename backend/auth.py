@@ -16,7 +16,7 @@ load_dotenv()
 
 from database import (
     get_db, init_db as _db_init,
-    User, RevokedToken, ActivityLogEntry,
+    User, UserPermission, RevokedToken, ActivityLogEntry,
 )
 
 SECRET_KEY                = os.environ.get("PJE_SECRET_KEY", "payroll-je-secret-key-change-in-production")
@@ -51,33 +51,35 @@ def init_db() -> None:
                     flush=True,
                     file=sys.stderr,
                 )
-            db.add(User(
+            admin = User(
                 username="admin",
                 password=pwd_context.hash(admin_pw),
                 role="admin",
-                created=datetime.now(tz=timezone.utc),  # Fix 1: DateTime, not strftime
-                can_access_payroll=True,
-                can_access_fpa=True,
-                can_access_portco=True,
-            ))
+                created=datetime.now(tz=timezone.utc),
+            )
+            db.add(admin)
+            db.flush()   # materialise admin.id before creating permissions
+            for module in ("payroll", "fpa", "portco"):
+                db.add(UserPermission(user_id=admin.id, module=module))
         else:
-            db.query(User).filter(User.role == "admin", User.deleted_at.is_(None)).update({
-                "can_access_payroll": True,
-                "can_access_fpa":     True,
-                "can_access_portco":  True,
-            })
             if admin_pw:
                 db.query(User).filter(
                     User.username == "admin", User.deleted_at.is_(None)
                 ).update({"password": pwd_context.hash(admin_pw)})
+            # Ensure every admin user has all module permissions
+            for admin_user in db.query(User).filter(
+                User.role == "admin", User.deleted_at.is_(None)
+            ).all():
+                for module in ("payroll", "fpa", "portco"):
+                    db.merge(UserPermission(user_id=admin_user.id, module=module))
 
     _purge_expired_revoked_tokens()
-    _purge_old_activity_log()          # Fix 7: prune log entries older than 1 year
+    _purge_old_activity_log()
 
 
 def _purge_expired_revoked_tokens() -> None:
     try:
-        now = datetime.now(tz=timezone.utc)   # Fix 1: proper DateTime comparison
+        now = datetime.now(tz=timezone.utc)
         with get_db() as db:
             db.query(RevokedToken).filter(RevokedToken.expires_at < now).delete()
     except Exception:
@@ -85,7 +87,7 @@ def _purge_expired_revoked_tokens() -> None:
 
 
 def _purge_old_activity_log() -> None:
-    """Fix 7: delete activity_log rows older than 1 year to prevent unbounded growth."""
+    """Delete activity_log rows older than 1 year to prevent unbounded growth."""
     try:
         cutoff = datetime.now(tz=timezone.utc) - timedelta(days=365)
         with get_db() as db:
@@ -103,7 +105,6 @@ def revoke_token(token: str) -> None:
         exp        = payload.get("exp")
         if not jti:
             return
-        # Fix 1: store as DateTime, not as a formatted string
         expires_at = (
             datetime.fromtimestamp(exp, tz=timezone.utc)
             if exp else datetime(2099, 12, 31, tzinfo=timezone.utc)
@@ -157,28 +158,42 @@ def decode_token(token: str) -> dict:
         )
 
 
-# ── User helpers ───────────────────────────────────────────────────────────────
+# ── Permission helpers ─────────────────────────────────────────────────────────
 
-def _row_to_dict(user: User) -> dict:
-    # Fix 5: password hash excluded — never expose it outside verification
+def _load_permissions(db, user_id: int) -> dict:
+    """Return a permissions dict sourced from the user_permissions table."""
+    perms = db.query(UserPermission).filter(UserPermission.user_id == user_id).all()
+    modules = {p.module for p in perms}
+    portco_perm = next((p for p in perms if p.module == "portco"), None)
+    return {
+        "can_access_payroll": "payroll" in modules,
+        "can_access_fpa":     "fpa"     in modules,
+        "can_access_portco":  "portco"  in modules,
+        "portco_dept":        portco_perm.dept if portco_perm else None,
+    }
+
+
+def _row_to_dict(user: User, perms: dict) -> dict:
     return {
         "id":                 user.id,
         "username":           user.username,
         "role":               user.role,
-        "created":            user.created.isoformat() if user.created else None,  # Fix 1: serialize DateTime
-        "can_access_payroll": int(bool(user.can_access_payroll)),
-        "can_access_fpa":     int(bool(user.can_access_fpa)),
-        "can_access_portco":  int(bool(user.can_access_portco)),
-        "portco_dept":        user.portco_dept,
+        "created":            user.created.isoformat() if user.created else None,
+        "can_access_payroll": int(perms.get("can_access_payroll", False)),
+        "can_access_fpa":     int(perms.get("can_access_fpa",     False)),
+        "can_access_portco":  int(perms.get("can_access_portco",  False)),
+        "portco_dept":        perms.get("portco_dept"),
     }
 
+
+# ── User helpers ───────────────────────────────────────────────────────────────
 
 def get_user_password_hash(username: str) -> str | None:
     """Return the stored password hash for a non-deleted user, or None if not found."""
     with get_db() as db:
         user = db.query(User).filter(
             User.username == username,
-            User.deleted_at.is_(None),              # Fix 9: exclude soft-deleted
+            User.deleted_at.is_(None),
         ).first()
         return user.password if user else None
 
@@ -187,32 +202,35 @@ def get_user(username: str) -> dict | None:
     with get_db() as db:
         user = db.query(User).filter(
             User.username == username,
-            User.deleted_at.is_(None),              # Fix 9
+            User.deleted_at.is_(None),
         ).first()
-        return _row_to_dict(user) if user else None
+        if not user:
+            return None
+        perms = _load_permissions(db, user.id)
+        return _row_to_dict(user, perms)
 
 
 def authenticate_user(username: str, password: str) -> dict | None:
     with get_db() as db:
         user = db.query(User).filter(
             User.username == username,
-            User.deleted_at.is_(None),              # Fix 9
+            User.deleted_at.is_(None),
         ).first()
-        # Fix 5: verify directly against the ORM object — never put hash in the dict
         if not user or not verify_password(password, user.password):
             return None
-        return _row_to_dict(user)
+        perms = _load_permissions(db, user.id)
+        return _row_to_dict(user, perms)
 
 
 def list_all_users() -> list[dict]:
     with get_db() as db:
-        return [
-            _row_to_dict(u)
-            for u in db.query(User)
-            .filter(User.deleted_at.is_(None))      # Fix 9
+        users = (
+            db.query(User)
+            .filter(User.deleted_at.is_(None))
             .order_by(User.id)
             .all()
-        ]
+        )
+        return [_row_to_dict(u, _load_permissions(db, u.id)) for u in users]
 
 
 def create_user_record(
@@ -221,20 +239,37 @@ def create_user_record(
     portco_dept: str | None,
 ) -> None:
     with get_db() as db:
-        db.add(User(
-            username=username,
-            password=password_hash,
-            role=role,
-            created=datetime.now(tz=timezone.utc),  # Fix 1
-            can_access_payroll=can_payroll,
-            can_access_fpa=can_fpa,
-            can_access_portco=can_portco,
-            portco_dept=portco_dept,
-        ))
+        # Resurrect a previously soft-deleted user with the same username
+        existing = db.query(User).filter(User.username == username).first()
+        if existing is not None:
+            if existing.deleted_at is None:
+                raise ValueError("Username already exists")
+            existing.password   = password_hash
+            existing.role       = role
+            existing.created    = datetime.now(tz=timezone.utc)
+            existing.deleted_at = None
+            db.flush()
+            user = existing
+        else:
+            user = User(
+                username=username,
+                password=password_hash,
+                role=role,
+                created=datetime.now(tz=timezone.utc),
+            )
+            db.add(user)
+            db.flush()   # materialise user.id
+        db.query(UserPermission).filter(UserPermission.user_id == user.id).delete()
+        if can_payroll:
+            db.add(UserPermission(user_id=user.id, module="payroll"))
+        if can_fpa:
+            db.add(UserPermission(user_id=user.id, module="fpa"))
+        if can_portco:
+            db.add(UserPermission(user_id=user.id, module="portco", dept=portco_dept))
 
 
 def delete_user_record(username: str) -> bool:
-    """Fix 9: soft-delete — set deleted_at instead of removing the row."""
+    """Soft-delete — set deleted_at instead of removing the row."""
     with get_db() as db:
         return db.query(User).filter(
             User.username == username,
@@ -246,7 +281,7 @@ def update_user_password(username: str, new_hash: str) -> bool:
     with get_db() as db:
         return db.query(User).filter(
             User.username == username,
-            User.deleted_at.is_(None),              # Fix 9
+            User.deleted_at.is_(None),
         ).update({"password": new_hash}) > 0
 
 
@@ -256,15 +291,21 @@ def update_user_permissions(
     portco_dept: str | None,
 ) -> bool:
     with get_db() as db:
-        return db.query(User).filter(
+        user = db.query(User).filter(
             User.username == username,
-            User.deleted_at.is_(None),              # Fix 9
-        ).update({
-            "can_access_payroll": can_payroll,
-            "can_access_fpa":     can_fpa,
-            "can_access_portco":  can_portco,
-            "portco_dept":        portco_dept,
-        }) > 0
+            User.deleted_at.is_(None),
+        ).first()
+        if not user:
+            return False
+        # Full replace: delete existing permissions then insert requested ones
+        db.query(UserPermission).filter(UserPermission.user_id == user.id).delete()
+        if can_payroll:
+            db.add(UserPermission(user_id=user.id, module="payroll"))
+        if can_fpa:
+            db.add(UserPermission(user_id=user.id, module="fpa"))
+        if can_portco:
+            db.add(UserPermission(user_id=user.id, module="portco", dept=portco_dept))
+        return True
 
 
 # ── FastAPI dependency ─────────────────────────────────────────────────────────

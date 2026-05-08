@@ -95,13 +95,6 @@ def fetch_company_transactions(
         )
 
     data = resp.json()
-
-    # Save raw response for debugging — delete this block once Amount/Balance are working
-    import json as _json, pathlib as _pl
-    _debug_path = _pl.Path(__file__).parent.parent / "qbo_gl_debug.json"
-    _debug_path.write_text(_json.dumps(data, indent=2), encoding="utf-8")
-    print(f"[qbo_fetch] Saved raw GL response → {_debug_path}", flush=True)
-
     return _parse_gl_report(data)
 
 

@@ -40,32 +40,37 @@ def _get_system_info() -> tuple[str, str, str]:
     return username, hostname, ip
 
 
-def compute_je_diff(original_df: pd.DataFrame, edited_df: pd.DataFrame) -> str:
-    if original_df is None:
-        return "Original not available"
+def compute_je_diff(original_df: pd.DataFrame, edited_df: pd.DataFrame) -> list[dict]:
+    """Return a structured list of change dicts (stored as JSONB, issue #5).
 
-    changes = []
+    Each dict has 'type' ('added' | 'deleted' | 'changed') plus context fields.
+    """
+    if original_df is None:
+        return [{"type": "error", "msg": "Original not available"}]
+
+    changes: list[dict] = []
     orig_len = len(original_df)
     edit_len = len(edited_df)
 
-    if edit_len > orig_len:
-        for i in range(orig_len, edit_len):
-            row     = edited_df.iloc[i]
-            desc    = row.get("Journal Description", "")
-            account = row.get("Account", "")
-            debit   = row.get("Debit (exc. Tax)", "")
-            credit  = row.get("Credit (exc. Tax)", "")
-            changes.append(
-                f"[Added row {i+1}] Desc: '{desc}' | Account: '{account}'"
-                f" | Debit: {debit} | Credit: {credit}"
-            )
+    for i in range(orig_len, edit_len):
+        row  = edited_df.iloc[i]
+        changes.append({
+            "type":    "added",
+            "row":     i + 1,
+            "desc":    str(row.get("Journal Description", "")),
+            "account": str(row.get("Account", "")),
+            "debit":   str(row.get("Debit (exc. Tax)", "")),
+            "credit":  str(row.get("Credit (exc. Tax)", "")),
+        })
 
-    if edit_len < orig_len:
-        for i in range(edit_len, orig_len):
-            row     = original_df.iloc[i]
-            desc    = row.get("Journal Description", "")
-            account = row.get("Account", "")
-            changes.append(f"[Deleted row {i+1}] Desc: '{desc}' | Account: '{account}'")
+    for i in range(edit_len, orig_len):
+        row = original_df.iloc[i]
+        changes.append({
+            "type":    "deleted",
+            "row":     i + 1,
+            "desc":    str(row.get("Journal Description", "")),
+            "account": str(row.get("Account", "")),
+        })
 
     min_len     = min(orig_len, edit_len)
     shared_cols = [c for c in original_df.columns if c in edited_df.columns]
@@ -76,10 +81,16 @@ def compute_je_diff(original_df: pd.DataFrame, edited_df: pd.DataFrame) -> str:
             o_str = "" if pd.isna(orig_val) or orig_val is None else str(orig_val).strip()
             e_str = "" if pd.isna(edit_val) or edit_val is None else str(edit_val).strip()
             if o_str != e_str:
-                desc = original_df.iloc[i].get("Journal Description", f"Row {i+1}")
-                changes.append(f"[Row {i+1} – '{desc}'] {col}: '{o_str}' → '{e_str}'")
+                changes.append({
+                    "type":  "changed",
+                    "row":   i + 1,
+                    "desc":  str(original_df.iloc[i].get("Journal Description", f"Row {i + 1}")),
+                    "field": col,
+                    "from":  o_str,
+                    "to":    e_str,
+                })
 
-    return " | ".join(changes) if changes else "No changes"
+    return changes
 
 
 def log_action(
@@ -88,7 +99,7 @@ def log_action(
     output_file:    str = "",
     journal_number: str = "",
     details:        str = "",
-    changes:        str = "",
+    changes:        list[dict] | None = None,   # JSONB list — replaces pipe string (issue #5)
 ) -> None:
     """Insert one audit row into the activity_log table."""
     try:
@@ -96,7 +107,7 @@ def log_action(
         with get_db() as db:
             db.add(ActivityLogEntry(
                 timestamp=datetime.now(tz=timezone.utc),
-                username=username,    # Fix 4: column renamed from 'user'
+                username=username,
                 ip_address=ip,
                 hostname=hostname,
                 action=action,
@@ -104,7 +115,7 @@ def log_action(
                 output_file=output_file,
                 journal_number=journal_number,
                 details=details,
-                changes_made=changes,
+                changes_made=changes if changes else None,
             ))
     except Exception as _exc:
         print(

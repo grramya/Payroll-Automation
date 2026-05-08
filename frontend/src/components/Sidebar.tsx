@@ -287,6 +287,14 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                     <span style={styles.navLabel}>Generate</span>
                   </NavLink>
 
+                  <NavLink
+                    to="/fpa/mapping"
+                    style={({ isActive }) => ({ ...styles.navItem, ...styles.nestedItem, ...(isActive ? styles.navItemActive : {}) })}
+                  >
+                    <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">edit_note</span>
+                    <span style={styles.navLabel}>Edit Mapping</span>
+                  </NavLink>
+
                   {FPA_RESULT_ITEMS.map(({ path, icon, label }) => {
                     const locked = !fpaResult
                     if (locked) {

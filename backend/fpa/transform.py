@@ -1,31 +1,38 @@
 import io
 import re
+import threading
 import pandas as pd
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
-from .mapping_data import ACCOUNT_MAP, DEPT_MAP
 from .base_bs import run_base_bs, get_bs_preview
 from .bs_individual import run_bs_individual, get_bs_individual_preview
 from .pl_individual import run_pl_individual, get_pl_individual_preview
 from .comparative_pl import run_comparative_pl, get_comparative_pl_preview
 from .comparative_pl_bd import run_comparative_pl_bd, get_comparative_pl_bd_preview
 
-# ── Alias: Acme Insurance variant → Concertiv Insurance entry ────────────────
 _ACME = "130080 Intercompany Receivable - due from Acme Insurance"
 _CONC = "130080 Intercompany Receivable - due from Concertiv Insurance"
-if _ACME not in ACCOUNT_MAP and _CONC in ACCOUNT_MAP:
-    ACCOUNT_MAP[_ACME] = ACCOUNT_MAP[_CONC]
-for dept_key in list(DEPT_MAP.keys()):
-    if dept_key[0] == _CONC:
-        new_key = (_ACME, dept_key[1])
-        if new_key not in DEPT_MAP:
-            DEPT_MAP[new_key] = DEPT_MAP[dept_key]
 
 _NUM_PREFIX   = re.compile(r"^\d+\s+")
 _NUM_CAPTURE  = re.compile(r"^(\d+)\s+")
+
+# ── Reloadable mapping state ──────────────────────────────────────────────────
+# All module-level dicts are populated by _load_mapping_state() which is called
+# once at import time and can be re-triggered via reload_mappings().
+
+ACCOUNT_MAP:    dict = {}
+DEPT_MAP:       dict = {}
+_FIN_MAP:       dict = {}
+_MAIN_MAP:      dict = {}
+_SEC_MAP:       dict = {}
+_CLASS_MAP:     dict = {}
+_DEPT_BY_ACCT:  dict = defaultdict(list)
+
+_mapping_lock  = threading.Lock()
+_state_loaded  = False
 
 def _account_aliases(name: str) -> list[str]:
     """Return lookup candidates for an account name.
@@ -74,18 +81,101 @@ def _build_lookup(field: str) -> dict:
                 result[alias] = val
     return result
 
-# Pre-flatten ACCOUNT_MAP: one dict per field avoids double .get() on every row
-_FIN_MAP   = _build_lookup("Financial Statement")
-_MAIN_MAP  = _build_lookup("Main Grouping")
-_SEC_MAP   = _build_lookup("Secondary Grouping")
-_CLASS_MAP = _build_lookup("Classification (Line Item)")
 
-# Pre-build reverse index: account → [(dept, vals)] so dept fallback is O(matches)
-# instead of O(entire DEPT_MAP) per row
-_DEPT_BY_ACCT: dict = defaultdict(list)
-for (_d_acct, _d_dept), _d_vals in DEPT_MAP.items():
-    for _alias in _account_aliases(_d_acct):
-        _DEPT_BY_ACCT[_alias].append((_d_dept, _d_vals))
+def _rebuild_computed_state() -> None:
+    """Rebuild all pre-flattened lookup dicts from the current ACCOUNT_MAP / DEPT_MAP."""
+    global _FIN_MAP, _MAIN_MAP, _SEC_MAP, _CLASS_MAP, _DEPT_BY_ACCT
+
+    _FIN_MAP   = _build_lookup("Financial Statement")
+    _MAIN_MAP  = _build_lookup("Main Grouping")
+    _SEC_MAP   = _build_lookup("Secondary Grouping")
+    _CLASS_MAP = _build_lookup("Classification (Line Item)")
+
+    new_dept: dict = defaultdict(list)
+    for (_d_acct, _d_dept), _d_vals in DEPT_MAP.items():
+        for _alias in _account_aliases(_d_acct):
+            new_dept[_alias].append((_d_dept, _d_vals))
+    _DEPT_BY_ACCT = new_dept
+
+
+def _load_mapping_state() -> None:
+    """Populate ACCOUNT_MAP / DEPT_MAP from DB, falling back to mapping_data.py."""
+    global ACCOUNT_MAP, DEPT_MAP, _state_loaded
+
+    account_map: dict = {}
+    dept_map:    dict = {}
+
+    # Prefer DB rows (queryable + updatable without a redeploy)
+    try:
+        import sys, os
+        sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+        from database import FpaAccountMap, FpaDeptMap, get_db
+        with get_db() as db:
+            acct_rows = db.query(FpaAccountMap).all()
+            if acct_rows:
+                account_map = {
+                    r.account_name: {
+                        "Financial Statement":       r.financial_statement,
+                        "Main Grouping":             r.main_grouping,
+                        "Secondary Grouping":        r.secondary_grouping,
+                        "Classification (Line Item)": r.classification,
+                    }
+                    for r in acct_rows
+                }
+                dept_map = {
+                    (r.account_name, r.dept_class): {
+                        "Classification 2":       r.classification_2,
+                        "Classification 3":       r.classification_3,
+                        "Department (Class)":     r.department,
+                        "Department Group (BD)":  r.dept_group_bd,
+                    }
+                    for r in db.query(FpaDeptMap).all()
+                }
+    except Exception:
+        pass
+
+    # Fall back to the bundled Python module if either table is empty or unavailable
+    if not account_map or not dept_map:
+        from .mapping_data import ACCOUNT_MAP as _AM, DEPT_MAP as _DM
+        account_map = dict(_AM)
+        dept_map    = dict(_DM)
+
+    # Apply Acme ↔ Concertiv alias so both name variants map correctly
+    if _ACME not in account_map and _CONC in account_map:
+        account_map[_ACME] = account_map[_CONC]
+    for dept_key in list(dept_map.keys()):
+        if dept_key[0] == _CONC:
+            new_key = (_ACME, dept_key[1])
+            if new_key not in dept_map:
+                dept_map[new_key] = dept_map[dept_key]
+
+    ACCOUNT_MAP   = account_map
+    DEPT_MAP      = dept_map
+    _state_loaded = True
+    _rebuild_computed_state()
+
+
+def reload_mappings() -> None:
+    """Reload mapping state from DB (or fallback). Called by the auto-fetch loop
+    after mapping_data.py changes or after a manual DB update."""
+    global _state_loaded
+    with _mapping_lock:
+        _state_loaded = False
+        _load_mapping_state()
+
+
+def _ensure_state() -> None:
+    if not _state_loaded:
+        with _mapping_lock:
+            if not _state_loaded:
+                _load_mapping_state()
+
+
+# Load on import — non-blocking; transforms call _ensure_state() as a guard.
+try:
+    _load_mapping_state()
+except Exception:
+    pass
 
 # ── Class (QuickBooks hierarchy) → Department (Class) ────────────────────────
 CLASS_TO_DEPT = {
@@ -164,6 +254,7 @@ def run_transform_from_df(df: pd.DataFrame, company_name: str = "Acme Corp, Inc.
     than a QuickBooks Excel export.  The DataFrame must have columns matching
     the QB Transaction Detail report: Account, Date, Amount, Class, etc.
     """
+    _ensure_state()
     df = df.copy()
     df.dropna(how="all", inplace=True)
     df.reset_index(drop=True, inplace=True)
@@ -171,6 +262,7 @@ def run_transform_from_df(df: pd.DataFrame, company_name: str = "Acme Corp, Inc.
 
 
 def run_transform(input_bytes: bytes, company_name: str = "Acme Corp, Inc.") -> tuple:
+    _ensure_state()
     # QuickBooks exports often include metadata rows (company name, report
     # title, date range) before the real column headers.  Read without a
     # header first, find the row that contains "Account", then re-read using

@@ -29,6 +29,7 @@ import FpaBSIndividual    from './pages/fpa/BSIndividualPage'
 import FpaPLIndividual    from './pages/fpa/PLIndividualPage'
 import FpaComparativePL   from './pages/fpa/ComparativePLPage'
 import FpaComparativePLBD from './pages/fpa/ComparativePLBDPage'
+import FpaMapping        from './pages/fpa/MappingPage'
 
 // PortCo Reporting — single SPA entry point (tabs handled internally)
 import PortcoApp from './pages/portco/index'
@@ -87,6 +88,7 @@ function ProtectedApp() {
                 <Route path="/fpa/pl-individual"    element={<FpaRoute user={user}><FpaPLIndividual /></FpaRoute>} />
                 <Route path="/fpa/comparative-pl"   element={<FpaRoute user={user}><FpaComparativePL /></FpaRoute>} />
                 <Route path="/fpa/comparative-pl-bd" element={<FpaRoute user={user}><FpaComparativePLBD /></FpaRoute>} />
+                <Route path="/fpa/mapping"          element={<FpaRoute user={user}><FpaMapping /></FpaRoute>} />
 
                 {/* PortCo Reporting — single route, tabs are internal */}
                 <Route path="/portco/*" element={<PortcoRoute user={user}><PortcoApp /></PortcoRoute>} />

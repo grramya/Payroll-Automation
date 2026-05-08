@@ -34,8 +34,8 @@ from auth import (
     get_user_password_hash,                      # Fix 5: for password verification without exposing hash
 )
 from database import (
-    get_db, JeSession, PortcoDataStore, QboOverrideItem, ActivityLogEntry,
-    JeSessionPayloadSchema, PortcoDataSchema, QboOverrideRowSchema,
+    get_db, JeSession, PortcoMetric, QboOverrideItem, ActivityLogEntry,
+    JeSessionPayloadSchema, QboOverrideRowSchema,
 )
 
 import sys as _sys
@@ -115,8 +115,6 @@ app.add_middleware(CSRFMiddleware)
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 _MAP_PATH    = BASE_DIR / "Mapping" / "Mapping.xlsx"
-_CACHE_DIR   = BASE_DIR / "cache"
-_CACHE_FILE  = _CACHE_DIR / "qbo_cache.json"
 _SESSION_DIR = BASE_DIR / "sessions"
 _SESSION_DIR.mkdir(exist_ok=True)
 
@@ -151,15 +149,26 @@ _SKIP_COLS = {
 
 _sessions: dict[str, dict] = {}  # in-memory cache (populated from DB on startup)
 
+_MAX_SESSION_JSON_MB = 10  # warn when a single session payload exceeds this size (issue #3)
+
 
 def _session_to_json(s: dict) -> dict:
     """Convert a session dict (with DataFrames/bytes) to a JSON-serialisable form."""
-    out = {k: v for k, v in s.items() if k not in ("je_df", "dept_summary", "pf_bytes")}
+    # owner_id is stored as a DB column, not in the JSONB payload
+    out = {k: v for k, v in s.items() if k not in ("je_df", "dept_summary", "pf_bytes", "owner_id")}
     if "je_df" in s and s["je_df"] is not None:
         out["je_df_records"] = s["je_df"].to_dict(orient="records")
         out["je_df_columns"] = list(s["je_df"].columns)
     if "dept_summary" in s and s["dept_summary"] is not None:
         out["dept_summary_records"] = s["dept_summary"].to_dict(orient="records")
+    # Size cap warning — session is still saved; this surfaces runaway payloads (issue #3)
+    size_mb = len(json.dumps(out).encode()) / (1024 * 1024)
+    if size_mb > _MAX_SESSION_JSON_MB:
+        print(
+            f"[Session] WARNING: payload is {size_mb:.1f} MB "
+            f"(threshold {_MAX_SESSION_JSON_MB} MB) — consider purging old sessions",
+            file=sys.stderr, flush=True,
+        )
     return out
 
 
@@ -183,7 +192,7 @@ def _persist_session(session_id: str, s: dict) -> None:
         JeSessionPayloadSchema(**payload)
         pf = s.get("pf_bytes")
         if pf:
-            _save_pf_bytes(session_id, pf)  # Fix 1: write to filesystem, not BYTEA
+            _save_pf_bytes(session_id, pf)
         with get_db() as db:
             row = db.query(JeSession).filter(JeSession.id == session_id).first()
             if row:
@@ -192,7 +201,7 @@ def _persist_session(session_id: str, s: dict) -> None:
             else:
                 db.add(JeSession(
                     id=session_id,
-                    owner=s.get("owner", ""),
+                    owner_id=s.get("owner_id"),   # Integer FK → users.id (issue #1)
                     payload=payload,
                     saved_at=datetime.now(tz=timezone.utc),
                 ))
@@ -209,13 +218,13 @@ def _load_sessions_from_db() -> None:
             rows = db.query(JeSession).filter(JeSession.saved_at >= cutoff).all()
             for row in rows:
                 s = _session_from_json(row.payload)
-                # Fix 1: load pf_bytes from filesystem; fall back to old b64 payload
-                # for sessions written before the BYTEA column was removed
                 pf = _load_pf_bytes(row.id)
                 if pf:
                     s["pf_bytes"] = pf
                 elif "pf_bytes_b64" in (row.payload or {}):
                     s["pf_bytes"] = base64.b64decode(row.payload["pf_bytes_b64"])
+                # owner_id sourced from the DB column, not the JSONB payload (issue #1)
+                s["owner_id"] = row.owner_id
                 _sessions[row.id] = s
             # Purge expired rows and their on-disk files
             expired = db.query(JeSession).filter(JeSession.saved_at < cutoff).all()
@@ -252,9 +261,9 @@ def _get_session(session_id: str, current_user: dict | None = None) -> dict:
     if session_id not in _sessions:
         raise HTTPException(status_code=404, detail="Session not found or expired")
     s = _sessions[session_id]
-    # Enforce ownership — admins may access any session
+    # Enforce ownership via user ID — admins may access any session (issue #1)
     if current_user and current_user.get("role") != "admin":
-        if s.get("owner") != current_user["username"]:
+        if s.get("owner_id") != current_user["id"]:
             raise HTTPException(status_code=403, detail="Access denied: this session belongs to another user")
     return s
 
@@ -361,12 +370,93 @@ def _safe_append_input(file_bytes: bytes, journal_number: str) -> None:
         pass
 
 
-# ── QBO background cache ───────────────────────────────────────────────────────
+# ── QBO / FPA cache helpers ───────────────────────────────────────────────────
 
-def _save_qbo_cache(data: dict) -> None:
-    import json as _json
-    _CACHE_DIR.mkdir(exist_ok=True)
-    _CACHE_FILE.write_text(_json.dumps(data), encoding="utf-8")
+def _save_fpa_cache(data: dict) -> None:
+    """Persist the FPA report cache to DB (fpa_cache singleton row).
+
+    `data` is the same dict the SSE endpoint emits as the 'done' event:
+    base64-encoded Excel blobs are decoded to raw bytes before storage so
+    PostgreSQL stores bytea instead of multi-MB JSONB text.
+    """
+    import base64 as _b64
+    from datetime import datetime as _dt, timezone
+    from database import FpaCache, get_db
+
+    def _decode(key: str) -> bytes | None:
+        val = data.get(key)
+        return _b64.b64decode(val) if val else None
+
+    raw_at = data.get("cached_at")
+    if raw_at:
+        cached_at = _dt.fromisoformat(raw_at)
+        if cached_at.tzinfo is None:
+            cached_at = cached_at.replace(tzinfo=timezone.utc)
+    else:
+        cached_at = _dt.now(timezone.utc)
+
+    with get_db() as db:
+        row = db.query(FpaCache).filter_by(id=1).first()
+        if row is None:
+            row = FpaCache(id=1)
+            db.add(row)
+        row.company_name           = data.get("company_name")
+        row.cached_at              = cached_at
+        row.summary                = data.get("summary")
+        row.preview                = data.get("preview")
+        row.bs_preview             = data.get("bs_preview")
+        row.bsi_preview            = data.get("bsi_preview")
+        row.pl_preview             = data.get("pl_preview")
+        row.comp_pl_preview        = data.get("comp_pl_preview")
+        row.comp_pl_bd_preview     = data.get("comp_pl_bd_preview")
+        row.excel_bytes            = _decode("excel_b64")
+        row.bs_excel_bytes         = _decode("bs_excel_b64")
+        row.bsi_excel_bytes        = _decode("bsi_excel_b64")
+        row.pl_excel_bytes         = _decode("pl_excel_b64")
+        row.comp_pl_excel_bytes    = _decode("comp_pl_excel_b64")
+        row.comp_pl_bd_excel_bytes = _decode("comp_pl_bd_excel_b64")
+
+
+def _load_fpa_cache() -> dict | None:
+    """Read the FPA cache row and reconstruct the frontend-compatible dict.
+
+    Returns None if no cache row exists yet.
+    """
+    import base64 as _b64
+    from database import FpaCache, get_db
+
+    def _enc(b: bytes | None) -> str | None:
+        return _b64.b64encode(b).decode() if b else None
+
+    with get_db() as db:
+        row = db.query(FpaCache).filter_by(id=1).first()
+        if row is None:
+            return None
+        # Build dict inside the session — avoids DetachedInstanceError after
+        # db.commit() expires ORM objects (expire_on_commit=True default).
+        return {
+            "cached_at":            row.cached_at.isoformat() if row.cached_at else None,
+            "company_name":         row.company_name,
+            "summary":              row.summary,
+            "preview":              row.preview,
+            "excel_b64":            _enc(row.excel_bytes),
+            "bs_excel_b64":         _enc(row.bs_excel_bytes),
+            "bs_preview":           row.bs_preview,
+            "bsi_excel_b64":        _enc(row.bsi_excel_bytes),
+            "bsi_preview":          row.bsi_preview,
+            "pl_excel_b64":         _enc(row.pl_excel_bytes),
+            "pl_preview":           row.pl_preview,
+            "comp_pl_excel_b64":    _enc(row.comp_pl_excel_bytes),
+            "comp_pl_preview":      row.comp_pl_preview,
+            "comp_pl_bd_excel_b64": _enc(row.comp_pl_bd_excel_bytes),
+            "comp_pl_bd_preview":   row.comp_pl_bd_preview,
+        }
+
+
+def _fpa_cache_exists() -> bool:
+    from database import FpaCache, get_db
+    with get_db() as db:
+        return db.query(FpaCache.id).filter_by(id=1).first() is not None
 
 
 def _refresh_qbo_cache() -> tuple[bool, str]:
@@ -377,7 +467,7 @@ def _refresh_qbo_cache() -> tuple[bool, str]:
     """
     import base64 as _b64
     import pandas as _pd
-    from datetime import datetime as _dt, date as _date
+    from datetime import datetime as _dt, date as _date, timezone as _tz
 
     company_name   = os.environ.get("QBO_AUTO_FETCH_COMPANY_NAME",    "Concertiv")
     include_broker = os.environ.get("QBO_AUTO_FETCH_INCLUDE_BROKER",  "false").lower() == "true"
@@ -414,8 +504,8 @@ def _refresh_qbo_cache() -> tuple[bool, str]:
             comp_pl_bd_bytes, comp_pl_bd_preview,
         ) = run_transform_from_df(combined, company_name)
 
-        _save_qbo_cache({
-            "cached_at":            _dt.now().isoformat(),
+        _save_fpa_cache({
+            "cached_at":            _dt.now(_tz.utc).isoformat(),
             "company_name":         company_name,
             "summary":              summary,
             "preview":              preview,
@@ -440,18 +530,23 @@ def _refresh_qbo_cache() -> tuple[bool, str]:
 
 def _qbo_auto_fetch_loop() -> None:
     """Daemon thread:
-    • First startup: fetch immediately (30 s delay) if no cache exists yet.
-    • Mapping watch: rebuilds the cache automatically within ~60 s of any
-      change to fpa/mapping_data.py — no manual refresh needed.
-    • Daily run: full re-fetch at QBO_AUTO_FETCH_TIME (default 10:00 local).
+    • First startup: fetch immediately (30 s delay) if no DB cache row exists.
+    • Mapping watch: if fpa/mapping_data.py changes on disk, re-seeds the DB
+      mapping tables, reloads in-memory lookups, then rebuilds the FPA cache.
+    • Daily run: full re-fetch at QBO_AUTO_FETCH_TIME (default 11:30 local).
     """
     from datetime import datetime as _dt
 
     _mapping_py = BASE_DIR / "fpa" / "mapping_data.py"
 
-    if not _CACHE_FILE.exists():
+    import sys as _sys
+    if _fpa_cache_exists():
+        print("[qbo-auto-fetch] cache found in DB — skipping startup fetch", file=_sys.stderr, flush=True)
+    else:
+        print("[qbo-auto-fetch] no cache found — fetching in 30 s…", file=_sys.stderr, flush=True)
         time.sleep(30)
-        _refresh_qbo_cache()
+        ok, msg = _refresh_qbo_cache()
+        print(f"[qbo-auto-fetch] startup fetch: ok={ok} — {msg}", file=_sys.stderr, flush=True)
 
     fetch_time_str = os.environ.get("QBO_AUTO_FETCH_TIME", "11:30")
     hour, minute   = map(int, fetch_time_str.split(":"))
@@ -463,11 +558,19 @@ def _qbo_auto_fetch_loop() -> None:
         time.sleep(60)
         now = _dt.now()
 
-        # ── Mapping file changed? rebuild cache immediately ───────────────────
+        # ── Mapping file changed? reseed DB, reload in-memory state, rebuild cache
         if _mapping_py.exists():
             mtime = _mapping_py.stat().st_mtime
             if mtime != last_mtime:
                 last_mtime = mtime
+                try:
+                    from database import seed_fpa_mappings, get_db
+                    from fpa.transform import reload_mappings
+                    with get_db() as db:
+                        seed_fpa_mappings(db, force=True)
+                    reload_mappings()
+                except Exception:
+                    pass
                 _refresh_qbo_cache()
                 continue
 
@@ -989,9 +1092,9 @@ async def fpa_qbo_fetch(
 
             yield _evt("packaging", "Packaging reports…")
 
-            from datetime import datetime as _dt2
+            from datetime import datetime as _dt2, timezone as _tz2
             result = {
-                "cached_at":            _dt2.now().isoformat(),
+                "cached_at":            _dt2.now(_tz2.utc).isoformat(),
                 "summary":              summary,
                 "preview":              preview,
                 "excel_b64":            _b64.b64encode(excel_bytes).decode(),
@@ -1007,11 +1110,12 @@ async def fpa_qbo_fetch(
                 "comp_pl_bd_preview":   comp_pl_bd_preview,
             }
 
-            # Persist so next app load serves this data from cache
+            # Persist to DB so the cache survives server restarts and redeploys
             try:
-                _save_qbo_cache({"company_name": company_name, **result})
-            except Exception:
-                pass
+                _save_fpa_cache({"company_name": company_name, **result})
+            except Exception as _save_exc:
+                import sys, traceback as _tb2
+                print(f"[fpa-cache] save failed: {_save_exc}\n{_tb2.format_exc()}", file=sys.stderr, flush=True)
 
             yield _evt("done", "All reports ready.", data=result)
 
@@ -1027,26 +1131,23 @@ async def fpa_qbo_fetch(
 
 @app.get("/api/fpa/qbo-cache/status")
 async def fpa_qbo_cache_status(_: dict = Depends(get_current_user)):
-    """Return cache metadata without the heavy b64 blobs (used for 'Last refreshed' UI)."""
-    if not _CACHE_FILE.exists():
-        return {"cached": False}
-    import json as _json
-    from datetime import datetime as _dt
+    """Return cache metadata without Excel blobs (used for 'Last refreshed' UI)."""
+    from datetime import datetime as _dt, timezone
+    from database import FpaCache, get_db
     try:
-        data      = _json.loads(_CACHE_FILE.read_text(encoding="utf-8"))
-        cached_at = data.get("cached_at")
-        age_min   = None
-        if cached_at:
-            age_min = round((_dt.now() - _dt.fromisoformat(cached_at)).total_seconds() / 60, 1)
-        _STALE_AFTER_HOURS = 24
-        is_stale = (age_min is not None) and (age_min > _STALE_AFTER_HOURS * 60)
+        with get_db() as db:
+            row = db.query(FpaCache).filter_by(id=1).first()
+        if row is None:
+            return {"cached": False}
+        now     = _dt.now(timezone.utc)
+        age_min = round((now - row.cached_at).total_seconds() / 60, 1)
         return {
             "cached":       True,
-            "cached_at":    cached_at,
+            "cached_at":    row.cached_at.isoformat(),
             "age_minutes":  age_min,
-            "is_stale":     is_stale,
-            "company_name": data.get("company_name"),
-            "total_rows":   data.get("summary", {}).get("total_rows"),
+            "is_stale":     age_min > 24 * 60,
+            "company_name": row.company_name,
+            "total_rows":   (row.summary or {}).get("total_rows"),
         }
     except Exception:
         return {"cached": False}
@@ -1055,13 +1156,100 @@ async def fpa_qbo_cache_status(_: dict = Depends(get_current_user)):
 @app.get("/api/fpa/qbo-cache")
 async def fpa_qbo_cache(_: dict = Depends(get_current_user)):
     """Return the full cached FP&A result (same shape as the SSE 'done' event data)."""
-    if not _CACHE_FILE.exists():
-        raise HTTPException(status_code=404, detail="No cache available yet — QBO fetch has not run")
-    import json as _json
     try:
-        return _json.loads(_CACHE_FILE.read_text(encoding="utf-8"))
+        data = _load_fpa_cache()
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
+    if data is None:
+        raise HTTPException(status_code=404, detail="No cache available yet — QBO fetch has not run")
+    return data
+
+
+# ── FP&A Mapping CRUD ─────────────────────────────────────────────────────────
+
+@app.get("/api/fpa/mapping/accounts")
+async def fpa_get_account_map(_: dict = Depends(_require_fpa)):
+    from database import FpaAccountMap, get_db
+    with get_db() as db:
+        rows = db.query(FpaAccountMap).order_by(FpaAccountMap.account_name).all()
+        return [
+            {
+                "account_name":        r.account_name,
+                "financial_statement": r.financial_statement,
+                "main_grouping":       r.main_grouping,
+                "secondary_grouping":  r.secondary_grouping,
+                "classification":      r.classification,
+            }
+            for r in rows
+        ]
+
+
+@app.put("/api/fpa/mapping/accounts")
+async def fpa_save_account_map(rows: list[dict] = Body(...), _: dict = Depends(_require_fpa)):
+    from database import FpaAccountMap, get_db
+    with get_db() as db:
+        db.query(FpaAccountMap).delete()
+        db.flush()
+        db.bulk_save_objects([
+            FpaAccountMap(
+                account_name=r.get("account_name", ""),
+                financial_statement=r.get("financial_statement"),
+                main_grouping=r.get("main_grouping"),
+                secondary_grouping=r.get("secondary_grouping"),
+                classification=r.get("classification"),
+            )
+            for r in rows if r.get("account_name")
+        ])
+    try:
+        from fpa.transform import reload_mappings
+        reload_mappings()
+    except Exception:
+        pass
+    return {"ok": True}
+
+
+@app.get("/api/fpa/mapping/dept")
+async def fpa_get_dept_map(_: dict = Depends(_require_fpa)):
+    from database import FpaDeptMap, get_db
+    with get_db() as db:
+        rows = db.query(FpaDeptMap).order_by(FpaDeptMap.account_name, FpaDeptMap.dept_class).all()
+        return [
+            {
+                "id":               r.id,
+                "account_name":     r.account_name,
+                "dept_class":       r.dept_class,
+                "classification_2": r.classification_2,
+                "classification_3": r.classification_3,
+                "department":       r.department,
+                "dept_group_bd":    r.dept_group_bd,
+            }
+            for r in rows
+        ]
+
+
+@app.put("/api/fpa/mapping/dept")
+async def fpa_save_dept_map(rows: list[dict] = Body(...), _: dict = Depends(_require_fpa)):
+    from database import FpaDeptMap, get_db
+    with get_db() as db:
+        db.query(FpaDeptMap).delete()
+        db.flush()
+        db.bulk_save_objects([
+            FpaDeptMap(
+                account_name=r.get("account_name", ""),
+                dept_class=r.get("dept_class") or None,
+                classification_2=r.get("classification_2"),
+                classification_3=r.get("classification_3"),
+                department=r.get("department"),
+                dept_group_bd=r.get("dept_group_bd"),
+            )
+            for r in rows if r.get("account_name")
+        ])
+    try:
+        from fpa.transform import reload_mappings
+        reload_mappings()
+    except Exception:
+        pass
+    return {"ok": True}
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1108,25 +1296,52 @@ async def portco_load_sample(_: dict = Depends(_require_portco)):
 
 @app.get("/api/portco/data")
 async def portco_get_data(_: dict = Depends(_require_portco)):
-    """Return the shared actuals + budget dataset for all PortCo users."""
+    """Return the shared actuals + budget dataset reconstructed from normalized rows (issue #2)."""
     with get_db() as db:
-        record = db.query(PortcoDataStore).first()
-        if record:
-            return record.data
-    return {"actuals": {}, "budget": {}, "year": datetime.now(tz=timezone.utc).year}
+        rows = db.query(PortcoMetric).all()
+
+    actuals: dict[str, dict[str, float]] = {}
+    budget:  dict[str, dict[str, float]] = {}
+    for row in rows:
+        target = actuals if row.sheet == "actuals" else budget
+        if row.metric_id not in target:
+            target[row.metric_id] = {}
+        if row.value is not None:
+            target[row.metric_id][row.month] = row.value
+
+    year = datetime.now(tz=timezone.utc).year
+    if actuals or budget:
+        all_months = [m for d in (*actuals.values(), *budget.values()) for m in d]
+        if all_months:
+            year = max(int(m[:4]) for m in all_months)
+
+    return {"actuals": actuals, "budget": budget, "year": year}
 
 
 @app.put("/api/portco/data")
 async def portco_save_data(body: dict = Body(...), _: dict = Depends(_require_portco)):
-    """Persist the shared actuals + budget dataset."""
-    # Fix 4: validate JSONB structure before writing
-    try:
-        PortcoDataSchema(**body)
-    except Exception as exc:
-        raise HTTPException(status_code=422, detail=f"Invalid portco data shape: {exc}")
-    # Fix 3: db.merge with id=1 enforces singleton — INSERT on first call, UPDATE thereafter
+    """Persist actuals + budget as individual metric rows (issue #2)."""
+    actuals = body.get("actuals")
+    budget  = body.get("budget")
+    if not isinstance(actuals, dict) or not isinstance(budget, dict):
+        raise HTTPException(status_code=422, detail="actuals and budget must be objects")
+
+    uploaded_at = datetime.now(tz=timezone.utc)
     with get_db() as db:
-        db.merge(PortcoDataStore(id=1, data=body, updated_at=datetime.now(tz=timezone.utc)))
+        db.query(PortcoMetric).delete()
+        for sheet_name, sheet_data in (("actuals", actuals), ("budget", budget)):
+            for metric_id, months in sheet_data.items():
+                if not isinstance(months, dict):
+                    continue
+                for month, value in months.items():
+                    if isinstance(value, (int, float)):
+                        db.add(PortcoMetric(
+                            metric_id=str(metric_id),
+                            month=str(month),
+                            sheet=sheet_name,
+                            value=float(value),
+                            uploaded_at=uploaded_at,
+                        ))
     return {"ok": True}
 
 
@@ -1188,7 +1403,7 @@ async def generate_je(
 
     session_id = str(uuid.uuid4())
     _sessions[session_id] = {
-        "owner": current_user["username"],
+        "owner_id": current_user["id"],   # Integer FK — stable across username changes (issue #1)
         "je_df": je_df,
         "je_filename": je_filename,
         "summary": summary,
@@ -1671,6 +1886,33 @@ async def sync_qbo_classes(_: dict = _auth):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def _fmt_changes(v) -> str:
+    """Format the JSONB changes_made list into a human-readable pipe-separated string."""
+    if not v:
+        return ""
+    if isinstance(v, list):
+        parts = []
+        for c in v:
+            t = c.get("type", "changed")
+            if t == "added":
+                parts.append(
+                    f"[Added row {c.get('row','?')}] "
+                    f"Desc: '{c.get('desc','')}' | Account: '{c.get('account','')}'"
+                )
+            elif t == "deleted":
+                parts.append(
+                    f"[Deleted row {c.get('row','?')}] "
+                    f"Desc: '{c.get('desc','')}' | Account: '{c.get('account','')}'"
+                )
+            else:
+                parts.append(
+                    f"[Row {c.get('row','?')} – '{c.get('desc','')}'] "
+                    f"{c.get('field','')}: '{c.get('from','')}' → '{c.get('to','')}'"
+                )
+        return " | ".join(parts)
+    return str(v)
+
+
 @app.get("/api/activity-log")
 async def get_activity_log(_: dict = _auth):
     with get_db() as db:
@@ -1690,7 +1932,7 @@ async def get_activity_log(_: dict = _auth):
             "Output File":    r.output_file or "",
             "Journal Number": r.journal_number or "",
             "Details":        r.details or "",
-            "Changes Made":   r.changes_made or "",
+            "Changes Made":   _fmt_changes(r.changes_made),
         }
         for r in rows
     ]
@@ -1716,7 +1958,7 @@ async def download_activity_log(_: dict = _auth):
             "Output File":    r.output_file or "",
             "Journal Number": r.journal_number or "",
             "Details":        r.details or "",
-            "Changes Made":   r.changes_made or "",
+            "Changes Made":   _fmt_changes(r.changes_made),
         }
         for r in rows
     ]

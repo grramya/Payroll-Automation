@@ -82,6 +82,42 @@ export interface MappingData {
   columns: string[]
 }
 
+export interface FpaAccountRow {
+  account_name: string
+  financial_statement: string | null
+  main_grouping: string | null
+  secondary_grouping: string | null
+  classification: string | null
+}
+
+export interface FpaDeptRow {
+  id?: number
+  account_name: string
+  dept_class: string | null
+  classification_2: string | null
+  classification_3: string | null
+  department: string | null
+  dept_group_bd: string | null
+}
+
+export async function getFpaAccountMap(): Promise<FpaAccountRow[]> {
+  const res = await http.get<FpaAccountRow[]>('/fpa/mapping/accounts')
+  return res.data
+}
+
+export async function saveFpaAccountMap(rows: FpaAccountRow[]): Promise<void> {
+  await http.put('/fpa/mapping/accounts', rows)
+}
+
+export async function getFpaDeptMap(): Promise<FpaDeptRow[]> {
+  const res = await http.get<FpaDeptRow[]>('/fpa/mapping/dept')
+  return res.data
+}
+
+export async function saveFpaDeptMap(rows: FpaDeptRow[]): Promise<void> {
+  await http.put('/fpa/mapping/dept', rows)
+}
+
 export interface ActivityLogData {
   rows: JERow[]
   columns: string[]
