@@ -732,7 +732,7 @@ async def list_users(_: dict = Depends(_require_admin)):
     return {"users": list_all_users()}
 
 
-_VALID_PORTCO_DEPTS = {None, "proddev", "sales", "marketing", "cs", "onboarding", "finance"}
+_VALID_PORTCO_DEPTS = {None, "proddev", "sales", "marketing", "cs", "finance"}
 
 @app.post("/api/auth/users")
 async def create_user(body: dict = Body(...), _: dict = Depends(_require_admin)):

@@ -12,11 +12,17 @@ interface UnmatchedAccount {
   amount: number;
 }
 
+interface PartiallyMapped {
+  pl_no_classification2?: UnmatchedAccount[];
+  pl_no_dept_class?: UnmatchedAccount[];
+}
+
 interface Summary {
   total_rows: number;
   unmatched_rows: number;
   financials_distribution?: Record<string, number>;
   unmatched_accounts?: UnmatchedAccount[];
+  partially_mapped?: PartiallyMapped;
 }
 
 interface Props {
@@ -29,8 +35,84 @@ interface PaletteEntry {
   text: string;
 }
 
+function PartialTable({
+  title, subtitle, color, accounts,
+}: {
+  title: string; subtitle: string; color: string; accounts: UnmatchedAccount[];
+}) {
+  if (accounts.length === 0) return null;
+  const totalAmt = accounts.reduce((s, a) => s + (a.amount ?? 0), 0);
+  const totalRows = accounts.reduce((s, a) => s + a.rows, 0);
+  return (
+    <Box>
+      <Typography variant="overline" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
+        {title}
+      </Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+        {subtitle}
+      </Typography>
+      <TableContainer sx={{ border: "1px solid", borderColor: alpha(color, 0.3), borderRadius: 2.5, overflow: "hidden" }}>
+        <Table size="small" aria-label={title}>
+          <TableHead>
+            <TableRow sx={{ bgcolor: alpha(color, 0.06) }}>
+              <TableCell sx={{ borderBottom: `1px solid ${alpha(color, 0.2)}`, py: 1 }}>
+                <Typography variant="overline" sx={{ color, fontSize: "0.65rem" }}>Account Name</Typography>
+              </TableCell>
+              <TableCell align="right" sx={{ borderBottom: `1px solid ${alpha(color, 0.2)}`, py: 1 }}>
+                <Typography variant="overline" sx={{ color, fontSize: "0.65rem" }}>Rows</Typography>
+              </TableCell>
+              <TableCell align="right" sx={{ borderBottom: `1px solid ${alpha(color, 0.2)}`, py: 1 }}>
+                <Typography variant="overline" sx={{ color, fontSize: "0.65rem" }}>Amount</Typography>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {accounts.map((item, i) => (
+              <TableRow key={i} sx={{ bgcolor: i % 2 === 0 ? "background.paper" : alpha(color, 0.02) }}>
+                <TableCell sx={{ borderBottom: `1px solid ${alpha(color, 0.1)}`, py: 1 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <WarningAmberIcon sx={{ fontSize: 13, color }} aria-hidden="true" />
+                    <Typography variant="body2" sx={{ fontFamily: "monospace", fontSize: "0.78rem", color }}>
+                      {item.account}
+                    </Typography>
+                  </Box>
+                </TableCell>
+                <TableCell align="right" sx={{ borderBottom: `1px solid ${alpha(color, 0.1)}`, py: 1 }}>
+                  <Chip label={item.rows} size="small" variant="outlined"
+                    sx={{ fontWeight: 700, minWidth: 42, fontSize: "0.72rem", borderColor: color, color }} />
+                </TableCell>
+                <TableCell align="right" sx={{ borderBottom: `1px solid ${alpha(color, 0.1)}`, py: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600, fontSize: "0.78rem",
+                    color: item.amount === 0 ? "text.disabled" : color }}>
+                    {item.amount === 0 ? "—" : item.amount.toLocaleString("en-US", { style: "currency", currency: "USD" })}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <TableFooter>
+            <TableRow sx={{ bgcolor: alpha(color, 0.06) }}>
+              <TableCell component="th" scope="row" sx={{ borderTop: `2px solid ${alpha(color, 0.2)}`, py: 1 }}>
+                <Typography variant="body2" fontWeight={700} sx={{ color }}>Total</Typography>
+              </TableCell>
+              <TableCell align="right" sx={{ borderTop: `2px solid ${alpha(color, 0.2)}`, py: 1 }}>
+                <Chip label={totalRows} size="small" sx={{ fontWeight: 700, minWidth: 42, fontSize: "0.72rem", bgcolor: alpha(color, 0.1), color }} />
+              </TableCell>
+              <TableCell align="right" sx={{ borderTop: `2px solid ${alpha(color, 0.2)}`, py: 1 }}>
+                <Typography variant="body2" fontWeight={700} sx={{ fontSize: "0.78rem", color: totalAmt === 0 ? "success.dark" : color }}>
+                  {totalAmt.toLocaleString("en-US", { style: "currency", currency: "USD" })}
+                </Typography>
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
+}
+
 export default function SummaryCard({ summary }: Props) {
-  const { total_rows, unmatched_rows, financials_distribution, unmatched_accounts } = summary;
+  const { total_rows, unmatched_rows, financials_distribution, unmatched_accounts, partially_mapped } = summary;
 
   const finEntries = Object.entries(financials_distribution || {})
     .filter(([k]) => k !== "None" && k !== "nan")
@@ -94,8 +176,12 @@ export default function SummaryCard({ summary }: Props) {
         )}
 
         <Box aria-label="Unmapped accounts">
-          <Typography variant="overline" color="text.secondary" sx={{ display: "block", mb: 1.5 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ display: "block", mb: 0.5 }}>
             Unmapped Accounts
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+            Accounts with <strong>no entry in the Account Map at all</strong> — these rows are excluded from every report.
+            Fix by adding the account on the Mapping page.
           </Typography>
 
           {!unmatched_accounts || unmatched_accounts.length === 0 ? (
@@ -105,7 +191,7 @@ export default function SummaryCard({ summary }: Props) {
               sx={{ borderRadius: 2.5, border: "1px solid", borderColor: alpha("#059669", 0.2) }}
               role="status"
             >
-              All accounts matched — no unmapped rows.
+              All accounts exist in the Account Map. Check the amber / purple sections below for partial-mapping gaps.
             </Alert>
           ) : (
             <>
@@ -177,6 +263,27 @@ export default function SummaryCard({ summary }: Props) {
             </>
           )}
         </Box>
+
+        {/* P&L rows missing Classification2 — can't be assigned to any revenue/OpEx line */}
+        {(partially_mapped?.pl_no_classification2?.length ?? 0) > 0 && (
+          <PartialTable
+            title="P&L — Missing Revenue / OpEx Classification"
+            subtitle="These accounts have no Classification 2 mapping and won't appear in any Revenue or OpEx line."
+            color="#B45309"
+            accounts={partially_mapped!.pl_no_classification2!}
+          />
+        )}
+
+        {/* P&L rows missing DeptClassOut — can't be assigned to any department bucket */}
+        {(partially_mapped?.pl_no_dept_class?.length ?? 0) > 0 && (
+          <PartialTable
+            title="P&L — Missing Department (Class) Mapping"
+            subtitle="These accounts have no Department mapping and won't appear in any COGS or OpEx department bucket."
+            color="#7C3AED"
+            accounts={partially_mapped!.pl_no_dept_class!}
+          />
+        )}
+
       </Box>
     </Box>
   );

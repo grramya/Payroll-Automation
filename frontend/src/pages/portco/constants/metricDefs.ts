@@ -23,7 +23,6 @@ const PD = "Product Development";
 const MK = "Marketing";
 const SA = "Sales";
 const CS = "Customer Success";
-const ON = "Onboarding";
 const FI = "Finance";
 
 export const METRIC_DEFS: MetricRow[] = [
@@ -135,16 +134,6 @@ export const METRIC_DEFS: MetricRow[] = [
   r(CS, "C.S. Efficiency",      "C.S. expense",                               "$", true,  "Sum",     "Finance"),
   r(CS, "C.S. Efficiency",      "C.S. exp. per $1 ARR",                       "$", false, "Average", "Finance"),
 
-  // ── Onboarding ────────────────────────────────────────────────────────────
-  r(ON, "Onboarding",           "In-Progress (BoP)",                          "#", true,  "EoP",     ""),
-  r(ON, "Onboarding",           "+ New in Period",                            "#", true,  "Sum",     ""),
-  r(ON, "Onboarding",           "- Closed in Period",                         "#", true,  "Sum",     ""),
-  r(ON, "Onboarding",           "In-Progress (EoP)",                          "#", false, "EoP",     ""),
-  r(ON, "Onboarding",           "Avg. Age of Ongoing Onboardings",            "#", true,  "Average", ""),
-  r(ON, "Onboarding",           "Onboarding Revenue",                         "$", true,  "Sum",     ""),
-  r(ON, "Efficiency",           "Headcount",                                  "#", true,  "EoP",     ""),
-  r(ON, "Efficiency",           "Onboarding. Rev - Onboarding Costs",         "$", true,  "Sum",     ""),
-
   // ── Finance ───────────────────────────────────────────────────────────────
   // Categories from Actuals/Budget: Income Statement Items, Balance Sheet Items,
   //   Other, Zero-Based Budgeting, Rule of 200
@@ -171,7 +160,6 @@ export const METRIC_DEFS: MetricRow[] = [
   r(FI, "Zero-Based Budgeting",   "Mktg exp. per $1 ARR",                    "$", false, "Average", "Finance"),
   r(FI, "Zero-Based Budgeting",   "Sales exp. per $1 ARR",                   "$", false, "Average", "Finance"),
   r(FI, "Zero-Based Budgeting",   "C.S. exp. per $1 ARR",                    "$", false, "Average", "Finance"),
-  r(FI, "Zero-Based Budgeting",   "Onboarding. Rev - Onboarding Costs",      "$", false, "Sum",     "Finance"),
   r(FI, "Rule of 200",            "New Logo ARR Growth (annualized)",         "%", false, "EoP",     "Finance"),
   r(FI, "Rule of 200",            "NRR (annualized)",                         "%", false, "EoP",     "Finance"),
   r(FI, "Rule of 200",            "Gross Margin",                             "%", false, "Average", "Finance"),

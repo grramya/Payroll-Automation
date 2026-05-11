@@ -239,7 +239,6 @@ export default function UserManagement() {
                       <option value="sales">Sales</option>
                       <option value="marketing">Marketing</option>
                       <option value="cs">Customer Success</option>
-                      <option value="onboarding">Onboarding</option>
                       <option value="finance">Finance</option>
                     </select>
                   </div>
@@ -365,7 +364,6 @@ export default function UserManagement() {
                             <option value="sales">Sales</option>
                             <option value="marketing">Marketing</option>
                             <option value="cs">Customer Success</option>
-                            <option value="onboarding">Onboarding</option>
                             <option value="finance">Finance</option>
                           </select>
                         )

@@ -17,7 +17,6 @@ const DEPT_LABELS: Record<string, string> = {
   sales:      "Sales",
   marketing:  "Marketing",
   cs:         "Customer Success",
-  onboarding: "Onboarding",
   finance:    "Finance",
 };
 

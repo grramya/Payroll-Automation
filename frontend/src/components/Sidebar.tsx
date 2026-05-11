@@ -63,7 +63,6 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
     { key: 'sales',      label: 'Sales'            },
     { key: 'marketing',  label: 'Marketing'        },
     { key: 'cs',         label: 'Customer Success' },
-    { key: 'onboarding', label: 'Onboarding'       },
     { key: 'finance',    label: 'Finance'          },
   ].filter(d => !userDept || d.key === userDept)
 

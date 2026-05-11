@@ -246,6 +246,102 @@ def _resolve_name(row) -> str | None:
     return None
 
 
+def _add_unmapped_sheet(wb, df: pd.DataFrame) -> None:
+    """Add an 'Unmapped' sheet listing every row that will produce a zero in any report."""
+    from openpyxl.styles import Font as _Font, PatternFill as _Fill, Alignment as _Align
+
+    RED    = _Fill("solid", fgColor="FEE2E2")
+    AMBER  = _Fill("solid", fgColor="FEF3C7")
+    PURPLE = _Fill("solid", fgColor="EDE9FE")
+    HEADER = _Fill("solid", fgColor="1E3A5F")
+    WH     = _Font(name="Calibri", bold=True, size=9, color="FFFFFF")
+    BLD    = _Font(name="Calibri", bold=True, size=9)
+    NRM    = _Font(name="Calibri", size=9)
+    NUM    = "#,##0.00"
+
+    ws = wb.create_sheet("Unmapped")
+
+    # Classify each problematic row
+    issues: list[dict] = []
+
+    for _, row in df.iterrows():
+        fin  = row.get("_Financials")
+        cls  = row.get("_Classification")
+        cls2 = row.get("_Classification2")
+        dept = row.get("_DeptClassOut")
+        amt_raw = row.get("Amount")
+        try:
+            amt = float(amt_raw) if amt_raw is not None and str(amt_raw) not in ("", "nan") else 0.0
+        except (ValueError, TypeError):
+            amt = 0.0
+
+        reasons = []
+        if pd.isna(fin) or fin is None:
+            reasons.append("No Financial Statement mapping (account not in Account Map)")
+        elif str(fin) == "Balance Sheet" and (pd.isna(cls) or cls is None):
+            reasons.append("Balance Sheet account — no Classification (Line Item) mapping")
+        elif str(fin) == "Profit and Loss A/c":
+            if pd.isna(cls2) or cls2 is None:
+                reasons.append("P&L account — no Classification 2 (Revenue / OpEx line) mapping")
+            if pd.isna(dept) or dept is None:
+                reasons.append("P&L account — no Department (Class) mapping → missing from COGS / OpEx")
+
+        if not reasons:
+            continue
+
+        for reason in reasons:
+            issues.append({
+                "account":  str(row.get("Account", "")) if not pd.isna(row.get("Account", "")) else "",
+                "date":     str(row.get("Date",    "")) if not pd.isna(row.get("Date",    "")) else "",
+                "cls_class":str(row.get("Class",   "")) if not pd.isna(row.get("Class",   "")) else "",
+                "fin":      str(fin) if fin and not pd.isna(fin) else "",
+                "cls2":     str(cls2) if cls2 and not pd.isna(cls2) else "",
+                "dept":     str(dept) if dept and not pd.isna(dept) else "",
+                "amount":   amt,
+                "reason":   reason,
+            })
+
+    # Header row
+    cols = ["Account", "Date", "QB Class", "Financial Statement", "Classification 2", "Department (Class)", "Amount", "Issue / Why It Produces Zero"]
+    ws.append(cols)
+    for ci, _ in enumerate(cols, 1):
+        c = ws.cell(1, ci)
+        c.font = WH; c.fill = HEADER
+        c.alignment = _Align(horizontal="center" if ci > 1 else "left", vertical="center")
+    ws.row_dimensions[1].height = 16
+
+    if not issues:
+        ws.append(["✓ All rows are fully mapped — nothing will produce a zero due to missing mappings."])
+        ws.cell(2, 1).font = _Font(name="Calibri", size=9, color="166534")
+    else:
+        for issue in issues:
+            ws.append([
+                issue["account"], issue["date"], issue["cls_class"],
+                issue["fin"], issue["cls2"], issue["dept"],
+                issue["amount"], issue["reason"],
+            ])
+            r = ws.max_row
+            reason = issue["reason"]
+            if "not in Account Map" in reason:
+                bg = RED
+            elif "Classification 2" in reason:
+                bg = AMBER
+            else:
+                bg = PURPLE
+            for ci in range(1, 9):
+                c = ws.cell(r, ci)
+                c.fill = bg
+                c.font = NRM if ci != 8 else BLD
+                c.alignment = _Align(horizontal="left", vertical="center")
+            ws.cell(r, 7).number_format = NUM
+            ws.cell(r, 7).alignment = _Align(horizontal="right", vertical="center")
+
+    # Column widths
+    for col, width in zip("ABCDEFGH", [45, 12, 28, 22, 30, 28, 14, 70]):
+        ws.column_dimensions[col].width = width
+    ws.freeze_panes = "A2"
+
+
 def run_transform_from_df(df: pd.DataFrame, company_name: str = "Acme Corp, Inc.") -> tuple:
     """
     Run the FP&A transform pipeline on a pre-parsed DataFrame.
@@ -388,6 +484,7 @@ def _transform_core(df: pd.DataFrame, company_name: str) -> tuple:
     total   = len(df)
     matched = int(df["_Financials"].notna().sum())
 
+    # Rows with no Financial Statement mapping at all
     unmatched_df    = df[df["_Financials"].isna()]
     unmatched_accts = []
     if not unmatched_df.empty and "Account" in unmatched_df.columns:
@@ -399,6 +496,30 @@ def _transform_core(df: pd.DataFrame, company_name: str) -> tuple:
             else:
                 amount = 0.0
             unmatched_accts.append({"account": label, "rows": int(len(grp)), "amount": amount})
+
+    # Partially-mapped P&L rows: _Financials is set but key classification fields are null
+    pl_mask = df["_Financials"] == "Profit and Loss A/c"
+    pl_df   = df[pl_mask]
+    no_cls2 = pl_df[pl_df["_Classification2"].isna()]
+    no_dept = pl_df[pl_df["_DeptClassOut"].isna()]
+
+    def _acct_breakdown(sub_df: pd.DataFrame) -> list:
+        """Summarise by Account: [{account, rows, amount}] sorted by abs(amount) desc."""
+        if sub_df.empty or "Account" not in sub_df.columns:
+            return []
+        rows_out = []
+        for acct, grp in sub_df.groupby("Account", dropna=False):
+            label = "(Blank / missing Account)" if str(acct) == "nan" else str(acct)
+            raw   = pd.to_numeric(grp["Amount"], errors="coerce").sum() if "Amount" in grp.columns else 0.0
+            amt   = 0.0 if pd.isna(raw) else round(float(raw), 2)
+            rows_out.append({"account": label, "rows": int(len(grp)), "amount": amt})
+        rows_out.sort(key=lambda x: abs(x["amount"]), reverse=True)
+        return rows_out
+
+    partially_mapped = {
+        "pl_no_classification2": _acct_breakdown(no_cls2),
+        "pl_no_dept_class":      _acct_breakdown(no_dept),
+    }
 
     fin_dist = {
         str(k): int(v)
@@ -531,6 +652,9 @@ def _transform_core(df: pd.DataFrame, company_name: str) -> tuple:
 
     ws.freeze_panes = "A6"
 
+    # ── Unmapped sheet — every row that will produce a zero in any report ──────
+    _add_unmapped_sheet(wb, df)
+
     buf = io.BytesIO()
     wb.save(buf)
 
@@ -539,6 +663,7 @@ def _transform_core(df: pd.DataFrame, company_name: str) -> tuple:
         "matched_rows":            matched,
         "unmatched_rows":          total - matched,
         "unmatched_accounts":      unmatched_accts,
+        "partially_mapped":        partially_mapped,
         "financials_distribution": fin_dist,
         "date_range":              date_range,
     }

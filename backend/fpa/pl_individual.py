@@ -147,6 +147,16 @@ def _aggregate(df: pd.DataFrame) -> tuple[dict, list]:
         d[("tax",)] = float(
             m.loc[m["_Classification2"] == "Tax Expense", "Amount"].sum()
         )
+
+        # Unclassified residual — P&L amount not captured by any known bucket
+        matched_total = (
+            sum(d[("rev",  lbl)] for lbl, _, _ in REVENUE_LINES) +
+            sum(d[("cogs", lbl)] for lbl, _, _ in COGS_LINES) +
+            sum(d[("opex", dept, sub)] for dept in OPEX_DEPTS for sub, _ in OPEX_SUB_LINES) +
+            d[("da",)] + d[("other_inc",)] + d[("other_exp",)] + d[("tax",)]
+        )
+        d[("unclassified",)] = float(m["Amount"].sum()) - matched_total
+
         agg[month] = d
 
     return agg, months
@@ -303,6 +313,13 @@ def _build_rows(agg: dict, months: list) -> list[tuple]:
     R.append(("Net Income", None, net_income, "grand_total"))
     # NI% = Net Income / Total Revenue  (mirrors C56 = C55/C7)
     R.append(("Net Income (%)", None, pct(net_income, total_rev), "metric"))
+
+    # Unclassified residual — amounts in P&L rows not matched by any known bucket
+    uc_val = va(("unclassified",))
+    if any(abs(uc_val[m]["co_a"]) > 0.001 for m in months):
+        R.append((None, None, None, "blank"))
+        R.append(("Unclassified / Unmapped", None, None, "section"))
+        R.append(("   Unclassified P&L Amounts", "Unmapped", uc_val, "line"))
 
     return R
 

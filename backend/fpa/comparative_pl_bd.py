@@ -123,6 +123,11 @@ def _build_row_structure() -> list[dict]:
     row("Net Income",     "grand_total", "Net Income")
     row("Net Income (%)", "metric",      "Net Income (%)")
 
+    # Unclassified residual row — only visible when there are unmapped P&L amounts
+    row(None, "blank")
+    row("Unclassified / Unmapped", "section")
+    row("   Unclassified P&L Amounts", "line", "Unclassified")
+
     return R
 
 
@@ -204,6 +209,10 @@ def _compute_period(m: pd.DataFrame) -> dict:
     d["Net Income (%)"] = (
         (ni / rev_total * 100) if rev_total and abs(rev_total) > 0.001 else None
     )
+
+    # Unclassified residual — P&L amounts not captured by any BD bucket
+    matched_total = rev_total + cogs + exp_total + oi + oe + da + tax
+    d["Unclassified"] = float(m["Amount"].sum()) - matched_total
 
     return d
 

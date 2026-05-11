@@ -157,14 +157,6 @@ export const FORMULAS: Record<string, FormulaFn> = {
       prevARR(d, m)
     ),
 
-  // ── Onboarding ────────────────────────────────────────────────────────────
-  "Onboarding In-Progress (EoP)": (d, m) =>
-    safeSum([
-      get(d, "Onboarding In-Progress (BoP)", m),
-      get(d, "Onboarding + New in Period", m),
-      get(d, "Onboarding - Closed in Period", m),
-    ]),
-
   // ── Finance ───────────────────────────────────────────────────────────────
   "Finance Adj. EBITDA": (d, m) =>
     safeSum([
@@ -206,9 +198,6 @@ export const FORMULAS: Record<string, FormulaFn> = {
 
   "Finance C.S. exp. per $1 ARR": (d, m) =>
     get(d, "Customer Success C.S. exp. per $1 ARR", m),
-
-  "Finance Onboarding. Rev - Onboarding Costs": (d, m) =>
-    get(d, "Onboarding Onboarding. Rev - Onboarding Costs", m),
 
   // Rule of 200
   "Finance Gross Margin": (d, m) => {
