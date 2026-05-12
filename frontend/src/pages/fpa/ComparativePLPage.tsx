@@ -135,7 +135,7 @@ export default function ComparativePLPage() {
   const { result, pageFilters, setPageFilter } = useFpaResult();
   if (!result) return null;
 
-  const { compPlBlob, compPlPreview, companyName } = result;
+  const { compPlUrl, compPlPreview, companyName } = result;
   if (!compPlPreview) return null;
 
   const {
@@ -215,13 +215,9 @@ export default function ComparativePLPage() {
 
   // ── Download handler ──────────────────────────────────────────────────────
   const handleDownload = () => {
-    if (!compPlBlob) return;
-    const url = URL.createObjectURL(compPlBlob);
-    const a   = document.createElement("a");
-    a.href     = url;
-    a.download = `${companyName}_comparative_pl.xlsx`;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (!compPlUrl) return;
+    const a = document.createElement("a");
+    a.href = compPlUrl; a.download = `${companyName}_comparative_pl.xlsx`; a.click();
   };
 
   // ── Table layout constants ────────────────────────────────────────────────
@@ -299,7 +295,7 @@ export default function ComparativePLPage() {
                 </FormControl>
               )}
 
-              {compPlBlob && (
+              {compPlUrl && (
                 <Button
                   size="small"
                   variant="contained"

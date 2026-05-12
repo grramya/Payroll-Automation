@@ -2,15 +2,34 @@
 from __future__ import annotations
 import json
 import os
+import time
+from collections import defaultdict
 from typing import Generator
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from auth import get_current_user
 
 router = APIRouter()
+
+# ── Per-user chat rate limiter ─────────────────────────────────────────────────
+_chat_attempts: dict[str, list[float]] = defaultdict(list)
+_CHAT_MAX_CALLS  = 10
+_CHAT_WINDOW_SEC = 60
+
+
+def _check_chat_rate(username: str) -> None:
+    now = time.time()
+    _chat_attempts[username] = [t for t in _chat_attempts[username] if now - t < _CHAT_WINDOW_SEC]
+    if len(_chat_attempts[username]) >= _CHAT_MAX_CALLS:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Chat rate limit exceeded ({_CHAT_MAX_CALLS} messages per minute). "
+                   "Wait a moment before sending another message.",
+        )
+    _chat_attempts[username].append(now)
 
 SYSTEM_PROMPT = """You are an enterprise-grade AI Financial Analytics, Reporting, Dashboard, and Visualization Assistant integrated into a finance and business intelligence platform.
 
@@ -371,12 +390,26 @@ def _stream(messages: list[dict], system: str) -> Generator[str, None, None]:
         yield f"data: {json.dumps({'error': str(exc)})}\n\n"
 
 
+def _load_system_prompt() -> str:
+    """Load the system prompt from app_config DB, falling back to the hardcoded default."""
+    try:
+        from database import AppConfig, get_db
+        with get_db() as db:
+            row = db.query(AppConfig).filter_by(key="chat_system_prompt").first()
+            if row and row.value:
+                return row.value
+    except Exception:
+        pass
+    return SYSTEM_PROMPT
+
+
 @router.post("/api/chat")
-async def chat(req: ChatRequest, _: dict = Depends(get_current_user)):
-    system = SYSTEM_PROMPT
+async def chat(req: ChatRequest, current_user: dict = Depends(get_current_user)):
+    _check_chat_rate(current_user["username"])
+    system = _load_system_prompt()
     if req.context and req.context.strip():
         system = (
-            f"{SYSTEM_PROMPT}\n\n"
+            f"{system}\n\n"
             f"{'='*50}\nCURRENT SESSION DATA\n{'='*50}\n"
             f"{req.context}"
         )

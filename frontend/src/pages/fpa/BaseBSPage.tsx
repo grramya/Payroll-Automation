@@ -24,7 +24,7 @@ function monthStrToYYYYMM(s: string): string {
 export default function BaseBSPage() {
   const { result, pageFilters, setPageFilter } = useFpaResult();
   if (!result) return null;
-  const { bsBlob, bsPreview, companyName } = result;
+  const { bsUrl, bsPreview, companyName } = result;
 
   const bs      = bsPreview as Record<string, unknown> | null;
   const months  = (bs?.months as string[]) ?? [];
@@ -68,11 +68,9 @@ export default function BaseBSPage() {
   const isBalanced = (checkRow?.values as (number | null)[] | undefined)?.every((v) => Math.abs(v ?? 0) < 0.01) ?? false;
 
   const handleDownload = () => {
-    if (!bsBlob) return;
-    const url = URL.createObjectURL(bsBlob);
+    if (!bsUrl) return;
     const a = document.createElement("a");
-    a.href = url; a.download = `${companyName}_base_bs.xlsx`; a.click();
-    URL.revokeObjectURL(url);
+    a.href = bsUrl; a.download = `${companyName}_base_bs.xlsx`; a.click();
   };
 
   return (
@@ -88,7 +86,7 @@ export default function BaseBSPage() {
               <DatePicker label="From" value={fromDate} onChange={(v: Dayjs | null) => setFromDate(v)} slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, inputProps: { "aria-label": "Filter from date" } } }} />
               <DatePicker label="To"   value={toDate}   onChange={(v: Dayjs | null) => setToDate(v)}   slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, inputProps: { "aria-label": "Filter to date" } } }} />
               <Chip icon={isBalanced ? <CheckCircleIcon sx={{ fontSize: "14px !important" }} aria-hidden="true" /> : <ErrorIcon sx={{ fontSize: "14px !important" }} aria-hidden="true" />} label={isBalanced ? "Sheet balances ✓" : "Check mismatch"} color={isBalanced ? "success" : "error"} variant="outlined" size="small" aria-label={isBalanced ? "Balance sheet is balanced" : "Balance sheet has a mismatch"} />
-              {bsBlob && (
+              {bsUrl && (
                 <Button size="small" variant="contained" startIcon={<AccountBalanceIcon aria-hidden="true" />} onClick={handleDownload} aria-label={`Download ${companyName}_base_bs.xlsx`} sx={{ background: "linear-gradient(135deg,#400f61,#2d0a45)", height: 40 }}>
                   Download .xlsx
                 </Button>

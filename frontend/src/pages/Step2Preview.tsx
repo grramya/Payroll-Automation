@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
@@ -72,6 +72,10 @@ export default function Step2Preview() {
   const defaultColDef = useMemo(() => ({
     cellStyle: { fontSize: '13px' },
   }), [])
+
+  // Stable row identity for AG Grid — uses row index as key since JE rows have no natural PK
+  const getRowId = useCallback((params: { data: JERow; rowIndex?: number }) =>
+    String(params.rowIndex ?? 0), [])
 
   // ── Save edits ────────────────────────────────────────────────────────────
   async function handleSave() {
@@ -290,6 +294,7 @@ export default function Step2Preview() {
               rowData={jeRows}
               columnDefs={colDefs}
               defaultColDef={defaultColDef}
+              getRowId={getRowId}
               rowSelection="multiple"
               stopEditingWhenCellsLoseFocus
               undoRedoCellEditing

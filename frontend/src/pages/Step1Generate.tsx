@@ -19,7 +19,28 @@ export default function Step1Generate() {
   const [apiError, setApiError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const MAX_FILE_BYTES = 50 * 1024 * 1024  // 50 MB — matches backend limit
+
+  function validateFileClient(f: File): string | null {
+    const ext = f.name.split('.').pop()?.toLowerCase()
+    if (ext !== 'xlsx' && ext !== 'xlsm') {
+      return `"${f.name}" is not an Excel file. Only .xlsx files are accepted.`
+    }
+    if (f.size > MAX_FILE_BYTES) {
+      return `File is too large (${(f.size / 1024 / 1024).toFixed(1)} MB). Maximum allowed size is 50 MB.`
+    }
+    if (f.size === 0) {
+      return 'The selected file is empty. Please choose a valid payroll Excel file.'
+    }
+    return null
+  }
+
   async function handleFile(f: File) {
+    const clientErr = validateFileClient(f)
+    if (clientErr) {
+      setErrors((e) => ({ ...e, file: clientErr }))
+      return
+    }
     setFile(f)
     setErrors((e) => ({ ...e, file: '' }))
     if (journalNumber) return

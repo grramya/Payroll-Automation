@@ -11,7 +11,7 @@ import { useFpaResult } from "../../context/FpaResultContext";
 export default function PLIndividualPage() {
   const { result, pageFilters, setPageFilter } = useFpaResult();
   if (!result) return null;
-  const { plBlob, plPreview, companyName } = result;
+  const { plUrl, plPreview, companyName } = result;
 
   const months       = (plPreview as Record<string, unknown> | null)?.months as string[] ?? [];
   const defaultMonth = months[months.length - 1] ?? "";
@@ -20,11 +20,9 @@ export default function PLIndividualPage() {
   const setSelectedMonth = (v: string) => setPageFilter("plIndividual", { selectedMonth: v } as never);
 
   const handleDownload = () => {
-    if (!plBlob) return;
-    const url = URL.createObjectURL(plBlob);
-    const a   = document.createElement("a");
-    a.href = url; a.download = `${companyName}_pl_individual.xlsx`; a.click();
-    URL.revokeObjectURL(url);
+    if (!plUrl) return;
+    const a = document.createElement("a");
+    a.href = plUrl; a.download = `${companyName}_pl_individual.xlsx`; a.click();
   };
 
   return (
@@ -49,7 +47,7 @@ export default function PLIndividualPage() {
                   </Select>
                 </FormControl>
               )}
-              {plBlob && (
+              {plUrl && (
                 <Button size="small" variant="contained" startIcon={<DownloadIcon aria-hidden="true" />} onClick={handleDownload} aria-label={`Download ${companyName}_pl_individual.xlsx`} sx={{ background: "linear-gradient(135deg,#400f61,#2d0a45)", height: 40 }}>
                   Download .xlsx
                 </Button>

@@ -12,8 +12,11 @@ uvicorn[standard]>=0.29.0
 gunicorn>=21.2.0
 python-multipart>=0.0.9
 
-# Authentication
-passlib[bcrypt]>=1.7.4
+# Authentication — bcrypt used directly (passlib[bcrypt] dropped; passlib 1.7.x
+# does not support bcrypt>=4.0 due to the detect_wrap_bug incompatibility).
+# passlib kept without the bcrypt extra solely for verifying legacy pbkdf2_sha256 hashes.
+passlib>=1.7.4
+bcrypt>=4.0.0
 python-jose[cryptography]>=3.3.0
 
 # PostgreSQL + ORM
@@ -21,11 +24,25 @@ sqlalchemy>=2.0.0
 psycopg2-binary>=2.9.0
 alembic>=1.13.0
 
-# Token encryption at rest
+# Token encryption at rest (required — set TOKEN_ENCRYPTION_KEY in .env)
 cryptography>=42.0.0
 
 # Cross-process file locking (consolidator, logger, session files)
 filelock>=3.14.0
 
+# Redis — token revocation cache and rate-limit state
+redis>=5.0.0
+
+# Testing
+pytest>=8.0.0
+pytest-cov>=5.0.0
+
 # AI chatbot
 anthropic>=0.50.0
+
+# Observability — OpenTelemetry tracing for FastAPI + SQLAlchemy
+# Sends traces/metrics to the OTEL collector defined in docker-compose.yml
+opentelemetry-sdk>=1.20.0
+opentelemetry-instrumentation-fastapi>=0.41b0
+opentelemetry-instrumentation-sqlalchemy>=0.41b0
+opentelemetry-exporter-otlp-proto-grpc>=1.20.0

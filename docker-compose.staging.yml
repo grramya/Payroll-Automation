@@ -1,0 +1,51 @@
+# docker-compose.staging.yml — overlay for the staging environment
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.staging.yml up --build -d
+#   make staging
+#   start.bat staging
+#
+# This file only specifies CHANGES from docker-compose.yml.
+# All unmentioned services/volumes inherit from the base file.
+
+services:
+
+  backend:
+    # Staging uses a separate .env so prod credentials are never loaded
+    env_file: ./backend/.env.staging
+    environment:
+      - PJE_DATA_DIR=/data/db
+      - WORKERS=1             # Single worker sufficient for staging load
+      - OTEL_SERVICE_NAME=payroll-backend-staging
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
+  frontend:
+    # Expose on a different port so staging and prod can run simultaneously
+    ports:
+      - "8080:80"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
+  db-backup:
+    # Staging backups in a separate directory
+    volumes:
+      - ./backups/staging:/backups
+
+  # Observability runs on offset ports in staging to avoid port conflicts
+  prometheus:
+    ports:
+      - "9091:9090"
+
+  grafana:
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_STAGING_PASSWORD:-staging}

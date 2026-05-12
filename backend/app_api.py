@@ -61,7 +61,65 @@ from processing.consolidator import append_input_to_consolidated, append_to_cons
 from processing.logger import log_action_async
 from chat import router as chat_router
 
+# ── OpenTelemetry auto-instrumentation ───────────────────────────────────────
+# Initialised before FastAPI app creation so the middleware is injected correctly.
+# Silently no-ops if the OTEL endpoint is not configured (development mode).
+def _setup_otel() -> None:
+    endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "")
+    if not endpoint:
+        return
+    try:
+        from opentelemetry import trace
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+
+        provider = TracerProvider()
+        provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint)))
+        trace.set_tracer_provider(provider)
+
+        # SQLAlchemy engine instrumented after engine creation in database.py
+        SQLAlchemyInstrumentor().instrument(engine=None, enable_commenter=True)
+        print("[otel] Tracing enabled → " + endpoint, file=sys.stderr, flush=True)
+        return provider  # type: ignore[return-value]
+    except Exception as exc:
+        print(f"[otel] Could not initialise tracing: {exc}", file=sys.stderr, flush=True)
+
+_otel_provider = _setup_otel()
+
 app = FastAPI(title="Payroll JE Automation API", version="1.0.0")
+
+# Wire FastAPI instrumentation after app creation
+if _otel_provider:
+    try:
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        FastAPIInstrumentor.instrument_app(app)
+    except Exception:
+        pass
+
+# ── Standardised error response ────────────────────────────────────────────────
+
+from pydantic import BaseModel as _BaseModel
+
+class ApiError(_BaseModel):
+    """Machine-readable error envelope returned by every 4xx/5xx response.
+
+    Frontend code should check `error.response.data.code` for programmatic
+    handling and display `error.response.data.message` to users.
+    """
+    code:    str            # snake_case identifier: "INVALID_FILE", "SESSION_NOT_FOUND"
+    message: str            # human-readable sentence
+    detail:  dict | None = None  # optional structured payload (e.g. field errors)
+
+
+def _err(code: str, message: str, status_code: int = 400, detail: dict | None = None) -> HTTPException:
+    """Convenience wrapper that produces an HTTPException with an ApiError body."""
+    return HTTPException(
+        status_code=status_code,
+        detail=ApiError(code=code, message=message, detail=detail).model_dump(exclude_none=True),
+    )
 
 
 @app.get("/api/health", tags=["meta"])
@@ -72,14 +130,38 @@ async def health():
 # Initialise auth database on startup
 init_db()
 
+# Seed payroll_config and app_config tables from defaults on first run
+try:
+    from database import get_db as _get_db_seed
+    from config_loader import seed_payroll_config as _seed_payroll_config
+    from chat import SYSTEM_PROMPT as _SYSTEM_PROMPT_DEFAULT
+    from database import AppConfig as _AppConfig
+    with _get_db_seed() as _seed_db:
+        n_cfg = _seed_payroll_config(_seed_db)
+        if n_cfg:
+            print(f"[startup] Seeded {n_cfg} payroll_config rows", file=sys.stderr, flush=True)
+        # Seed the chat system prompt only if the key is absent
+        if not _seed_db.query(_AppConfig).filter_by(key="chat_system_prompt").first():
+            from datetime import datetime as _dt, timezone as _tz
+            _seed_db.add(_AppConfig(
+                key="chat_system_prompt",
+                value=_SYSTEM_PROMPT_DEFAULT,
+                updated_at=_dt.now(tz=_tz.utc),
+            ))
+            print("[startup] Seeded chat_system_prompt in app_config", file=sys.stderr, flush=True)
+except Exception as _seed_exc:
+    print(f"[startup] Config seed warning: {_seed_exc}", file=sys.stderr, flush=True)
+
 _origins = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",") if o.strip()]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    # Explicit allow-lists prevent accidental exposure of non-standard HTTP methods
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+    expose_headers=["Content-Disposition"],  # needed for download filename
 )
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -112,6 +194,32 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 app.add_middleware(CSRFMiddleware)
+
+# ── File upload validation ─────────────────────────────────────────────────────
+
+_XLSX_MAGIC = b"PK\x03\x04"          # OOXML (.xlsx/.xlsm) ZIP magic bytes
+_MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50 MB hard ceiling
+
+async def _read_and_validate_excel(file: UploadFile) -> bytes:
+    """Read an UploadFile, enforce size limit, and verify Excel magic bytes.
+
+    Returns the raw file bytes on success. Raises HTTP 400/413 on failure.
+    """
+    data = await file.read()
+    if len(data) > _MAX_UPLOAD_BYTES:
+        raise _err(
+            "FILE_TOO_LARGE",
+            f"File exceeds the {_MAX_UPLOAD_BYTES // (1024*1024)} MB limit.",
+            status_code=413,
+        )
+    if not data.startswith(_XLSX_MAGIC):
+        raise _err(
+            "INVALID_FILE_TYPE",
+            "Only Excel (.xlsx / .xlsm) files are accepted. "
+            "Please do not rename other file types to .xlsx.",
+        )
+    return data
+
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 _MAP_PATH    = BASE_DIR / "Mapping" / "Mapping.xlsx"
@@ -185,24 +293,39 @@ def _session_from_json(d: dict) -> dict:
     return s
 
 
+def _payload_json_path(session_id: str) -> Path:
+    return _SESSION_DIR / f"{session_id}.json"
+
+
 def _persist_session(session_id: str, s: dict) -> None:
-    """Upsert session into the je_sessions table (non-blocking; errors logged)."""
+    """Upsert session: payload written to a JSON file on the sessions volume.
+
+    Storing payload on disk (not as JSONB in PostgreSQL) keeps the je_sessions
+    rows slim and avoids TOAST overhead for large JE payloads.
+    """
     try:
         payload = _session_to_json(s)
         JeSessionPayloadSchema(**payload)
         pf = s.get("pf_bytes")
         if pf:
             _save_pf_bytes(session_id, pf)
+
+        # Write payload to filesystem
+        payload_path = _payload_json_path(session_id)
+        payload_path.write_text(json.dumps(payload), encoding="utf-8")
+
         with get_db() as db:
             row = db.query(JeSession).filter(JeSession.id == session_id).first()
             if row:
-                row.payload  = payload
-                row.saved_at = datetime.now(tz=timezone.utc)
+                row.payload_path = str(payload_path)
+                row.payload      = None   # clear legacy JSONB once file exists
+                row.saved_at     = datetime.now(tz=timezone.utc)
             else:
                 db.add(JeSession(
                     id=session_id,
-                    owner_id=s.get("owner_id"),   # Integer FK → users.id (issue #1)
-                    payload=payload,
+                    owner_id=s.get("owner_id"),
+                    payload_path=str(payload_path),
+                    payload=None,
                     saved_at=datetime.now(tz=timezone.utc),
                 ))
     except Exception as exc:
@@ -217,19 +340,33 @@ def _load_sessions_from_db() -> None:
         with get_db() as db:
             rows = db.query(JeSession).filter(JeSession.saved_at >= cutoff).all()
             for row in rows:
-                s = _session_from_json(row.payload)
+                # Prefer filesystem payload (new path), fall back to legacy JSONB
+                raw_payload: dict | None = None
+                if row.payload_path:
+                    p = Path(row.payload_path)
+                    if p.exists():
+                        try:
+                            raw_payload = json.loads(p.read_text(encoding="utf-8"))
+                        except Exception:
+                            pass
+                if raw_payload is None and row.payload:
+                    raw_payload = row.payload
+                if raw_payload is None:
+                    continue
+                s = _session_from_json(raw_payload)
                 pf = _load_pf_bytes(row.id)
                 if pf:
                     s["pf_bytes"] = pf
-                elif "pf_bytes_b64" in (row.payload or {}):
-                    s["pf_bytes"] = base64.b64decode(row.payload["pf_bytes_b64"])
-                # owner_id sourced from the DB column, not the JSONB payload (issue #1)
+                elif "pf_bytes_b64" in raw_payload:
+                    s["pf_bytes"] = base64.b64decode(raw_payload["pf_bytes_b64"])
                 s["owner_id"] = row.owner_id
                 _sessions[row.id] = s
-            # Purge expired rows and their on-disk files
+            # Purge expired rows and their on-disk artefacts
             expired = db.query(JeSession).filter(JeSession.saved_at < cutoff).all()
             for row in expired:
                 _delete_pf_bytes(row.id)
+                if row.payload_path:
+                    Path(row.payload_path).unlink(missing_ok=True)
             db.query(JeSession).filter(JeSession.saved_at < cutoff).delete()
     except Exception as exc:
         print(f"[Session] Could not load sessions from DB: {exc}", file=sys.stderr, flush=True)
@@ -257,14 +394,30 @@ def _check_generate_rate(username: str) -> None:
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
+def _validate_session_id(session_id: str) -> None:
+    """Reject non-UUID session IDs before they are used in filesystem paths.
+
+    Session IDs are always Python uuid4() strings. Any other value is invalid
+    and could be a path-traversal attempt (e.g. '../secrets').
+    """
+    import uuid as _uuid
+    try:
+        _uuid.UUID(session_id, version=4)
+    except ValueError:
+        raise _err("INVALID_SESSION_ID", "Invalid session identifier.")
+    candidate = _pf_path(session_id).resolve()
+    if not str(candidate).startswith(str(_SESSION_DIR.resolve())):
+        raise _err("INVALID_SESSION_ID", "Invalid session identifier.")
+
+
 def _get_session(session_id: str, current_user: dict | None = None) -> dict:
+    _validate_session_id(session_id)
     if session_id not in _sessions:
-        raise HTTPException(status_code=404, detail="Session not found or expired")
+        raise _err("SESSION_NOT_FOUND", "Session not found or expired.", status_code=404)
     s = _sessions[session_id]
-    # Enforce ownership via user ID — admins may access any session (issue #1)
     if current_user and current_user.get("role") != "admin":
         if s.get("owner_id") != current_user["id"]:
-            raise HTTPException(status_code=403, detail="Access denied: this session belongs to another user")
+            raise _err("SESSION_FORBIDDEN", "Access denied: this session belongs to another user.", status_code=403)
     return s
 
 
@@ -626,28 +779,60 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
     if not user:
         _record_attempt(f"user:{username}")
         _record_attempt(f"ip:{ip}")
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+        raise _err("INVALID_CREDENTIALS", "Invalid username or password.", status_code=401)
 
     # Success — clear counters
     _clear_attempts(f"user:{username}")
     _clear_attempts(f"ip:{ip}")
 
+    from fastapi.responses import JSONResponse as _JSONResponse
     token = create_access_token({"sub": user["username"], "role": user["role"]})
-    return {
-        "access_token": token, "token_type": "bearer",
-        "username": user["username"], "role": user["role"],
+
+    # Use Lax instead of Strict so the cookie survives top-level navigations
+    # (e.g., OAuth redirects that return to the app). Strict is preferred for
+    # pure SPA flows but breaks redirect-based OAuth callbacks.
+    use_secure = os.environ.get("USE_HTTPS", "false").lower() == "true"
+    samesite   = os.environ.get("COOKIE_SAMESITE", "lax").lower()  # 'lax' | 'strict' | 'none'
+
+    response = _JSONResponse(content={
+        "username":           user["username"],
+        "role":               user["role"],
         "can_access_payroll": bool(user.get("can_access_payroll", 0)),
-        "can_access_fpa": bool(user.get("can_access_fpa", 0)),
-        "can_access_portco": bool(user.get("can_access_portco", 0)),
-        "portco_dept": user.get("portco_dept"),
-    }
+        "can_access_fpa":     bool(user.get("can_access_fpa", 0)),
+        "can_access_portco":  bool(user.get("can_access_portco", 0)),
+        "portco_dept":        user.get("portco_dept"),
+    })
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,         # JS cannot read this cookie
+        samesite=samesite,     # CSRF protection
+        secure=use_secure,     # require HTTPS in production
+        max_age=8 * 3600,      # match ACCESS_TOKEN_EXPIRE_HOURS
+        path="/",
+    )
+    return response
 
 
 @app.post("/api/auth/logout")
-async def logout(token: str = Depends(oauth2_scheme)):
-    """Blacklist the supplied JWT so it is rejected on all future requests."""
-    revoke_token(token)
-    return {"ok": True}
+async def logout(request: Request):
+    """Blacklist the current token (cookie or Bearer) and clear the auth cookie."""
+    from fastapi.responses import JSONResponse as _JSONResponse
+
+    # Resolve token: cookie takes priority, then Bearer header
+    token = request.cookies.get("access_token")
+    if not token:
+        auth_header = request.headers.get("authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+    if token:
+        revoke_token(token)
+
+    use_secure = os.environ.get("USE_HTTPS", "false").lower() == "true"
+    samesite   = os.environ.get("COOKIE_SAMESITE", "lax").lower()
+    response   = _JSONResponse(content={"ok": True})
+    response.delete_cookie("access_token", path="/", samesite=samesite, secure=use_secure)
+    return response
 
 
 @app.post("/api/auth/reset-password")
@@ -822,7 +1007,9 @@ async def fpa_transform(
 ):
     import base64 as _b64
     try:
-        input_bytes = await input_file.read()
+        input_bytes = await _read_and_validate_excel(input_file)
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"File read error: {e}")
     try:
@@ -1155,14 +1342,67 @@ async def fpa_qbo_cache_status(_: dict = Depends(get_current_user)):
 
 @app.get("/api/fpa/qbo-cache")
 async def fpa_qbo_cache(_: dict = Depends(get_current_user)):
-    """Return the full cached FP&A result (same shape as the SSE 'done' event data)."""
+    """Return cached FP&A metadata and preview data WITHOUT Excel blobs.
+
+    Use the /api/fpa/qbo-cache/report/{report_type} endpoints to download
+    individual Excel files on demand instead of loading all blobs at once.
+    """
     try:
         data = _load_fpa_cache()
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
     if data is None:
         raise HTTPException(status_code=404, detail="No cache available yet — QBO fetch has not run")
-    return data
+    # Strip the Excel blobs from the metadata response — callers should use
+    # /report/{type} to download individual files rather than loading 60 MB at once.
+    _BLOB_KEYS = {
+        "excel_b64", "bs_excel_b64", "bsi_excel_b64",
+        "pl_excel_b64", "comp_pl_excel_b64", "comp_pl_bd_excel_b64",
+    }
+    return {k: v for k, v in data.items() if k not in _BLOB_KEYS}
+
+
+# Report-type → (db_column_attr, suggested_filename)
+_FPA_REPORT_MAP: dict[str, tuple[str, str]] = {
+    "combined":    ("excel_bytes",            "FPA_Combined.xlsx"),
+    "bs":          ("bs_excel_bytes",         "FPA_BalanceSheet.xlsx"),
+    "bsi":         ("bsi_excel_bytes",        "FPA_BS_Individual.xlsx"),
+    "pl":          ("pl_excel_bytes",         "FPA_PL.xlsx"),
+    "comp_pl":     ("comp_pl_excel_bytes",    "FPA_Comparative_PL.xlsx"),
+    "comp_pl_bd":  ("comp_pl_bd_excel_bytes", "FPA_Comparative_PL_BD.xlsx"),
+}
+
+_XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+@app.get("/api/fpa/qbo-cache/report/{report_type}")
+async def fpa_report_download(report_type: str, _: dict = Depends(get_current_user)):
+    """Stream a single FP&A Excel report by type without loading all cached blobs.
+
+    report_type: combined | bs | bsi | pl | comp_pl | comp_pl_bd
+    """
+    if report_type not in _FPA_REPORT_MAP:
+        raise _err(
+            "INVALID_REPORT_TYPE",
+            f"Unknown report type '{report_type}'. "
+            f"Valid options: {', '.join(_FPA_REPORT_MAP)}",
+        )
+    col_attr, filename = _FPA_REPORT_MAP[report_type]
+    from database import FpaCache, get_db
+    try:
+        with get_db() as db:
+            # Select only the one blob column needed — avoids loading up to 60 MB
+            row = db.query(getattr(FpaCache, col_attr)).filter_by(id=1).first()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+    if row is None or row[0] is None:
+        raise HTTPException(status_code=404, detail="Report not cached yet.")
+    blob: bytes = row[0]
+    return StreamingResponse(
+        iter([blob]),
+        media_type=_XLSX_MIME,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 # ── FP&A Mapping CRUD ─────────────────────────────────────────────────────────
@@ -1262,11 +1502,9 @@ async def portco_upload(
     _: dict = Depends(_require_portco),
 ):
     """Upload an MBR Excel file and return structured dashboard JSON."""
-    if not file.filename or not file.filename.lower().endswith((".xlsx", ".xlsm")):
-        raise HTTPException(status_code=422, detail="Please upload an Excel (.xlsx) file.")
     try:
         from portco.parser import parse_mbr_file
-        file_bytes = await file.read()
+        file_bytes = await _read_and_validate_excel(file)
         return parse_mbr_file(file_bytes)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to parse file: {exc}")
@@ -1352,7 +1590,7 @@ async def parse_file_metadata(
     file: UploadFile = File(...),
     _: dict = _auth,
 ):
-    file_bytes = await file.read()
+    file_bytes = await _read_and_validate_excel(file)
     meta = get_file_metadata(BytesIO(file_bytes))
     return {"journal_number": meta.get("journal_number", ""), "invoice_date": meta.get("invoice_date", "")}
 
@@ -1382,7 +1620,7 @@ async def generate_je(
     except ValueError:
         raise HTTPException(status_code=422, detail={"errors": [f"Entry Date '{entry_date}' is invalid. Expected MM/DD/YYYY."]})
 
-    file_bytes = await file.read()
+    file_bytes = await _read_and_validate_excel(file)
     filename = file.filename or "payroll.xlsx"
 
     # Single Excel read — validate on the already-parsed result instead of re-reading
@@ -1914,13 +2152,31 @@ def _fmt_changes(v) -> str:
 
 
 @app.get("/api/activity-log")
-async def get_activity_log(_: dict = _auth):
+async def get_activity_log(
+    action:         str | None = None,
+    journal_number: str | None = None,
+    date_from:      str | None = None,
+    date_to:        str | None = None,
+    _: dict = _auth,
+):
+    from datetime import datetime as _dt
     with get_db() as db:
-        rows = (
-            db.query(ActivityLogEntry)
-            .order_by(ActivityLogEntry.id.desc())
-            .all()
-        )
+        q = db.query(ActivityLogEntry)
+        if action:
+            q = q.filter(ActivityLogEntry.action.ilike(f"%{action}%"))
+        if journal_number:
+            q = q.filter(ActivityLogEntry.journal_number.ilike(f"%{journal_number}%"))
+        if date_from:
+            try:
+                q = q.filter(ActivityLogEntry.timestamp >= _dt.fromisoformat(date_from).replace(tzinfo=timezone.utc))
+            except ValueError:
+                pass
+        if date_to:
+            try:
+                q = q.filter(ActivityLogEntry.timestamp <= _dt.fromisoformat(date_to).replace(tzinfo=timezone.utc))
+            except ValueError:
+                pass
+        rows = q.order_by(ActivityLogEntry.id.desc()).all()
     records = [
         {
             "Timestamp":      r.timestamp.isoformat() if r.timestamp else "",
@@ -1997,5 +2253,104 @@ async def download_consolidated_inputs(_: dict = _auth):
     )
 
 
+# ── Payroll config CRUD (admin only) ──────────────────────────────────────────
+
+def _require_admin(current_user: dict = Depends(get_current_user)) -> dict:
+    if current_user.get("role") != "admin":
+        raise _err("FORBIDDEN", "Admin role required.", status_code=403)
+    return current_user
+
+
+@app.get("/api/admin/payroll-config")
+async def get_payroll_config_api(_: dict = Depends(_require_admin)):
+    """Return all payroll configuration entries as {key: value} dict."""
+    from database import PayrollConfigEntry, get_db
+    with get_db() as db:
+        rows = db.query(PayrollConfigEntry).all()
+    return {r.key: json.loads(r.value_json) for r in rows}
+
+
+@app.put("/api/admin/payroll-config")
+async def save_payroll_config_api(
+    updates: dict = Body(...),
+    _: dict = Depends(_require_admin),
+):
+    """Upsert one or more payroll configuration keys."""
+    from database import PayrollConfigEntry, get_db
+    from config_loader import reload_payroll_config
+    now = datetime.now(tz=timezone.utc)
+    with get_db() as db:
+        for key, value in updates.items():
+            row = db.query(PayrollConfigEntry).filter_by(key=key).first()
+            if row:
+                row.value_json = json.dumps(value)
+                row.updated_at = now
+            else:
+                db.add(PayrollConfigEntry(key=key, value_json=json.dumps(value), updated_at=now))
+    reload_payroll_config()
+    return {"updated": list(updates.keys())}
+
+
+# ── App config CRUD (admin only) — e.g. AI chatbot system prompt ──────────────
+
+@app.get("/api/admin/app-config/{key}")
+async def get_app_config(key: str, _: dict = Depends(_require_admin)):
+    from database import AppConfig, get_db
+    with get_db() as db:
+        row = db.query(AppConfig).filter_by(key=key).first()
+    if row is None:
+        raise _err("NOT_FOUND", f"Config key '{key}' not found.", status_code=404)
+    return {"key": key, "value": row.value}
+
+
+@app.put("/api/admin/app-config/{key}")
+async def set_app_config(key: str, body: dict = Body(...), _: dict = Depends(_require_admin)):
+    from database import AppConfig, get_db
+    value = body.get("value", "")
+    now = datetime.now(tz=timezone.utc)
+    with get_db() as db:
+        row = db.query(AppConfig).filter_by(key=key).first()
+        if row:
+            row.value = value
+            row.updated_at = now
+        else:
+            db.add(AppConfig(key=key, value=value, updated_at=now))
+    return {"key": key, "value": value}
+
+
 # ── AI chatbot ─────────────────────────────────────────────────────────────────
 app.include_router(chat_router)
+
+
+# ── API versioning ─────────────────────────────────────────────────────────────
+# Every route above lives at /api/<path>. We expose the same handlers under
+# /api/v1/<path> so future clients can pin to the versioned prefix while
+# existing integrations continue to use /api/<path> without change.
+#
+# Implementation: mount a thin APIRouter that re-exports each group of routes.
+# Adding a dedicated v1 router avoids code duplication; route handlers remain
+# defined once and are registered on both prefixes.
+
+from fastapi import APIRouter as _APIRouter
+
+_v1 = _APIRouter(prefix="/api/v1")
+
+# Include all existing app routes under the v1 prefix by copying their routes.
+# FastAPI stores registered routes in app.routes; we re-mount each on _v1.
+for _route in list(app.routes):
+    from fastapi.routing import APIRoute as _APIRoute
+    if isinstance(_route, _APIRoute) and _route.path.startswith("/api/"):
+        # Strip the /api prefix so /api/auth/login → /api/v1/auth/login
+        _v1_path = _route.path[len("/api"):]
+        _v1.add_api_route(
+            _v1_path,
+            _route.endpoint,
+            methods=list(_route.methods or ["GET"]),
+            response_model=_route.response_model,
+            status_code=_route.status_code,
+            tags=_route.tags,
+            summary=_route.summary,
+            include_in_schema=False,  # hide v1 duplicates from /docs to reduce noise
+        )
+
+app.include_router(_v1)

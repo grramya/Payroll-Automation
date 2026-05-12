@@ -27,8 +27,46 @@ _NAME     = os.environ.get("DB_NAME",     "finance_suite")
 
 DATABASE_URL = f"postgresql+psycopg2://{_USER}:{_PASSWORD}@{_HOST}:{_PORT}/{_NAME}"
 
-engine       = create_engine(DATABASE_URL, pool_pre_ping=True, pool_size=10, max_overflow=20)
+engine       = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,   # detect stale connections before use
+    pool_size=20,         # sustained concurrent connections
+    max_overflow=10,      # burst headroom above pool_size
+    pool_recycle=3600,    # recycle connections hourly to avoid server-side timeouts
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# ── Slow query logging ────────────────────────────────────────────────────────
+# Queries that take longer than this threshold are written to stderr.
+# Set SLOW_QUERY_MS=0 to disable. Default: 200ms.
+import time as _time
+from sqlalchemy import event as _sa_event
+
+_SLOW_QUERY_MS = int(os.environ.get("SLOW_QUERY_MS", "200"))
+
+
+@_sa_event.listens_for(engine, "before_cursor_execute")
+def _before_query(conn, cursor, statement, parameters, context, executemany):
+    if _SLOW_QUERY_MS > 0:
+        context._query_start = _time.monotonic()
+
+
+@_sa_event.listens_for(engine, "after_cursor_execute")
+def _after_query(conn, cursor, statement, parameters, context, executemany):
+    if _SLOW_QUERY_MS <= 0:
+        return
+    start = getattr(context, "_query_start", None)
+    if start is None:
+        return
+    elapsed_ms = (_time.monotonic() - start) * 1000
+    if elapsed_ms >= _SLOW_QUERY_MS:
+        import sys as _sys
+        # Truncate to 300 chars to avoid flooding logs
+        snippet = statement.replace("\n", " ")[:300]
+        print(
+            f"[slow-query] {elapsed_ms:.0f}ms — {snippet}",
+            file=_sys.stderr, flush=True,
+        )
 
 
 class Base(DeclarativeBase):
@@ -73,11 +111,13 @@ class RevokedToken(Base):
 
 class JeSession(Base):
     __tablename__ = "je_sessions"
-    id       = Column(String(255), primary_key=True)
-    # owner_id (Integer FK → users.id) replaces the old owner string FK (issue #1)
-    owner_id = Column(Integer, ForeignKey("users.id", ondelete="NO ACTION"), nullable=False)
-    payload  = Column(JSONB, nullable=False)
-    saved_at = Column(DateTime(timezone=True), nullable=False)
+    id           = Column(String(255), primary_key=True)
+    owner_id     = Column(Integer, ForeignKey("users.id", ondelete="NO ACTION"), nullable=False)
+    # payload_path points to a JSON file on the sessions volume (migration 0011).
+    # payload JSONB is kept for backward compat with rows written before 0011.
+    payload_path = Column(Text, nullable=True)
+    payload      = Column(JSONB, nullable=True)
+    saved_at     = Column(DateTime(timezone=True), nullable=False)
     __table_args__ = (
         Index("ix_je_sessions_owner_id", "owner_id"),
     )
@@ -219,6 +259,33 @@ class ActivityLogEntry(Base):
     )
 
 
+# ── Payroll Configuration (DB-backed, replaces hardcoded config.py dicts) ─────
+
+class PayrollConfigEntry(Base):
+    """One row per configuration key.  value is stored as JSON text so it can
+    hold scalars, lists, or dicts without schema changes.
+
+    Keys mirror the constants in config.py (SPECIAL_COLUMNS, DEPARTMENT_TO_CLASS, …).
+    Seeded from config.py defaults on first startup; editable via the admin API.
+    """
+    __tablename__ = "payroll_config"
+    key        = Column(String(255), primary_key=True)
+    value_json = Column(Text, nullable=False)
+    updated_at = Column(DateTime(timezone=True), nullable=False)
+
+
+# ── Application-wide configuration (system prompt, feature flags, …) ──────────
+
+class AppConfig(Base):
+    """Generic key/value store for application-level settings that should be
+    editable without a code deployment (e.g. the AI chatbot system prompt).
+    """
+    __tablename__ = "app_config"
+    key        = Column(String(255), primary_key=True)
+    value      = Column(Text, nullable=False)
+    updated_at = Column(DateTime(timezone=True), nullable=False)
+
+
 # ── Pydantic schemas for JSONB validation ─────────────────────────────────────
 
 class JeSessionPayloadSchema(BaseModel):
@@ -241,26 +308,36 @@ def _build_fernet() -> "Fernet | None":
         return None
     try:
         return Fernet(key.encode())
-    except Exception:
+    except Exception as exc:
+        import sys as _sys
+        print(f"[database] Invalid TOKEN_ENCRYPTION_KEY: {exc}", file=_sys.stderr, flush=True)
         return None
 
 _fernet = _build_fernet()
 
 
 def encrypt_token(t: str) -> str:
-    """Encrypt an OAuth token before DB storage. No-op if TOKEN_ENCRYPTION_KEY is unset."""
-    if _fernet is None or not t:
+    """Encrypt an OAuth token before DB storage. Raises if TOKEN_ENCRYPTION_KEY is not configured."""
+    if not t:
         return t
+    if _fernet is None:
+        raise RuntimeError(
+            "TOKEN_ENCRYPTION_KEY is required but not set. "
+            "QBO tokens cannot be stored without encryption."
+        )
     return _fernet.encrypt(t.encode()).decode()
 
 
 def decrypt_token(t: str) -> str:
-    """Decrypt an OAuth token read from DB. Falls back to plaintext for pre-encryption tokens."""
-    if _fernet is None or not t:
+    """Decrypt an OAuth token read from DB. Falls back to plaintext for legacy unencrypted tokens."""
+    if not t:
+        return t
+    if _fernet is None:
         return t
     try:
         return _fernet.decrypt(t.encode()).decode()
     except Exception:
+        # Token was stored before encryption was enabled — return as-is
         return t
 
 

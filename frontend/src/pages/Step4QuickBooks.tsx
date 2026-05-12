@@ -4,6 +4,7 @@ import type { ColDef, CellContextMenuEvent, IRowNode } from 'ag-grid-community'
 import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import Alert from '../components/Alert'
+import { CardSkeleton } from '../components/SkeletonLoader'
 import { useApp } from '../context/AppContext'
 import type { QBOStatus, QBOTableData, JERow } from '../api/api'
 import {
@@ -56,8 +57,9 @@ function isSyncStale(isoStr: string | null): boolean {
 export default function Step4QuickBooks() {
   const { sessionId, setLoading, loading, loadingMsg } = useApp()
 
-  const [status,       setStatus]       = useState<QBOStatus | null>(null)
-  const [loadErr,      setLoadErr]       = useState('')
+  const [status,        setStatus]       = useState<QBOStatus | null>(null)
+  const [statusLoading, setStatusLoading] = useState(true)   // skeleton during first fetch
+  const [loadErr,       setLoadErr]       = useState('')
   const [apiError,     setApiError]     = useState('')
   const [msg,          setMsg]          = useState('')
   const [redirectUrl,  setRedirectUrl]  = useState('')
@@ -65,6 +67,9 @@ export default function Step4QuickBooks() {
   const [showAccounts, setShowAccounts] = useState(false)
   const [showVendors,  setShowVendors]  = useState(false)
   const [showClasses,  setShowClasses]  = useState(false)
+  // Track the OAuth popup window so we can poll for its closure
+  const popupRef = useRef<Window | null>(null)
+  const pollRef  = useRef<ReturnType<typeof setInterval> | null>(null)
   const [accounts,     setAccounts]     = useState<TableState>(emptyTable())
   const [vendors,      setVendors]      = useState<TableState>(emptyTable())
   const [classes,      setClasses]      = useState<TableState>(emptyTable())
@@ -82,25 +87,82 @@ export default function Step4QuickBooks() {
   useEffect(() => { fetchStatus() }, [])
 
   async function fetchStatus() {
-    setLoading(true, 'Checking QuickBooks status…')
+    setStatusLoading(true)
     try { setStatus(await getQBOStatus()) }
     catch { setLoadErr('Could not check QuickBooks status.') }
-    finally { setLoading(false) }
+    finally { setStatusLoading(false) }
   }
 
+  // ── Cleanup popup polling on unmount ────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+      if (popupRef.current && !popupRef.current.closed) popupRef.current.close()
+    }
+  }, [])
+
   // ── Auth actions ─────────────────────────────────────────────────────────────
+
+  /**
+   * Opens the Intuit OAuth page in a popup window (600×700).
+   * Polls every 500 ms for the popup to close, then re-fetches QBO status.
+   * Falls back to paste-mode if the popup is blocked by the browser.
+   */
   async function handleConnect() {
     setApiError('')
     setLoading(true, 'Starting QuickBooks authorization…')
     try {
       const d = await startQBOAuth()
-      window.open(d.auth_url, '_blank', 'noopener,noreferrer')
-      setShowExchange(true)
-      setMsg('Authorization page opened. Complete sign-in, then paste the redirect URL below.')
+
+      // Attempt popup mode first
+      const popup = window.open(
+        d.auth_url,
+        'qbo_oauth',
+        'width=640,height=720,left=200,top=100,resizable=yes,scrollbars=yes'
+      )
+
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        // Popup was blocked — fall back to paste-mode so users aren't stuck
+        setShowExchange(true)
+        setMsg(
+          'Popup was blocked by your browser. Complete sign-in in the new tab, ' +
+          'then paste the redirect URL below.'
+        )
+        window.open(d.auth_url, '_blank', 'noopener,noreferrer')
+        return
+      }
+
+      popupRef.current = popup
+      setMsg('Sign in to QuickBooks in the popup window. This panel will update automatically when done.')
+
+      // Poll until the popup closes (backend callback does window.close())
+      pollRef.current = setInterval(async () => {
+        if (!popupRef.current || popupRef.current.closed) {
+          if (pollRef.current) clearInterval(pollRef.current)
+          pollRef.current  = null
+          popupRef.current = null
+          setMsg('')
+          // Re-fetch status to see if auth succeeded
+          try {
+            const updated = await getQBOStatus()
+            setStatus(updated)
+            if (updated.authenticated) {
+              setMsg('Connected to QuickBooks successfully!')
+            } else {
+              setApiError('Authorization did not complete. Please try again.')
+            }
+          } catch {
+            setApiError('Could not verify QuickBooks status after authorization.')
+          }
+        }
+      }, 500)
+
     } catch (err: unknown) {
       const e = err as { response?: { data?: { detail?: string } } }
       setApiError(e.response?.data?.detail || 'Failed to start authorization.')
-    } finally { setLoading(false) }
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function handleExchange() {
@@ -222,6 +284,13 @@ export default function Step4QuickBooks() {
       {apiError && <Alert type="error" onClose={() => setApiError('')}>{apiError}</Alert>}
       {msg      && <Alert type="success" onClose={() => setMsg('')}>{msg}</Alert>}
 
+      {statusLoading && !status && (
+        <>
+          <CardSkeleton lines={2} />
+          <CardSkeleton lines={1} />
+        </>
+      )}
+
       {status && !status.creds_configured && (
         <Alert type="error">
           <strong>QBO credentials not configured.</strong> Copy <code>.env.example</code> → <code>.env</code>,
@@ -254,15 +323,22 @@ export default function Step4QuickBooks() {
 
           {showExchange && (
             <div style={{ marginTop: 16 }}>
-              <Alert type="info">After signing in to QuickBooks, copy the full redirect URL from your browser and paste it below.</Alert>
-              <label className="form-label" style={{ marginTop: 12 }}>Redirect URL</label>
-              <input className="form-input" value={redirectUrl} onChange={e => setRedirectUrl(e.target.value)}
-                placeholder="https://developer.intuit.com/v2/OAuth2Playground/RedirectUrl?..." />
+              <Alert type="info">
+                <strong>Popup blocked.</strong> After signing in to QuickBooks in the new tab,
+                copy the full redirect URL from your browser's address bar and paste it below.
+              </Alert>
+              <label className="form-label" style={{ marginTop: 12 }}>Redirect URL (paste-mode fallback)</label>
+              <input
+                className="form-input"
+                value={redirectUrl}
+                onChange={e => setRedirectUrl(e.target.value)}
+                placeholder="http://localhost:8000/api/qbo/callback?code=…&state=…&realmId=…"
+              />
               <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
                 <button className="btn btn-primary" onClick={handleExchange} disabled={loading}>
                   <span className="material-icons-round">check</span>Complete Authorization
                 </button>
-                <button className="btn btn-secondary" onClick={() => setShowExchange(false)}>Cancel</button>
+                <button className="btn btn-secondary" onClick={() => { setShowExchange(false); setRedirectUrl('') }}>Cancel</button>
               </div>
             </div>
           )}

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { useAuth } from '../context/AuthContext'
@@ -20,6 +20,14 @@ const PAYROLL_STEPS = [
   { n: 4, icon: 'cloud_sync',  label: 'Step 4: QuickBooks' },
 ]
 
+// Steps that are "done" once we have a session
+// Step 1 is done when sessionId is set; steps 2-4 become accessible after that.
+function stepStatus(n: number, sessionId: string | null): 'done' | 'active' | 'todo' {
+  if (n === 1 && sessionId) return 'done'
+  if (n !== 1 && sessionId) return 'active'
+  return 'todo'
+}
+
 const FPA_RESULT_ITEMS = [
   { path: '/fpa/dashboard',         icon: 'dashboard',       label: 'Dashboard' },
   { path: '/fpa/staging',           icon: 'table_chart',     label: 'Staging Output' },
@@ -30,7 +38,9 @@ const FPA_RESULT_ITEMS = [
   { path: '/fpa/comparative-pl-bd', icon: 'bar_chart',       label: 'Comp P&L (BD)' },
 ]
 
-export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
+// Wrapped with memo so jeRows edits in AppContext don't force Sidebar to re-render.
+// Sidebar only reads sessionId from AppContext — memo breaks the chain for unrelated updates.
+const Sidebar = memo(function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const { sessionId } = useApp()
   const { user } = useAuth()
   const { result: fpaResult } = useFpaResult()
@@ -197,6 +207,8 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                 <div id="payroll-section" hidden={!payrollOpen}>
                   {PAYROLL_STEPS.map(({ n, icon, label }) => {
                     const locked = n === 2 && !sessionId
+                    const status = stepStatus(n, sessionId)
+
                     if (locked) {
                       return (
                         <span
@@ -223,6 +235,16 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                       >
                         <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">{icon}</span>
                         <span style={styles.navLabel}>{label}</span>
+                        {status === 'done' && (
+                          <span
+                            className="material-icons-round"
+                            style={{ fontSize: 13, color: '#22c55e', flexShrink: 0 }}
+                            aria-label="completed"
+                            title="Completed"
+                          >
+                            check_circle
+                          </span>
+                        )}
                       </NavLink>
                     )
                   })}
@@ -448,7 +470,9 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       </div>
     </>
   )
-}
+})
+
+export default Sidebar
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 

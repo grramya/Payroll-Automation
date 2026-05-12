@@ -11,7 +11,7 @@ import { useFpaResult }   from "../../context/FpaResultContext";
 export default function BSIndividualPage() {
   const { result, pageFilters, setPageFilter } = useFpaResult();
   if (!result) return null;
-  const { bsiBlob, bsiPreview, companyName } = result;
+  const { bsiUrl, bsiPreview, companyName } = result;
 
   const bsi = bsiPreview as Record<string, unknown> | null;
   const isNewShape   = !!bsi?.rows_by_month;
@@ -27,11 +27,9 @@ export default function BSIndividualPage() {
   const isBalanced = checkVal != null && Math.abs(checkVal) < 0.01;
 
   const handleDownload = () => {
-    if (!bsiBlob) return;
-    const url = URL.createObjectURL(bsiBlob);
-    const a   = document.createElement("a");
-    a.href = url; a.download = `${companyName}_bs_individual.xlsx`; a.click();
-    URL.revokeObjectURL(url);
+    if (!bsiUrl) return;
+    const a = document.createElement("a");
+    a.href = bsiUrl; a.download = `${companyName}_bs_individual.xlsx`; a.click();
   };
 
   const displayMonth = selectedMonth || defaultMonth;
@@ -54,7 +52,7 @@ export default function BSIndividualPage() {
                   </Select>
                 </FormControl>
               )}
-              {bsiBlob && (
+              {bsiUrl && (
                 <Button size="small" variant="contained" startIcon={<AccountBalanceWalletIcon aria-hidden="true" />} onClick={handleDownload} aria-label={`Download ${companyName}_bs_individual.xlsx`} sx={{ background: "linear-gradient(135deg,#400f61,#2d0a45)", height: 40 }}>
                   Download .xlsx
                 </Button>

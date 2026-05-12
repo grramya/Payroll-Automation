@@ -14,18 +14,8 @@ import LinkIcon from "@mui/icons-material/Link";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
-import { useFpaResult, FpaResult } from "../../context/FpaResultContext";
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function b64ToBlob(b64: string): Blob {
-  const bin = atob(b64);
-  const buf = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-  return new Blob([buf], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
-}
+import { useFpaResult, fpaResultFromEventData } from "../../context/FpaResultContext";
+import type { FpaResult } from "../../context/FpaResultContext";
 
 function formatAge(isoStr: string): string {
   const mins = Math.round((Date.now() - new Date(isoStr).getTime()) / 60000);
@@ -357,28 +347,7 @@ export default function GeneratePage() {
   }, [fetchQboStatus]);
 
   const applyResult = (data: Record<string, unknown>): void => {
-    const {
-      cached_at, summary, preview, excel_b64, bs_excel_b64, bs_preview, bsi_excel_b64, bsi_preview,
-      pl_excel_b64, pl_preview, comp_pl_excel_b64, comp_pl_preview,
-      comp_pl_bd_excel_b64, comp_pl_bd_preview,
-    } = data;
-    setResult({
-      summary:         summary as Record<string, unknown>,
-      previewRows:     preview as Record<string, unknown>[],
-      cachedAt:        (cached_at as string | undefined) ?? null,
-      companyName:     qboCompanyName.trim(),
-      downloadBlob:    b64ToBlob(excel_b64 as string),
-      bsBlob:          bs_excel_b64         ? b64ToBlob(bs_excel_b64 as string)         : null,
-      bsPreview:       (bs_preview          as Record<string, unknown> | undefined)  ?? null,
-      bsiBlob:         bsi_excel_b64        ? b64ToBlob(bsi_excel_b64 as string)        : null,
-      bsiPreview:      (bsi_preview         as Record<string, unknown> | undefined)  ?? null,
-      plBlob:          pl_excel_b64         ? b64ToBlob(pl_excel_b64 as string)         : null,
-      plPreview:       (pl_preview          as Record<string, unknown> | undefined)  ?? null,
-      compPlBlob:      comp_pl_excel_b64    ? b64ToBlob(comp_pl_excel_b64 as string)    : null,
-      compPlPreview:   (comp_pl_preview     as Record<string, unknown> | undefined)  ?? null,
-      compPlBdBlob:    comp_pl_bd_excel_b64 ? b64ToBlob(comp_pl_bd_excel_b64 as string) : null,
-      compPlBdPreview: (comp_pl_bd_preview  as Record<string, unknown> | undefined)  ?? null,
-    });
+    setResult(fpaResultFromEventData(data, qboCompanyName.trim()));
   };
 
   const handleReset = (): void => {
@@ -394,19 +363,17 @@ export default function GeneratePage() {
     abortRef.current = ctrl;
 
     try {
-      const rawToken = localStorage.getItem("pje_token") || sessionStorage.getItem("pje_token") || "";
-      const token = rawToken ? `Bearer ${rawToken}` : "";
-      const resp = await fetch("/api/fpa/qbo-fetch",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: token },
-          body: JSON.stringify({
-            company_name:   qboCompanyName.trim(),
-            include_broker: includeBroker,
-          }),
-          signal: ctrl.signal,
-        }
-      );
+      // credentials: "include" sends the httpOnly auth cookie automatically
+      const resp = await fetch("/api/fpa/qbo-fetch", {
+        method:      "POST",
+        headers:     { "Content-Type": "application/json" },
+        credentials: "include",
+        body:        JSON.stringify({
+          company_name:   qboCompanyName.trim(),
+          include_broker: includeBroker,
+        }),
+        signal: ctrl.signal,
+      });
 
       if (!resp.ok) {
         const text = await resp.text();

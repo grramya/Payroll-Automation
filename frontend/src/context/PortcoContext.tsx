@@ -11,6 +11,14 @@ import { apiClient } from "../api/api";
 
 const ALL_MONTHS = allDataMonths();
 
+const MAX_HISTORY = 20
+
+// Snapshot of editable data kept in the undo/redo stack
+interface Snapshot {
+  actuals: MetricMap;
+  budget:  MetricMap;
+}
+
 // ── Context shape ─────────────────────────────────────────────────────────────
 interface PortcoCtx {
   actualsValues: MetricMap;
@@ -22,6 +30,8 @@ interface PortcoCtx {
   activeTab:    TabId;
   hasEdits:     boolean;
   syncing:      boolean;
+  canUndo:      boolean;
+  canRedo:      boolean;
 
   updateActuals:     (id: string, month: string, value: number | null) => void;
   updateBudget:      (id: string, month: string, value: number | null) => void;
@@ -30,6 +40,8 @@ interface PortcoCtx {
   setYear:           (y: number) => void;
   setActiveTab:      (t: TabId)  => void;
   clearAll:          () => void;
+  undo:              () => void;
+  redo:              () => void;
 }
 
 const PortcoContext = createContext<PortcoCtx>({} as PortcoCtx);
@@ -79,6 +91,20 @@ export function PortcoProvider({ children }: { children: ReactNode }) {
   const [hasEdits,      setHasEdits]      = useState(false);
   const [syncing,       setSyncing]       = useState(false);
 
+  // ── Undo / redo history ───────────────────────────────────────────────────
+  const undoStack = useRef<Snapshot[]>([]);
+  const redoStack = useRef<Snapshot[]>([]);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  function pushHistory(actuals: MetricMap, budget: MetricMap) {
+    undoStack.current.push({ actuals, budget });
+    if (undoStack.current.length > MAX_HISTORY) undoStack.current.shift();
+    redoStack.current = [];
+    setCanUndo(undoStack.current.length > 0);
+    setCanRedo(false);
+  }
+
   // Debounce timer ref for server saves
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -116,6 +142,7 @@ export function PortcoProvider({ children }: { children: ReactNode }) {
   const updateActuals = useCallback(
     (id: string, month: string, value: number | null) => {
       setActualsValues((prev) => {
+        pushHistory(prev, budgetValues);
         const next = { ...prev, [id]: { ...(prev[id] ?? {}), [month]: value } };
         scheduleSave(next, budgetValues, selectedYear);
         return next;
@@ -128,6 +155,7 @@ export function PortcoProvider({ children }: { children: ReactNode }) {
   const updateBudget = useCallback(
     (id: string, month: string, value: number | null) => {
       setBudgetValues((prev) => {
+        pushHistory(actualsValues, prev);
         const next = { ...prev, [id]: { ...(prev[id] ?? {}), [month]: value } };
         scheduleSave(actualsValues, next, selectedYear);
         return next;
@@ -136,6 +164,41 @@ export function PortcoProvider({ children }: { children: ReactNode }) {
     },
     [actualsValues, scheduleSave, selectedYear]
   );
+
+  const undo = useCallback(() => {
+    const snapshot = undoStack.current.pop();
+    if (!snapshot) return;
+    redoStack.current.push({ actuals: actualsValues, budget: budgetValues });
+    setActualsValues(snapshot.actuals);
+    setBudgetValues(snapshot.budget);
+    scheduleSave(snapshot.actuals, snapshot.budget, selectedYear);
+    setCanUndo(undoStack.current.length > 0);
+    setCanRedo(true);
+    setHasEdits(true);
+  }, [actualsValues, budgetValues, scheduleSave, selectedYear]);
+
+  const redo = useCallback(() => {
+    const snapshot = redoStack.current.pop();
+    if (!snapshot) return;
+    undoStack.current.push({ actuals: actualsValues, budget: budgetValues });
+    setActualsValues(snapshot.actuals);
+    setBudgetValues(snapshot.budget);
+    scheduleSave(snapshot.actuals, snapshot.budget, selectedYear);
+    setCanUndo(true);
+    setCanRedo(redoStack.current.length > 0);
+    setHasEdits(true);
+  }, [actualsValues, budgetValues, scheduleSave, selectedYear]);
+
+  // Ctrl+Z = undo, Ctrl+Y / Ctrl+Shift+Z = redo
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+      if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) { e.preventDefault(); redo(); }
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [undo, redo]);
 
   const loadActualsValues = useCallback(
     (map: MetricMap) => {
@@ -181,6 +244,8 @@ export function PortcoProvider({ children }: { children: ReactNode }) {
         activeTab,
         hasEdits,
         syncing,
+        canUndo,
+        canRedo,
         updateActuals,
         updateBudget,
         loadActualsValues,
@@ -188,6 +253,8 @@ export function PortcoProvider({ children }: { children: ReactNode }) {
         setYear,
         setActiveTab,
         clearAll,
+        undo,
+        redo,
       }}
     >
       {children}

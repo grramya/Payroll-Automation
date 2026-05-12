@@ -53,17 +53,15 @@ export default function StagingPage() {
   const { result } = useFpaResult();
   const [tab, setTab] = useState(0);
   if (!result) return null;
-  const { summary, previewRows, downloadBlob, companyName } = result;
+  const { summary, previewRows, downloadUrl, companyName } = result;
 
   const s        = summary as Record<string, unknown> | null;
   const coverage = s ? (((s.matched_rows as number) / (s.total_rows as number)) * 100).toFixed(1) : "0";
 
   const handleDownload = () => {
-    if (!downloadBlob) return;
-    const url = URL.createObjectURL(downloadBlob);
+    if (!downloadUrl) return;
     const a = document.createElement("a");
-    a.href = url; a.download = `${companyName}_staging_output.xlsx`; a.click();
-    URL.revokeObjectURL(url);
+    a.href = downloadUrl; a.download = `${companyName}_staging_output.xlsx`; a.click();
   };
 
   return (

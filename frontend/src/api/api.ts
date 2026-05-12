@@ -1,26 +1,21 @@
 import axios from 'axios'
 
-const http = axios.create({ baseURL: '/api' })
+const http = axios.create({
+  baseURL: '/api/v1',
+  // Required so the browser sends the httpOnly access_token cookie with every request.
+  // The cookie is set by the server on login and never accessible to JavaScript.
+  withCredentials: true,
+})
 export { http as apiClient }
 
-// ── Request interceptor — attach JWT from whichever storage holds it ──────────
-http.interceptors.request.use((config) => {
-  const token =
-    localStorage.getItem('pje_token') ||
-    sessionStorage.getItem('pje_token')
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  return config
-})
-
-// ── Response interceptor — handle 401 (expired / revoked session) ─────────────
+// ── Response interceptor — redirect to /login on 401 ─────────────────────────
+// No request interceptor needed: the browser sends the httpOnly cookie automatically.
 http.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('pje_token')
+      // Remove the cached user profile (non-sensitive) so the login page re-renders cleanly
       localStorage.removeItem('pje_user')
-      sessionStorage.removeItem('pje_token')
-      sessionStorage.removeItem('pje_user')
       window.location.href = '/login'
     }
     return Promise.reject(err)
@@ -121,6 +116,13 @@ export async function saveFpaDeptMap(rows: FpaDeptRow[]): Promise<void> {
 export interface ActivityLogData {
   rows: JERow[]
   columns: string[]
+}
+
+export interface ActivityLogFilters {
+  action?: string
+  journal_number?: string
+  date_from?: string
+  date_to?: string
 }
 
 export interface UserRecord {
@@ -311,8 +313,8 @@ export async function syncQBOClasses(): Promise<QBOTableData> {
 
 // ── Activity log ───────────────────────────────────────────────────────────────
 
-export async function getActivityLog(): Promise<ActivityLogData> {
-  const { data } = await http.get<ActivityLogData>('/activity-log')
+export async function getActivityLog(filters?: ActivityLogFilters): Promise<ActivityLogData> {
+  const { data } = await http.get<ActivityLogData>('/activity-log', { params: filters })
   return data
 }
 
@@ -369,20 +371,34 @@ export async function updateUserPermissions(
 
 // ── FP&A ───────────────────────────────────────────────────────────────────────
 
+export type FpaReportType = 'combined' | 'bs' | 'bsi' | 'pl' | 'comp_pl' | 'comp_pl_bd'
+
 export interface FpaTransformResponse {
   summary: Record<string, unknown>
   preview: Record<string, unknown>[]
-  excel_b64: string
-  bs_excel_b64: string
-  bs_preview: Record<string, unknown>
-  bsi_excel_b64: string
-  bsi_preview: Record<string, unknown>
-  pl_excel_b64: string
-  pl_preview: Record<string, unknown>
-  comp_pl_excel_b64: string
-  comp_pl_preview: Record<string, unknown>
-  comp_pl_bd_excel_b64: string
-  comp_pl_bd_preview: Record<string, unknown>
+  // Blob fields present only in SSE 'done' event and direct /fpa/transform response.
+  // The /fpa/qbo-cache endpoint no longer returns blobs — use fpaDownloadCachedReport().
+  excel_b64?: string
+  bs_excel_b64?: string
+  bs_preview?: Record<string, unknown>
+  bsi_excel_b64?: string
+  bsi_preview?: Record<string, unknown>
+  pl_excel_b64?: string
+  pl_preview?: Record<string, unknown>
+  comp_pl_excel_b64?: string
+  comp_pl_preview?: Record<string, unknown>
+  comp_pl_bd_excel_b64?: string
+  comp_pl_bd_preview?: Record<string, unknown>
+}
+
+/** Download a single cached FP&A Excel report without fetching all blobs. */
+export function fpaDownloadCachedReportUrl(reportType: FpaReportType): string {
+  return `/api/v1/fpa/qbo-cache/report/${reportType}`
+}
+
+export async function fpaDownloadCachedReport(reportType: FpaReportType): Promise<Blob> {
+  const res = await http.get(`/fpa/qbo-cache/report/${reportType}`, { responseType: 'blob' })
+  return res.data as Blob
 }
 
 export async function fpaGetMeta(file: File): Promise<{ company_name: string }> {

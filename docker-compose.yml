@@ -7,19 +7,26 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file: ./backend/.env
+    depends_on:
+      redis:
+        condition: service_healthy
     environment:
-      # auth.db is stored in the named volume, not inside the image
       - PJE_DATA_DIR=/data/db
+      - WORKERS=${WORKERS:-2}
+      - REDIS_URL=redis://redis:6379
+      # OpenTelemetry — traces exported to the local collector
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_SERVICE_NAME=payroll-backend
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=otlp
     volumes:
-      # Persistent database (named volume — survives container rebuilds)
       - db_data:/data/db
-      # Bind-mount data dirs so you can access files directly on the host
       - ./backend/Mapping:/app/Mapping
       - ./backend/logs:/app/logs
       - ./backend/inputs:/app/inputs
       - ./backend/JE:/app/JE
       - ./backend/consolidated:/app/consolidated
-      - ./backend/qbo/tokens.json:/app/qbo/tokens.json
+      - sessions_data:/app/sessions
     networks:
       - payroll_net
     healthcheck:
@@ -27,7 +34,15 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 15s
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   # ── React frontend served by nginx ───────────────────────────────────────────
   frontend:
@@ -36,16 +51,117 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "80:80"       # change to "443:443" when adding HTTPS/SSL
+      - "80:80"
     depends_on:
       backend:
         condition: service_healthy
     networks:
       - payroll_net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # ── Automated PostgreSQL backup ───────────────────────────────────────────────
+  # Runs pg_dump daily at 02:00, retains 7 most-recent dumps in ./backups/
+  db-backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: ./backend/.env
+    environment:
+      - PGPASSWORD=${DB_PASSWORD:-}
+    volumes:
+      - ./backups:/backups
+    networks:
+      - payroll_net
+    entrypoint: >
+      sh -c "
+        while true; do
+          NOW=$$(date +%Y%m%d_%H%M%S);
+          pg_dump -h $${DB_HOST:-localhost} -U $${DB_USER:-postgres} -d $${DB_NAME:-finance_suite}
+            -f /backups/finance_suite_$${NOW}.sql &&
+          echo \"[backup] Dump written: finance_suite_$${NOW}.sql\" &&
+          ls -t /backups/*.sql | tail -n +8 | xargs -r rm -- &&
+          echo \"[backup] Pruned old backups\";
+          sleep 86400;
+        done
+      "
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # ── Redis — token revocation cache + rate-limit state ────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - payroll_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── OpenTelemetry Collector ───────────────────────────────────────────────────
+  # Receives OTLP traces/metrics from the backend and forwards to Prometheus/Jaeger
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    restart: unless-stopped
+    volumes:
+      - ./observability/otel-collector.yml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+      - "8889:8889"   # Prometheus metrics scrape port (from collector)
+    networks:
+      - payroll_net
+    depends_on:
+      - backend
+
+  # ── Prometheus ────────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - payroll_net
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+
+  # ── Grafana ───────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    networks:
+      - payroll_net
+    depends_on:
+      - prometheus
 
 networks:
   payroll_net:
     driver: bridge
 
 volumes:
-  db_data:    # named volume — auth.db persists here across rebuilds
+  db_data:         # PostgreSQL data
+  sessions_data:   # JE session .pf files
+  redis_data:      # Redis AOF / RDB persistence
+  prometheus_data: # Prometheus TSDB
+  grafana_data:    # Grafana dashboards and config
