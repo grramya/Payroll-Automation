@@ -80,7 +80,7 @@ export default function PreviewTable({ rows }: Props) {
         }}
       >
         <Box>
-          <Typography variant="subtitle1" fontWeight={700} id="preview-caption">Data Preview</Typography>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }} id="preview-caption">Data Preview</Typography>
           <Typography variant="caption" color="text.secondary">50 Balance Sheet + 50 P&amp;L rows sampled</Typography>
         </Box>
         <TextField
@@ -88,14 +88,16 @@ export default function PreviewTable({ rows }: Props) {
           placeholder="Search…"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(0); }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ fontSize: 16, color: "text.disabled" }} aria-hidden="true" />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ fontSize: 16, color: "text.disabled" }} aria-hidden="true" />
+                </InputAdornment>
+              ),
+            },
+            htmlInput: { "aria-label": "Search preview data", role: "searchbox" },
           }}
-          inputProps={{ "aria-label": "Search preview data", role: "searchbox" }}
           sx={{ width: 200 }}
         />
       </Box>

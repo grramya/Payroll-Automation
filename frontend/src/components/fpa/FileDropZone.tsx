@@ -97,7 +97,7 @@ export default function FileDropZone({ label, accept, file, onFile }: Props) {
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
             <CheckCircleIcon sx={{ fontSize: 14, color: "success.main" }} aria-hidden="true" />
-            <Typography variant="body2" fontWeight={600} color="success.dark">
+            <Typography variant="body2" sx={{ fontWeight: 600 }} color="success.dark">
               {file.name}
             </Typography>
           </Box>
@@ -121,7 +121,7 @@ export default function FileDropZone({ label, accept, file, onFile }: Props) {
               aria-hidden="true"
             />
           </Box>
-          <Typography variant="body2" fontWeight={600} color="text.primary">
+          <Typography variant="body2" sx={{ fontWeight: 600 }} color="text.primary">
             {dragging ? "Drop file here" : "Click or drag & drop"}
           </Typography>
           <Typography variant="caption" color="text.secondary">

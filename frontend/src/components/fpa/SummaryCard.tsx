@@ -93,13 +93,13 @@ function PartialTable({
           <TableFooter>
             <TableRow sx={{ bgcolor: alpha(color, 0.06) }}>
               <TableCell component="th" scope="row" sx={{ borderTop: `2px solid ${alpha(color, 0.2)}`, py: 1 }}>
-                <Typography variant="body2" fontWeight={700} sx={{ color }}>Total</Typography>
+                <Typography variant="body2" sx={{ color, fontWeight: 700 }}>Total</Typography>
               </TableCell>
               <TableCell align="right" sx={{ borderTop: `2px solid ${alpha(color, 0.2)}`, py: 1 }}>
                 <Chip label={totalRows} size="small" sx={{ fontWeight: 700, minWidth: 42, fontSize: "0.72rem", bgcolor: alpha(color, 0.1), color }} />
               </TableCell>
               <TableCell align="right" sx={{ borderTop: `2px solid ${alpha(color, 0.2)}`, py: 1 }}>
-                <Typography variant="body2" fontWeight={700} sx={{ fontSize: "0.78rem", color: totalAmt === 0 ? "success.dark" : color }}>
+                <Typography variant="body2" sx={{ fontSize: "0.78rem", color: totalAmt === 0 ? "success.dark" : color, fontWeight: 700 }}>
                   {totalAmt.toLocaleString("en-US", { style: "currency", currency: "USD" })}
                 </Typography>
               </TableCell>
@@ -134,7 +134,7 @@ export default function SummaryCard({ summary }: Props) {
       aria-label="Transform summary"
     >
       <Box sx={{ px: 3, py: 2, borderBottom: "1px solid #F1F5F9", bgcolor: "#FAFAFA" }}>
-        <Typography variant="subtitle1" fontWeight={700}>Transform Summary</Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Transform Summary</Typography>
       </Box>
 
       <Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 3 }}>
@@ -153,7 +153,7 @@ export default function SummaryCard({ summary }: Props) {
                     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.75 }}>
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: p.bar, flexShrink: 0 }} aria-hidden="true" />
-                        <Typography variant="body2" fontWeight={500} color="text.primary" sx={{ fontSize: "0.82rem" }}>
+                        <Typography variant="body2" color="text.primary" sx={{ fontSize: "0.82rem", fontWeight: 500 }}>
                           {name}
                         </Typography>
                       </Box>
@@ -235,7 +235,7 @@ export default function SummaryCard({ summary }: Props) {
                   <TableFooter>
                     <TableRow sx={{ bgcolor: alpha("#DC2626", 0.05) }}>
                       <TableCell component="th" scope="row" sx={{ borderTop: `2px solid ${alpha("#DC2626", 0.2)}`, py: 1 }}>
-                        <Typography variant="body2" fontWeight={700} color="error.dark">Total unmapped</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 700 }} color="error.dark">Total unmapped</Typography>
                       </TableCell>
                       <TableCell align="right" sx={{ borderTop: `2px solid ${alpha("#DC2626", 0.2)}`, py: 1 }}>
                         <Chip label={unmatched_rows} size="small" color="error" sx={{ fontWeight: 700, minWidth: 42, fontSize: "0.72rem" }} />
@@ -244,7 +244,7 @@ export default function SummaryCard({ summary }: Props) {
                         {(() => {
                           const total = unmatched_accounts.reduce((s, a) => s + (a.amount ?? 0), 0);
                           return (
-                            <Typography variant="body2" fontWeight={700} sx={{ fontSize: "0.78rem", color: total === 0 ? "success.dark" : "error.dark" }}>
+                            <Typography variant="body2" sx={{ fontSize: "0.78rem", color: total === 0 ? "success.dark" : "error.dark", fontWeight: 700 }}>
                               {total === 0 ? "$0.00" : total.toLocaleString("en-US", { style: "currency", currency: "USD" })}
                             </Typography>
                           );

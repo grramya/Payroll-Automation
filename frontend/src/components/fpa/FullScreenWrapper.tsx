@@ -52,9 +52,9 @@ export default function FullScreenWrapper({ title, children, fullContent }: Prop
         fullScreen
         open={open}
         onClose={() => setOpen(false)}
-        TransitionComponent={Transition}
+        slots={{ transition: Transition }}
         aria-label={`${title ?? "Preview"} — full screen`}
-        PaperProps={{ sx: { bgcolor: "#F8FAFC" } }}
+        slotProps={{ paper: { sx: { bgcolor: "#F8FAFC" } } }}
       >
         <AppBar
           elevation={0}

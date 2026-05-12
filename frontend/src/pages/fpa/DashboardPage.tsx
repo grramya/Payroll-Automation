@@ -417,10 +417,10 @@ export default function DashboardPage() {
   const companyName   = result?.companyName ?? "";
 
   // ── All months from data ──────────────────────────────────────────────────
-  const plMonths  = compPlPreview?.available_months ?? [];
-  const plData    = compPlPreview?.data ?? {};
-  const bsMonths  = bsPreview?.months ?? [];
-  const bsRows    = bsPreview?.rows   ?? [];
+  const plMonths  = (compPlPreview?.available_months ?? []) as string[];
+  const plData    = (compPlPreview?.data ?? {}) as Record<string, PlDataRecord>;
+  const bsMonths  = (bsPreview?.months ?? []) as string[];
+  const bsRows    = (bsPreview?.rows ?? []) as unknown as BsRow[];
 
   // ── Date range — derived from data, persisted in context ─────────────────
   const defaultFrom = dayjs().startOf('year');
@@ -597,13 +597,13 @@ export default function DashboardPage() {
             label="From"
             value={fromDate}
             onChange={(v: Dayjs | null) => setFromDate(v)}
-            slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, inputProps: { "aria-label": "Filter from date" } } }}
+            slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
           />
           <DatePicker
             label="To"
             value={toDate}
             onChange={(v: Dayjs | null) => setToDate(v)}
-            slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, inputProps: { "aria-label": "Filter to date" } } }}
+            slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
           />
         </Box>
       </Box>

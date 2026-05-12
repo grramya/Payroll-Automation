@@ -485,7 +485,7 @@ export default function GeneratePage() {
             <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mb: 2 }}>
               <TextField label="Company name" size="small" required
                 value={qboCompanyName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQboCompanyName(e.target.value)}
-                InputProps={{ startAdornment: <InputAdornment position="start"><BusinessIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> }}
+                slotProps={{ input: { startAdornment: <InputAdornment position="start"><BusinessIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> } }}
                 sx={{ flex: "1 1 200px" }} />
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
@@ -499,7 +499,7 @@ export default function GeneratePage() {
                 {qboFetchStatus === "loading" ? "Fetching…" : "Fetch from QBO"}
               </Button>
               {qboFetchStatus !== "idle" && (
-                <Button variant="ghost" size="small" onClick={handleReset} startIcon={<RestartAltIcon />}
+                <Button variant="text" size="small" onClick={handleReset} startIcon={<RestartAltIcon />}
                   sx={{ height: 40, color: "text.secondary", "&:hover": { bgcolor: "#F1F5F9" } }}>
                   Reset
                 </Button>

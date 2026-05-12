@@ -62,7 +62,7 @@ export default function TransformLogic() {
   return (
     <Paper elevation={0} variant="outlined" sx={{ borderRadius: 3, overflow: "hidden" }}>
       <Box sx={{ px: 2.5, py: 2, borderBottom: "1px solid #E2E8F0", bgcolor: "#FAFAFA" }}>
-        <Typography variant="subtitle1" fontWeight={700} id="logic-caption">
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }} id="logic-caption">
           Transformation Logic
         </Typography>
         <Typography variant="caption" color="text.secondary">

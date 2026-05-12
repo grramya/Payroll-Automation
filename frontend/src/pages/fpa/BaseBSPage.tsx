@@ -83,8 +83,8 @@ export default function BaseBSPage() {
               <Typography variant="body2" color="text.secondary">Month-end balances from staging data &mdash; <strong>{companyName}</strong></Typography>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
-              <DatePicker label="From" value={fromDate} onChange={(v: Dayjs | null) => setFromDate(v)} slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, inputProps: { "aria-label": "Filter from date" } } }} />
-              <DatePicker label="To"   value={toDate}   onChange={(v: Dayjs | null) => setToDate(v)}   slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, inputProps: { "aria-label": "Filter to date" } } }} />
+              <DatePicker label="From" value={fromDate} onChange={(v: Dayjs | null) => setFromDate(v)} slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, } }} />
+              <DatePicker label="To"   value={toDate}   onChange={(v: Dayjs | null) => setToDate(v)}   slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }} />
               <Chip icon={isBalanced ? <CheckCircleIcon sx={{ fontSize: "14px !important" }} aria-hidden="true" /> : <ErrorIcon sx={{ fontSize: "14px !important" }} aria-hidden="true" />} label={isBalanced ? "Sheet balances ✓" : "Check mismatch"} color={isBalanced ? "success" : "error"} variant="outlined" size="small" aria-label={isBalanced ? "Balance sheet is balanced" : "Balance sheet has a mismatch"} />
               {bsUrl && (
                 <Button size="small" variant="contained" startIcon={<AccountBalanceIcon aria-hidden="true" />} onClick={handleDownload} aria-label={`Download ${companyName}_base_bs.xlsx`} sx={{ background: "linear-gradient(135deg,#400f61,#2d0a45)", height: 40 }}>

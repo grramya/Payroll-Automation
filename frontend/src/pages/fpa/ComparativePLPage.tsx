@@ -254,13 +254,13 @@ export default function ComparativePLPage() {
                 label="From"
                 value={fromDate}
                 onChange={(v: Dayjs | null) => setFromDate(v)}
-                slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, inputProps: { "aria-label": "Filter from date" } } }}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
               />
               <DatePicker
                 label="To"
                 value={toDate}
                 onChange={(v: Dayjs | null) => setToDate(v)}
-                slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, inputProps: { "aria-label": "Filter to date" } } }}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
               />
 
               {filteredQuarters.length > 0 && (
@@ -286,7 +286,7 @@ export default function ComparativePLPage() {
                     labelId="comp-pl-year-label"
                     value={selectedYear}
                     label="Year"
-                    onChange={(e: { target: { value: string } }) => setSelectedYear(Number(e.target.value))}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
                   >
                     {years.map((y) => (
                       <MenuItem key={y} value={y}>{y}</MenuItem>
