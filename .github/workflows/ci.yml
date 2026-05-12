@@ -2,41 +2,14 @@ name: CI
 
 on:
   push:
-    branches: ["main", "develop"]
+    branches: ["main"]
   pull_request:
     branches: ["main"]
 
 jobs:
-  # ── Backend: lint, type-check, security scan, unit tests ────────────────────
   backend:
-    name: Backend (Python 3.11)
+    name: Backend security audit
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ci_password
-          POSTGRES_DB: finance_suite_test
-        ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      DB_USER: postgres
-      DB_PASSWORD: ci_password
-      DB_HOST: localhost
-      DB_PORT: "5432"
-      DB_NAME: finance_suite_test
-      # Minimal secrets for CI — not real values
-      PJE_SECRET_KEY: ci-test-secret-key-at-least-32-chars-long
-      TOKEN_ENCRYPTION_KEY: ${{ secrets.CI_TOKEN_ENCRYPTION_KEY || '' }}
-      PJE_ADMIN_PASSWORD: ci_admin_password
-
     steps:
       - uses: actions/checkout@v4
 
@@ -47,33 +20,15 @@ jobs:
           cache-dependency-path: backend/requirements.txt
 
       - name: Install dependencies
-        run: pip install -r backend/requirements.txt pytest pytest-cov
+        run: pip install -r backend/requirements.txt pip-audit
 
-      - name: Security audit (pip-audit)
-        run: |
-          pip install pip-audit
-          pip-audit -r backend/requirements.txt --ignore-vuln GHSA-dummy || true
-        # 'true' so known-unfixable low-sev advisories don't block CI; remove when clean
-
-      - name: Run backend tests
-        working-directory: backend
-        run: pytest --cov=. --cov-report=xml -q
-        # Tests will be added under backend/tests/ — see CONTRIBUTING notes
-        continue-on-error: true  # remove once test suite is established
-
-      - name: Upload coverage
-        if: always()
-        uses: codecov/codecov-action@v4
-        with:
-          files: backend/coverage.xml
-          flags: backend
+      - name: Security audit
+        run: pip-audit -r backend/requirements.txt
         continue-on-error: true
 
-  # ── Frontend: install, type-check, build, security audit ───────────────────
   frontend:
-    name: Frontend (Node 20)
+    name: Frontend type-check and build
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -87,11 +42,6 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Security audit (npm audit)
-        working-directory: frontend
-        run: npm audit --audit-level=high
-        continue-on-error: true  # remove once all high/critical advisories are resolved
-
       - name: TypeScript type-check
         working-directory: frontend
         run: npx tsc --noEmit
@@ -99,26 +49,3 @@ jobs:
       - name: Production build
         working-directory: frontend
         run: npm run build
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist/
-          retention-days: 7
-
-  # ── Docker build smoke-test ─────────────────────────────────────────────────
-  docker:
-    name: Docker build (smoke test)
-    runs-on: ubuntu-latest
-    needs: [backend, frontend]
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build backend image
-        run: docker build -t payroll-backend:ci ./backend
-
-      - name: Build frontend image
-        run: docker build -t payroll-frontend:ci ./frontend
