@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Box, Container, Typography, Button,
   Select, MenuItem, FormControl, InputLabel,
@@ -7,8 +7,11 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import DownloadIcon from "@mui/icons-material/Download";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 
 import { useFpaResult } from "../../context/FpaResultContext";
+import FullScreenWrapper from "../../components/fpa/FullScreenWrapper";
 
 // ── Formatting helpers ────────────────────────────────────────────────────────
 
@@ -117,6 +120,8 @@ interface CompPlBdPreview {
 
 export default function ComparativePLBDPage() {
   const { result, pageFilters, setPageFilter } = useFpaResult();
+  const [collapsedSections, setCollapsedSections] = useState<Set<number>>(new Set());
+  const [collapsedSubsections, setCollapsedSubsections] = useState<Set<number>>(new Set());
   if (!result) return null;
 
   const { compPlBdUrl, compPlBdPreview, companyName } = result;
@@ -145,6 +150,30 @@ export default function ComparativePLBDPage() {
   const setToDate          = (v: Dayjs | null) => setPageFilter("compPLBD", { fromDate, toDate: v, selectedQuarter, selectedYear });
   const setSelectedQuarter = (v: string)       => setPageFilter("compPLBD", { fromDate, toDate, selectedQuarter: v, selectedYear });
   const setSelectedYear    = (v: number)       => setPageFilter("compPLBD", { fromDate, toDate, selectedQuarter, selectedYear: v });
+  const [fromOpen, setFromOpen] = useState(false);
+  const [toOpen,   setToOpen]   = useState(false);
+
+  // ── Expand / collapse helpers ─────────────────────────────────────────────
+  const rowMeta = useMemo(() => {
+    let curSection = -1;
+    let curSubsection = -1;
+    return rows.map((rdef, i) => {
+      if (rdef.type === "section")    { curSection = i; curSubsection = -1; return { sectionParent: -1, subsectionParent: -1 }; }
+      if (rdef.type === "subsection") { curSubsection = i; return { sectionParent: curSection, subsectionParent: -1 }; }
+      return { sectionParent: curSection, subsectionParent: curSubsection };
+    });
+  }, [rows]);
+
+  const toggleSection    = (idx: number) => setCollapsedSections(p    => { const s = new Set(p); s.has(idx) ? s.delete(idx) : s.add(idx); return s; });
+  const toggleSubsection = (idx: number) => setCollapsedSubsections(p => { const s = new Set(p); s.has(idx) ? s.delete(idx) : s.add(idx); return s; });
+
+  const isVisible = (ri: number, type: string): boolean => {
+    if (type === "section" || type === "grand_total") return true;
+    const { sectionParent, subsectionParent } = rowMeta[ri];
+    if (sectionParent !== -1 && collapsedSections.has(sectionParent)) return false;
+    if (["line", "subtotal", "metric", "blank"].includes(type) && subsectionParent !== -1 && collapsedSubsections.has(subsectionParent)) return false;
+    return true;
+  };
 
   // ── Filter quarters by date range ────────────────────────────────────────
   const filteredQuarters = useMemo<string[]>(() => {
@@ -233,13 +262,15 @@ export default function ComparativePLBDPage() {
                 label="From"
                 value={fromDate}
                 onChange={(v: Dayjs | null) => setFromDate(v)}
-                slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
+                open={fromOpen} onOpen={() => setFromOpen(true)} onClose={() => setFromOpen(false)}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setFromOpen(true) } }}
               />
               <DatePicker
                 label="To"
                 value={toDate}
                 onChange={(v: Dayjs | null) => setToDate(v)}
-                slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
+                open={toOpen} onOpen={() => setToOpen(true)} onClose={() => setToOpen(false)}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setToOpen(true) } }}
               />
 
               {filteredQuarters.length > 0 && (
@@ -293,6 +324,7 @@ export default function ComparativePLBDPage() {
 
       {/* ── Table ─────────────────────────────────────────────────────────── */}
       <Container maxWidth="xl" sx={{ py: 3, px: { xs: 1, md: 3 } }}>
+        <FullScreenWrapper title={tableCaption}>
         <Box
           role="region"
           aria-label={tableCaption}
@@ -387,8 +419,13 @@ export default function ComparativePLBDPage() {
             <tbody>
               {rows.map((rdef, ri) => {
                 const { label, type, key } = rdef;
-                const style    = ROW_STYLES[type] ?? ROW_STYLES.line;
-                const isMetric = type === "metric";
+                if (!isVisible(ri, type)) return null;
+                const style      = ROW_STYLES[type] ?? ROW_STYLES.line;
+                const isMetric   = type === "metric";
+                const isSection  = type === "section";
+                const isSub      = type === "subsection";
+                const canToggle  = isSection || isSub;
+                const isCollapsed = isSection ? collapsedSections.has(ri) : isSub ? collapsedSubsections.has(ri) : false;
 
                 if (type === "blank") {
                   return (
@@ -403,10 +440,11 @@ export default function ComparativePLBDPage() {
                     {/* Sticky label */}
                     <th
                       scope="row"
+                      onClick={canToggle ? () => (isSection ? toggleSection(ri) : toggleSubsection(ri)) : undefined}
                       style={{
                         position: "sticky", left: 0, zIndex: 2,
                         background: style.bg,
-                        padding: "4px 12px",
+                        padding: "4px 8px 4px 12px",
                         height: style.height,
                         fontSize: style.fontSize,
                         fontWeight: style.fontWeight,
@@ -416,8 +454,18 @@ export default function ComparativePLBDPage() {
                         borderRight: "2px solid #E2E8F0",
                         borderTop: style.borderTop,
                         textAlign: "left",
+                        cursor: canToggle ? "pointer" : "default",
+                        userSelect: "none",
                       }}
                     >
+                      {canToggle && (
+                        <span style={{ display: "inline-flex", verticalAlign: "middle", marginRight: 4 }}>
+                          {isCollapsed
+                            ? <KeyboardArrowRightIcon style={{ fontSize: "1rem" }} />
+                            : <KeyboardArrowDownIcon  style={{ fontSize: "1rem" }} />
+                          }
+                        </span>
+                      )}
                       {label ?? ""}
                     </th>
 
@@ -461,6 +509,7 @@ export default function ComparativePLBDPage() {
             </tbody>
           </table>
         </Box>
+        </FullScreenWrapper>
       </Container>
     </Box>
   );

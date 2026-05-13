@@ -21,18 +21,21 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.create_table(
-        "payroll_config",
-        sa.Column("key",        sa.String(255), primary_key=True),
-        sa.Column("value_json", sa.Text(),      nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-    )
-    op.create_table(
-        "app_config",
-        sa.Column("key",        sa.String(255), primary_key=True),
-        sa.Column("value",      sa.Text(),      nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
-    )
+    existing = sa.inspect(op.get_bind()).get_table_names()
+    if "payroll_config" not in existing:
+        op.create_table(
+            "payroll_config",
+            sa.Column("key",        sa.String(255), primary_key=True),
+            sa.Column("value_json", sa.Text(),      nullable=False),
+            sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        )
+    if "app_config" not in existing:
+        op.create_table(
+            "app_config",
+            sa.Column("key",        sa.String(255), primary_key=True),
+            sa.Column("value",      sa.Text(),      nullable=False),
+            sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        )
 
 
 def downgrade() -> None:

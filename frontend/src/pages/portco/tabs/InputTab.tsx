@@ -2,8 +2,6 @@ import { METRIC_DEFS } from "../constants/metricDefs";
 import MetricTable from "../components/MetricTable";
 import type { MetricMap } from "../types";
 
-const BRAND = "#512D6D";
-
 const ALL_DEPTS = [
   "Product Development",
   "Marketing",
@@ -28,20 +26,6 @@ export default function InputTab({ selectedYear, derivedActuals, derivedBudget, 
         if (!rows.length) return null;
         return (
           <div key={dept}>
-            {/* Department banner */}
-            <div style={{
-              padding: "8px 16px",
-              background: "#EDE9F7",
-              borderTop: "2px solid #C4B3E0",
-              borderBottom: "1px solid #D4BBE8",
-              fontWeight: 700,
-              fontSize: "0.78rem",
-              color: BRAND,
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-            }}>
-              {dept}
-            </div>
             <MetricTable
               rows={rows}
               selectedYear={selectedYear}
@@ -50,6 +34,7 @@ export default function InputTab({ selectedYear, derivedActuals, derivedBudget, 
               mode={mode}
               onCellEdit={onCellEdit}
               view="input"
+              deptLabel={dept}
             />
           </div>
         );

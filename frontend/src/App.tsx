@@ -203,7 +203,7 @@ function ProtectedApp() {
             </main>
           </div>
         </div>
-        <PageSuspense label="chat-widget"><ChatWidget /></PageSuspense>
+        {user?.role === 'admin' && <PageSuspense label="chat-widget"><ChatWidget /></PageSuspense>}
       </PortcoProvider>
       </FpaResultProvider>
     </AppProvider>

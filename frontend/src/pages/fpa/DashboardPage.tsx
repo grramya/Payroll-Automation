@@ -429,6 +429,8 @@ export default function DashboardPage() {
   const toDate: Dayjs   = pageFilters.dashboard?.toDate   ?? defaultTo;
   const setFromDate = (v: Dayjs | null): void => setPageFilter("dashboard", { fromDate: v, toDate });
   const setToDate   = (v: Dayjs | null): void => setPageFilter("dashboard", { fromDate, toDate: v });
+  const [fromOpen, setFromOpen] = useState(false);
+  const [toOpen,   setToOpen]   = useState(false);
 
   // ── Filtered P&L months ───────────────────────────────────────────────────
   const filteredPlMonths = useMemo((): string[] => {
@@ -597,13 +599,15 @@ export default function DashboardPage() {
             label="From"
             value={fromDate}
             onChange={(v: Dayjs | null) => setFromDate(v)}
-            slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
+            open={fromOpen} onOpen={() => setFromOpen(true)} onClose={() => setFromOpen(false)}
+            slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setFromOpen(true) } }}
           />
           <DatePicker
             label="To"
             value={toDate}
             onChange={(v: Dayjs | null) => setToDate(v)}
-            slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }}
+            open={toOpen} onOpen={() => setToOpen(true)} onClose={() => setToOpen(false)}
+            slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setToOpen(true) } }}
           />
         </Box>
       </Box>

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Box, Container, Typography, Button, Chip } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import type { Dayjs } from "dayjs";
@@ -37,6 +37,8 @@ export default function BaseBSPage() {
   const toDate      = filters?.toDate   ?? defaultTo;
   const setFromDate = (v: Dayjs | null) => setPageFilter("baseBS", { fromDate: v, toDate } as never);
   const setToDate   = (v: Dayjs | null) => setPageFilter("baseBS", { fromDate, toDate: v } as never);
+  const [fromOpen, setFromOpen] = useState(false);
+  const [toOpen,   setToOpen]   = useState(false);
 
   const filteredIndices = useMemo<number[]>(() => {
     const fromYM = fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
@@ -83,8 +85,8 @@ export default function BaseBSPage() {
               <Typography variant="body2" color="text.secondary">Month-end balances from staging data &mdash; <strong>{companyName}</strong></Typography>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
-              <DatePicker label="From" value={fromDate} onChange={(v: Dayjs | null) => setFromDate(v)} slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, } }} />
-              <DatePicker label="To"   value={toDate}   onChange={(v: Dayjs | null) => setToDate(v)}   slotProps={{ textField: { size: "small", sx: { minWidth: 160 } } }} />
+              <DatePicker label="From" value={fromDate} onChange={(v: Dayjs | null) => setFromDate(v)} open={fromOpen} onOpen={() => setFromOpen(true)} onClose={() => setFromOpen(false)} slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setFromOpen(true) } }} />
+              <DatePicker label="To"   value={toDate}   onChange={(v: Dayjs | null) => setToDate(v)}   open={toOpen}   onOpen={() => setToOpen(true)}   onClose={() => setToOpen(false)}   slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setToOpen(true)   } }} />
               <Chip icon={isBalanced ? <CheckCircleIcon sx={{ fontSize: "14px !important" }} aria-hidden="true" /> : <ErrorIcon sx={{ fontSize: "14px !important" }} aria-hidden="true" />} label={isBalanced ? "Sheet balances ✓" : "Check mismatch"} color={isBalanced ? "success" : "error"} variant="outlined" size="small" aria-label={isBalanced ? "Balance sheet is balanced" : "Balance sheet has a mismatch"} />
               {bsUrl && (
                 <Button size="small" variant="contained" startIcon={<AccountBalanceIcon aria-hidden="true" />} onClick={handleDownload} aria-label={`Download ${companyName}_base_bs.xlsx`} sx={{ background: "linear-gradient(135deg,#400f61,#2d0a45)", height: 40 }}>

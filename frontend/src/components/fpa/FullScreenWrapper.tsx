@@ -30,7 +30,7 @@ export default function FullScreenWrapper({ title, children, fullContent }: Prop
             aria-label={`Open ${title ?? "preview"} in full screen`}
             onClick={() => setOpen(true)}
             sx={{
-              position: "absolute", top: 10, right: 10, zIndex: 10,
+              position: "absolute", top: 10, right: 10, zIndex: 50,
               bgcolor: "background.paper",
               border: "1px solid #E2E8F0",
               boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
@@ -49,12 +49,13 @@ export default function FullScreenWrapper({ title, children, fullContent }: Prop
       </Box>
 
       <Dialog
-        fullScreen
         open={open}
         onClose={() => setOpen(false)}
+        maxWidth="xl"
+        fullWidth
         slots={{ transition: Transition }}
         aria-label={`${title ?? "Preview"} — full screen`}
-        slotProps={{ paper: { sx: { bgcolor: "#F8FAFC" } } }}
+        slotProps={{ paper: { sx: { bgcolor: "#F8FAFC", maxHeight: "90vh", display: "flex", flexDirection: "column" } } }}
       >
         <AppBar
           elevation={0}

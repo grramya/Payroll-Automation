@@ -36,6 +36,7 @@ from auth import (
 from database import (
     get_db, JeSession, PortcoMetric, QboOverrideItem, ActivityLogEntry,
     JeSessionPayloadSchema, QboOverrideRowSchema,
+    BudgetEmployeeCost, BudgetOtherCost,
 )
 
 import sys as _sys
@@ -1556,6 +1557,7 @@ async def portco_get_data(_: dict = Depends(_require_portco)):
     return {"actuals": actuals, "budget": budget, "year": year}
 
 
+
 @app.put("/api/portco/data")
 async def portco_save_data(body: dict = Body(...), _: dict = Depends(_require_portco)):
     """Persist actuals + budget as individual metric rows (issue #2)."""
@@ -1580,6 +1582,243 @@ async def portco_save_data(body: dict = Body(...), _: dict = Depends(_require_po
                             value=float(value),
                             uploaded_at=uploaded_at,
                         ))
+    return {"ok": True}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Budget: Employee Cost
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _emp_row(r: BudgetEmployeeCost) -> dict:
+    return {
+        "id":                  r.id,
+        "department":          r.department,
+        "year":                r.year,
+        "geography":           r.geography,
+        "name":                r.name,
+        "title":               r.title,
+        "start_date":          r.start_date.isoformat() if r.start_date else None,
+        "base_salary":         r.base_salary,
+        "bonus_pct":           r.bonus_pct,
+        "bonus_amount":        r.bonus_amount,
+        "taxes_benefits_pct":  r.taxes_benefits_pct,
+        "hike_cycle_pct":      r.hike_cycle_pct,
+        "payroll_expenses":    r.payroll_expenses,
+        "tech_stipend":        r.tech_stipend,
+    }
+
+
+def _parse_date(s):
+    if not s:
+        return None
+    from datetime import date
+    try:
+        return date.fromisoformat(str(s)[:10])
+    except (ValueError, TypeError):
+        return None
+
+
+@app.get("/api/portco/budget/employee-cost")
+async def budget_emp_list(
+    year: int,
+    department: str | None = None,
+    current_user: dict = Depends(_require_portco),
+):
+    is_admin  = current_user.get("role") == "admin"
+    user_dept = current_user.get("portco_dept")
+    with get_db() as db:
+        q = db.query(BudgetEmployeeCost).filter(BudgetEmployeeCost.year == year)
+        if not is_admin and user_dept:
+            q = q.filter(BudgetEmployeeCost.department == user_dept)
+        elif department:
+            q = q.filter(BudgetEmployeeCost.department == department)
+        rows = q.order_by(BudgetEmployeeCost.id).all()
+        return [_emp_row(r) for r in rows]
+
+
+@app.post("/api/portco/budget/employee-cost")
+async def budget_emp_create(
+    body: dict = Body(...),
+    current_user: dict = Depends(_require_portco),
+):
+    dept = body.get("department") or current_user.get("portco_dept")
+    if not dept:
+        raise HTTPException(status_code=422, detail="department is required")
+    now = datetime.now(tz=timezone.utc)
+    with get_db() as db:
+        duplicate = db.query(BudgetEmployeeCost).filter(
+            BudgetEmployeeCost.department == dept,
+            BudgetEmployeeCost.year == int(body["year"]),
+            BudgetEmployeeCost.name == str(body["name"]).strip(),
+        ).first()
+        if duplicate:
+            raise HTTPException(
+                status_code=409,
+                detail=f"An entry for '{body['name']}' already exists in {dept} for {body['year']}.",
+            )
+        row = BudgetEmployeeCost(
+            department        = dept,
+            year              = int(body["year"]),
+            geography         = str(body["geography"]),
+            name              = str(body["name"]),
+            title             = str(body["title"]),
+            start_date        = _parse_date(body.get("start_date")),
+            base_salary       = float(body["base_salary"]),
+            bonus_pct         = float(body["bonus_pct"])        if body.get("bonus_pct")        is not None else None,
+            bonus_amount      = float(body["bonus_amount"])     if body.get("bonus_amount")     is not None else None,
+            taxes_benefits_pct= float(body.get("taxes_benefits_pct") or 0),
+            hike_cycle_pct    = float(body["hike_cycle_pct"])   if body.get("hike_cycle_pct")   is not None else None,
+            payroll_expenses  = float(body["payroll_expenses"]) if body.get("payroll_expenses") is not None else None,
+            tech_stipend      = float(body["tech_stipend"])     if body.get("tech_stipend")     is not None else None,
+            created_at        = now,
+            updated_at        = now,
+        )
+        db.add(row)
+        db.flush()
+        result = _emp_row(row)
+    return result
+
+
+@app.put("/api/portco/budget/employee-cost/{row_id}")
+async def budget_emp_update(
+    row_id: int,
+    body: dict = Body(...),
+    _: dict = Depends(_require_portco),
+):
+    now = datetime.now(tz=timezone.utc)
+    with get_db() as db:
+        row = db.query(BudgetEmployeeCost).filter(BudgetEmployeeCost.id == row_id).first()
+        if not row:
+            raise HTTPException(status_code=404, detail="Record not found")
+        new_name = str(body["name"]).strip() if "name" in body else None
+        if new_name and new_name != row.name:
+            duplicate = db.query(BudgetEmployeeCost).filter(
+                BudgetEmployeeCost.department == row.department,
+                BudgetEmployeeCost.year == row.year,
+                BudgetEmployeeCost.name == new_name,
+                BudgetEmployeeCost.id != row_id,
+            ).first()
+            if duplicate:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"An entry for '{new_name}' already exists in {row.department} for {row.year}.",
+                )
+        for f in ("geography", "name", "title", "base_salary", "taxes_benefits_pct"):
+            if f in body:
+                setattr(row, f, body[f])
+        if "start_date"       in body: row.start_date       = _parse_date(body["start_date"])
+        if "bonus_pct"        in body: row.bonus_pct        = float(body["bonus_pct"])        if body["bonus_pct"]        is not None else None
+        if "bonus_amount"     in body: row.bonus_amount     = float(body["bonus_amount"])     if body["bonus_amount"]     is not None else None
+        if "hike_cycle_pct"   in body: row.hike_cycle_pct   = float(body["hike_cycle_pct"])   if body["hike_cycle_pct"]   is not None else None
+        if "payroll_expenses" in body: row.payroll_expenses = float(body["payroll_expenses"]) if body["payroll_expenses"] is not None else None
+        if "tech_stipend"     in body: row.tech_stipend     = float(body["tech_stipend"])     if body["tech_stipend"]     is not None else None
+        row.updated_at = now
+        result = _emp_row(row)
+    return result
+
+
+@app.delete("/api/portco/budget/employee-cost/{row_id}")
+async def budget_emp_delete(
+    row_id: int,
+    _: dict = Depends(_require_portco),
+):
+    with get_db() as db:
+        row = db.query(BudgetEmployeeCost).filter(BudgetEmployeeCost.id == row_id).first()
+        if not row:
+            raise HTTPException(status_code=404, detail="Record not found")
+        db.delete(row)
+    return {"ok": True}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Budget: Other Cost
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _other_row(r: BudgetOtherCost) -> dict:
+    return {
+        "id":               r.id,
+        "department":       r.department,
+        "year":             r.year,
+        "cost_grouping":    r.cost_grouping,
+        "vendor_name":      r.vendor_name,
+        "memo_description": r.memo_description,
+        "amount":           r.amount,
+    }
+
+
+@app.get("/api/portco/budget/other-cost")
+async def budget_other_list(
+    year: int,
+    department: str | None = None,
+    current_user: dict = Depends(_require_portco),
+):
+    is_admin  = current_user.get("role") == "admin"
+    user_dept = current_user.get("portco_dept")
+    with get_db() as db:
+        q = db.query(BudgetOtherCost).filter(BudgetOtherCost.year == year)
+        if not is_admin and user_dept:
+            q = q.filter(BudgetOtherCost.department == user_dept)
+        elif department:
+            q = q.filter(BudgetOtherCost.department == department)
+        rows = q.order_by(BudgetOtherCost.id).all()
+        return [_other_row(r) for r in rows]
+
+
+@app.post("/api/portco/budget/other-cost")
+async def budget_other_create(
+    body: dict = Body(...),
+    current_user: dict = Depends(_require_portco),
+):
+    dept = body.get("department") or current_user.get("portco_dept")
+    if not dept:
+        raise HTTPException(status_code=422, detail="department is required")
+    now = datetime.now(tz=timezone.utc)
+    with get_db() as db:
+        row = BudgetOtherCost(
+            department       = dept,
+            year             = int(body["year"]),
+            cost_grouping    = str(body["cost_grouping"]),
+            vendor_name      = str(body["vendor_name"]),
+            memo_description = body.get("memo_description") or "",
+            amount           = float(body["amount"]),
+            created_at       = now,
+            updated_at       = now,
+        )
+        db.add(row)
+        db.flush()
+        result = _other_row(row)
+    return result
+
+
+@app.put("/api/portco/budget/other-cost/{row_id}")
+async def budget_other_update(
+    row_id: int,
+    body: dict = Body(...),
+    _: dict = Depends(_require_portco),
+):
+    now = datetime.now(tz=timezone.utc)
+    with get_db() as db:
+        row = db.query(BudgetOtherCost).filter(BudgetOtherCost.id == row_id).first()
+        if not row:
+            raise HTTPException(status_code=404, detail="Record not found")
+        for f in ("cost_grouping", "vendor_name", "memo_description", "amount"):
+            if f in body:
+                setattr(row, f, body[f])
+        row.updated_at = now
+        result = _other_row(row)
+    return result
+
+
+@app.delete("/api/portco/budget/other-cost/{row_id}")
+async def budget_other_delete(
+    row_id: int,
+    _: dict = Depends(_require_portco),
+):
+    with get_db() as db:
+        row = db.query(BudgetOtherCost).filter(BudgetOtherCost.id == row_id).first()
+        if not row:
+            raise HTTPException(status_code=404, detail="Record not found")
+        db.delete(row)
     return {"ok": True}
 
 

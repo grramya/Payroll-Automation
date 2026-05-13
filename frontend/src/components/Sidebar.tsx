@@ -50,10 +50,10 @@ const Sidebar = memo(function Sidebar({ collapsed, onToggle, mobileOpen, onMobil
   const canFpa     = isAdmin || user?.can_access_fpa
   const canPortco  = isAdmin || user?.can_access_portco
 
-  const [payrollOpen, setPayrollOpen] = useState(false)
-  const [fpaOpen, setFpaOpen]         = useState(false)
-  const [portcoOpen, setPortcoOpen]   = useState(false)
-  const [openDepts, setOpenDepts]     = useState<Record<string, boolean>>({})
+  const [payrollOpen, setPayrollOpen]   = useState(false)
+  const [fpaOpen, setFpaOpen]           = useState(false)
+  const [portcoOpen, setPortcoOpen]     = useState(false)
+  const [budgetOpen, setBudgetOpen]     = useState(false)
 
   // Prevent body scroll when mobile sidebar is open
   useEffect(() => {
@@ -66,15 +66,6 @@ const Sidebar = memo(function Sidebar({ collapsed, onToggle, mobileOpen, onMobil
   }, [mobileOpen])
 
   const userDept = user?.portco_dept ?? null  // null = access to all
-
-  // Department definitions for nav — restricted users only see their own dept
-  const PORTCO_DEPTS = [
-    { key: 'proddev',    label: 'Product Dev'      },
-    { key: 'sales',      label: 'Sales'            },
-    { key: 'marketing',  label: 'Marketing'        },
-    { key: 'cs',         label: 'Customer Success' },
-    { key: 'finance',    label: 'Finance'          },
-  ].filter(d => !userDept || d.key === userDept)
 
   return (
     <>
@@ -154,7 +145,7 @@ const Sidebar = memo(function Sidebar({ collapsed, onToggle, mobileOpen, onMobil
               <>
                 {!canFpa && <div style={{ ...styles.divider, width: '100%' }} role="separator" />}
                 <NavLink
-                  to={userDept ? `/portco/${userDept}/actuals` : "/portco/exec"}
+                  to="/portco/actuals"
                   aria-label="PortCo Reporting"
                   style={({ isActive }: { isActive: boolean }) => ({ ...styles.iconBtn, ...(isActive ? styles.iconBtnActive : {}) })}
                 >
@@ -369,75 +360,52 @@ const Sidebar = memo(function Sidebar({ collapsed, onToggle, mobileOpen, onMobil
                 </button>
 
                 <div id="portco-section" hidden={!portcoOpen}>
-                  {/* Executive Summary — admins / all-dept users only */}
-                  {!userDept && (
+                  <NavLink
+                    to="/portco/actuals"
+                    style={({ isActive }) => ({ ...styles.navItem, ...styles.nestedItem, ...(isActive ? styles.navItemActive : {}) })}
+                  >
+                    <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">edit_note</span>
+                    <span style={styles.navLabel}>Actuals</span>
+                  </NavLink>
+
+                  {/* Budget collapsible sub-section */}
+                  <button
+                    onClick={() => setBudgetOpen(v => !v)}
+                    style={{ ...styles.navItem, ...styles.nestedItem, background: 'none', border: 'none', width: '100%', cursor: 'pointer', fontFamily: 'inherit', margin: 0, boxSizing: 'border-box', justifyContent: 'flex-start', padding: '9px 12px 9px 20px', textAlign: 'left' }}
+                    aria-expanded={budgetOpen}
+                    aria-controls="budget-sub-section"
+                  >
+                    <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">calculate</span>
+                    <span style={styles.navLabel}>Budget</span>
+                    <span className="material-icons-round" style={{ fontSize: 13, color: 'var(--sb-muted)' }} aria-hidden="true">
+                      {budgetOpen ? 'expand_less' : 'expand_more'}
+                    </span>
+                  </button>
+
+                  <div id="budget-sub-section" hidden={!budgetOpen}>
                     <NavLink
-                      to="/portco/exec"
-                      style={({ isActive }) => ({ ...styles.navItem, ...styles.nestedItem, ...(isActive ? styles.navItemActive : {}) })}
+                      to="/portco/budget"
+                      end
+                      style={({ isActive }) => ({ ...styles.navItem, ...styles.nestedItem, paddingLeft: 32, ...(isActive ? styles.navItemActive : {}) })}
                     >
-                      <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">summarize</span>
-                      <span style={styles.navLabel}>Executive Summary</span>
+                      <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">table_chart</span>
+                      <span style={styles.navLabel}>Overview</span>
                     </NavLink>
-                  )}
-
-                  {/* Per-department: Actuals + Budget (input) + Report (output) */}
-                  {PORTCO_DEPTS.map(({ key, label }) => {
-                    const isExpanded = openDepts[key] ?? false
-                    return (
-                      <div key={key}>
-                        <button
-                          onClick={() => setOpenDepts(prev => ({ ...prev, [key]: !isExpanded }))}
-                          style={{
-                            ...styles.navItem, ...styles.nestedItem,
-                            width: '100%', background: 'none', border: 'none',
-                            cursor: 'pointer', fontFamily: 'inherit',
-                          }}
-                          aria-expanded={isExpanded}
-                        >
-                          <span style={styles.navLabel}>{label}</span>
-                          <span className="material-icons-round" style={{ fontSize: 12, opacity: 0.55 }} aria-hidden="true">
-                            {isExpanded ? 'expand_less' : 'expand_more'}
-                          </span>
-                        </button>
-
-                        {isExpanded && (
-                          <>
-                            <NavLink
-                              to={`/portco/${key}/actuals`}
-                              style={({ isActive }) => ({
-                                ...styles.navItem, paddingLeft: 36, fontSize: 12,
-                                ...(isActive ? styles.navItemActive : {}),
-                              })}
-                            >
-                              <span className="material-icons-round" style={{ ...styles.navIcon, fontSize: 14 }} aria-hidden="true">edit_note</span>
-                              <span style={styles.navLabel}>Actuals</span>
-                            </NavLink>
-                            <NavLink
-                              to={`/portco/${key}/budget`}
-                              style={({ isActive }) => ({
-                                ...styles.navItem, paddingLeft: 36, fontSize: 12,
-                                ...(isActive ? styles.navItemActive : {}),
-                              })}
-                            >
-                              <span className="material-icons-round" style={{ ...styles.navIcon, fontSize: 14 }} aria-hidden="true">calculate</span>
-                              <span style={styles.navLabel}>Budget</span>
-                            </NavLink>
-                            <NavLink
-                              to={`/portco/${key}`}
-                              end
-                              style={({ isActive }) => ({
-                                ...styles.navItem, paddingLeft: 36, fontSize: 12,
-                                ...(isActive ? styles.navItemActive : {}),
-                              })}
-                            >
-                              <span className="material-icons-round" style={{ ...styles.navIcon, fontSize: 14 }} aria-hidden="true">bar_chart</span>
-                              <span style={styles.navLabel}>Report</span>
-                            </NavLink>
-                          </>
-                        )}
-                      </div>
-                    )
-                  })}
+                    <NavLink
+                      to="/portco/budget/employee-cost"
+                      style={({ isActive }) => ({ ...styles.navItem, ...styles.nestedItem, paddingLeft: 32, ...(isActive ? styles.navItemActive : {}) })}
+                    >
+                      <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">people</span>
+                      <span style={styles.navLabel}>Employee Cost</span>
+                    </NavLink>
+                    <NavLink
+                      to="/portco/budget/other-cost"
+                      style={({ isActive }) => ({ ...styles.navItem, ...styles.nestedItem, paddingLeft: 32, ...(isActive ? styles.navItemActive : {}) })}
+                    >
+                      <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">receipt_long</span>
+                      <span style={styles.navLabel}>Other Cost</span>
+                    </NavLink>
+                  </div>
                 </div>
               </>
             )}

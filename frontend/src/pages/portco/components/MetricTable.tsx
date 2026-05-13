@@ -14,10 +14,11 @@ interface Props {
   mode:           "actuals" | "budget";
   onCellEdit:     (id: string, month: string, value: number | null) => void;
   view?:          "input" | "report";
+  deptLabel?:     string;
 }
 
 export default function MetricTable({
-  rows, selectedYear, derivedActuals, derivedBudget, mode, onCellEdit, view = "input",
+  rows, selectedYear, derivedActuals, derivedBudget, mode, onCellEdit, view = "input", deptLabel,
 }: Props) {
   const months = monthsForYear(selectedYear);
 
@@ -41,10 +42,49 @@ export default function MetricTable({
       <table
         style={{
           borderCollapse: "collapse", tableLayout: "fixed",
+          width: "100%", minWidth: 1760,
           fontSize: "0.76rem", fontFamily: "Inter, Roboto, sans-serif",
         }}
       >
+        {/* colgroup pins column widths so the colSpan dept-label row doesn't collapse them */}
+        {view === "report" ? (
+          <colgroup>
+            <col style={{ width: 220 }} /><col style={{ width: 44 }} />
+            {Array.from({ length: 12 }, (_, i) => <col key={i} style={{ width: 72 }} />)}
+            {Array.from({ length: 15 }, (_, i) => <col key={i} style={{ width: 70 }} />)}
+            <col style={{ width: 72 }} />
+          </colgroup>
+        ) : (
+          <colgroup>
+            <col style={{ width: 220 }} /><col style={{ width: 44 }} />
+            {Array.from({ length: 12 }, (_, i) => <col key={i} style={{ width: 72 }} />)}
+            {Array.from({ length: 8 },  (_, i) => <col key={i} style={{ width: 70 }} />)}
+            <col style={{ width: 68 }} />
+          </colgroup>
+        )}
         <thead style={{ position: "sticky", top: 0, zIndex: 5 }}>
+          {deptLabel && (
+            <tr>
+              <th
+                colSpan={100}
+                style={{
+                  padding: "7px 16px",
+                  background: "#EDE9F7",
+                  textAlign: "left",
+                  fontSize: "0.78rem",
+                  fontWeight: 700,
+                  color: BRAND,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  borderTop: "2px solid #C4B3E0",
+                  borderBottom: "1px solid #D4BBE8",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {deptLabel}
+              </th>
+            </tr>
+          )}
           {view === "report" ? (
             <>
               {/* Report: Q1 Q2 Q3 Q4 YTD LTM header */}
@@ -52,24 +92,24 @@ export default function MetricTable({
                 <th style={{ ...thSticky, color: "#fff", width: 220 }}>Metric</th>
                 <th style={{ ...thSticky, left: 220, color: "#fff", width: 44 }}>Units</th>
                 {MONTH_ABBR.map((mo, i) => (
-                  <th key={i} style={{ ...th, color: "#fff", width: 72 }}>{mo}</th>
+                  <th key={i} style={{ ...thH1, color: "#fff", width: 72 }}>{mo}</th>
                 ))}
                 {(["Q1","Q2","Q3","Q4"] as const).map((q) => (
-                  <th key={q} colSpan={3} style={{ ...th, color: "#fff", borderLeft: "2px solid rgba(255,255,255,0.25)", width: 70 * 3 }}>
+                  <th key={q} colSpan={3} style={{ ...thH1, color: "#fff", borderLeft: "2px solid rgba(255,255,255,0.25)", width: 70 * 3 }}>
                     {q}
                   </th>
                 ))}
-                <th colSpan={3} style={{ ...th, color: "#fff", borderLeft: "2px solid rgba(255,255,255,0.25)", width: 70 * 3 }}>
+                <th colSpan={3} style={{ ...thH1, color: "#fff", borderLeft: "2px solid rgba(255,255,255,0.25)", width: 70 * 3 }}>
                   YTD
                 </th>
-                <th style={{ ...th, color: "#fff", width: 72 }}>LTM</th>
+                <th style={{ ...thH1, color: "#fff", width: 72 }}>LTM</th>
               </tr>
               {/* Sub-header */}
               <tr style={{ background: "#3D1F52" }}>
                 <th style={{ ...thSticky, color: "rgba(255,255,255,0.7)", fontSize: "0.65rem", width: 220 }} />
                 <th style={{ ...thSticky, left: 220, color: "rgba(255,255,255,0.7)", fontSize: "0.65rem", width: 44 }} />
                 {Array.from({ length: 12 }, (_, i) => (
-                  <th key={i} style={{ ...th, color: "rgba(255,255,255,0.5)", fontSize: "0.65rem", width: 72 }}>
+                  <th key={i} style={{ ...thH2, color: "rgba(255,255,255,0.5)", fontSize: "0.65rem", width: 72 }}>
                     {selectedYear}
                   </th>
                 ))}
@@ -77,7 +117,7 @@ export default function MetricTable({
                   <th
                     key={i}
                     style={{
-                      ...th, width: 70,
+                      ...thH2, width: 70,
                       color: "rgba(255,255,255,0.7)", fontSize: "0.65rem",
                       borderLeft: (i % 3 === 0) ? "2px solid rgba(255,255,255,0.25)" : undefined,
                     }}
@@ -85,7 +125,7 @@ export default function MetricTable({
                     {lbl}
                   </th>
                 ))}
-                <th style={{ ...th, color: "rgba(255,255,255,0.5)", fontSize: "0.65rem", width: 72 }}>12mo</th>
+                <th style={{ ...thH2, color: "rgba(255,255,255,0.5)", fontSize: "0.65rem", width: 72 }}>12mo</th>
               </tr>
             </>
           ) : (
@@ -95,21 +135,21 @@ export default function MetricTable({
                 <th style={{ ...thSticky, color: "#fff", width: 220 }}>Metric</th>
                 <th style={{ ...thSticky, left: 220, color: "#fff", width: 44 }}>Units</th>
                 {MONTH_ABBR.map((mo, i) => (
-                  <th key={i} style={{ ...th, color: "#fff", width: 72 }}>{mo}</th>
+                  <th key={i} style={{ ...thH1, color: "#fff", width: 72 }}>{mo}</th>
                 ))}
-                <th colSpan={4} style={{ ...th, color: "#fff", borderLeft: "2px solid rgba(255,255,255,0.25)", width: 70*4 }}>
+                <th colSpan={4} style={{ ...thH1, color: "#fff", borderLeft: "2px solid rgba(255,255,255,0.25)", width: 70*4 }}>
                   QTD
                 </th>
-                <th colSpan={4} style={{ ...th, color: "#fff", borderLeft: "2px solid rgba(255,255,255,0.25)", width: 70*4 }}>
+                <th colSpan={4} style={{ ...thH1, color: "#fff", borderLeft: "2px solid rgba(255,255,255,0.25)", width: 70*4 }}>
                   YTD
                 </th>
-                <th style={{ ...th, color: "#fff", width: 68 }}>Trend</th>
+                <th style={{ ...thH1, color: "#fff", width: 68 }}>Trend</th>
               </tr>
               <tr style={{ background: "#3D1F52" }}>
                 <th style={{ ...thSticky, color: "rgba(255,255,255,0.7)", fontSize: "0.65rem", width: 220 }} />
                 <th style={{ ...thSticky, left: 220, color: "rgba(255,255,255,0.7)", fontSize: "0.65rem", width: 44 }} />
                 {Array.from({ length: 12 }, (_, i) => (
-                  <th key={i} style={{ ...th, color: "rgba(255,255,255,0.5)", fontSize: "0.65rem", width: 72 }}>
+                  <th key={i} style={{ ...thH2, color: "rgba(255,255,255,0.5)", fontSize: "0.65rem", width: 72 }}>
                     {selectedYear}
                   </th>
                 ))}
@@ -117,7 +157,7 @@ export default function MetricTable({
                   <th
                     key={i}
                     style={{
-                      ...th, width: 70,
+                      ...thH2, width: 70,
                       color: "rgba(255,255,255,0.7)", fontSize: "0.65rem",
                       borderLeft: (i === 0 || i === 4) ? "2px solid rgba(255,255,255,0.25)" : undefined,
                     }}
@@ -125,7 +165,7 @@ export default function MetricTable({
                     {lbl}
                   </th>
                 ))}
-                <th style={{ ...th, color: "rgba(255,255,255,0.5)", fontSize: "0.65rem", width: 68 }}>12mo</th>
+                <th style={{ ...thH2, color: "rgba(255,255,255,0.5)", fontSize: "0.65rem", width: 68 }}>12mo</th>
               </tr>
             </>
           )}
@@ -183,6 +223,8 @@ const th: React.CSSProperties = {
   padding: "7px 6px", textAlign: "center",
   fontWeight: 600, fontSize: "0.72rem", whiteSpace: "nowrap",
 };
+const thH1: React.CSSProperties = { ...th, background: BRAND };
+const thH2: React.CSSProperties = { ...th, background: "#3D1F52" };
 
 const thSticky: React.CSSProperties = {
   ...th, position: "sticky", left: 0, zIndex: 6,

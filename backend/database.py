@@ -10,7 +10,7 @@ from typing import Any
 from cryptography.fernet import Fernet
 from pydantic import BaseModel
 from sqlalchemy import (
-    CheckConstraint, Column, DateTime, Float, ForeignKey, Index,
+    CheckConstraint, Column, Date, DateTime, Float, ForeignKey, Index,
     Integer, LargeBinary, String, Text, UniqueConstraint, create_engine,
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -140,6 +140,49 @@ class PortcoMetric(Base):
         UniqueConstraint("metric_id", "month", "sheet", name="uq_portco_metric"),
         Index("ix_portco_metrics_sheet", "sheet"),
         Index("ix_portco_metrics_month", "month"),
+    )
+
+
+# ── Budget Planning ───────────────────────────────────────────────────────────
+
+class BudgetEmployeeCost(Base):
+    """Employee cost budget entries — one row per employee per department per year."""
+    __tablename__ = "budget_employee_cost"
+    id                 = Column(Integer, primary_key=True, autoincrement=True)
+    department         = Column(String(255), nullable=False)
+    year               = Column(Integer, nullable=False)
+    geography          = Column(String(100), nullable=False)   # Concertiv | India | US | Vearc…
+    name               = Column(String(255), nullable=False)
+    title              = Column(String(255), nullable=False)
+    start_date         = Column(Date, nullable=True)
+    base_salary        = Column(Float, nullable=False)
+    bonus_pct          = Column(Float, nullable=True)           # decimal, e.g. 0.10 = 10%
+    bonus_amount       = Column(Float, nullable=True)
+    taxes_benefits_pct = Column(Float, nullable=False, default=0)
+    hike_cycle_pct     = Column(Float, nullable=True)           # Concertiv only
+    payroll_expenses   = Column(Float, nullable=True)           # Concertiv only, per-employee/month
+    tech_stipend       = Column(Float, nullable=True)           # Concertiv only, per-employee/month
+    created_at         = Column(DateTime(timezone=True), nullable=False)
+    updated_at         = Column(DateTime(timezone=True), nullable=False)
+    __table_args__ = (
+        Index("ix_budget_emp_cost_dept_year", "department", "year"),
+    )
+
+
+class BudgetOtherCost(Base):
+    """Other cost budget entries — one row per vendor/expense line per department per year."""
+    __tablename__ = "budget_other_cost"
+    id               = Column(Integer, primary_key=True, autoincrement=True)
+    department       = Column(String(255), nullable=False)
+    year             = Column(Integer, nullable=False)
+    cost_grouping    = Column(String(255), nullable=False)
+    vendor_name      = Column(String(255), nullable=False)
+    memo_description = Column(Text, nullable=True)
+    amount           = Column(Float, nullable=False)
+    created_at       = Column(DateTime(timezone=True), nullable=False)
+    updated_at       = Column(DateTime(timezone=True), nullable=False)
+    __table_args__ = (
+        Index("ix_budget_other_cost_dept_year", "department", "year"),
     )
 
 
@@ -424,12 +467,15 @@ def seed_fpa_mappings(db, force: bool = False) -> int:
 
 
 def init_db() -> None:
-    """Create all tables (idempotent), then run pending Alembic migrations."""
+    """Run pending Alembic migrations, then create any remaining tables."""
     from sqlalchemy import inspect
     inspector = inspect(engine)
     is_fresh  = "users" not in inspector.get_table_names()
-    Base.metadata.create_all(bind=engine)
+    # Alembic must run before create_all so that its DDL statements are not
+    # pre-empted by create_all (which causes DuplicateTable errors that roll
+    # back the entire migration transaction, including earlier steps in the run).
     _run_alembic(stamp_if_fresh=is_fresh)
+    Base.metadata.create_all(bind=engine)
 
     # Seed mapping tables from mapping_data.py on first install
     try:

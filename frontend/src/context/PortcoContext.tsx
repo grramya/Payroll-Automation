@@ -8,6 +8,7 @@ import { METRIC_DEFS } from "../pages/portco/constants/metricDefs";
 import { FORMULAS } from "../pages/portco/engine/formulas";
 import { allDataMonths } from "../pages/portco/engine/periodCalc";
 import { apiClient } from "../api/api";
+import { SAMPLE_ACTUALS, SAMPLE_BUDGET } from "../pages/portco/data/sampleData";
 
 const ALL_MONTHS = allDataMonths();
 
@@ -39,7 +40,7 @@ interface PortcoCtx {
   loadBudgetValues:  (map: MetricMap) => void;
   setYear:           (y: number) => void;
   setActiveTab:      (t: TabId)  => void;
-  clearAll:          () => void;
+  clearMode:         (mode: "actuals" | "budget") => void;
   undo:              () => void;
   redo:              () => void;
 }
@@ -64,7 +65,8 @@ function deriveMap(base: MetricMap): MetricMap {
 }
 
 // ── localStorage helpers (offline fallback) ───────────────────────────────────
-const LS_KEY = "portco_v1";
+const LS_KEY      = "portco_v1";
+const CLEARED_KEY = "portco_cleared_v1";
 
 function lsLoad(): { actuals: MetricMap; budget: MetricMap; year: number } {
   try {
@@ -113,14 +115,27 @@ export function PortcoProvider({ children }: { children: ReactNode }) {
     apiClient
       .get<{ actuals: MetricMap; budget: MetricMap; year: number }>("/portco/data")
       .then(({ data }) => {
-        setActualsValues(data.actuals ?? {});
-        setBudgetValues(data.budget ?? {});
-        setSelectedYear(data.year ?? new Date().getFullYear());
-        // Keep localStorage in sync as offline fallback
-        lsSave(data.actuals ?? {}, data.budget ?? {}, data.year ?? new Date().getFullYear());
+        const actuals = data.actuals ?? {};
+        const budget  = data.budget  ?? {};
+        const year    = data.year    ?? new Date().getFullYear();
+        const isEmpty = Object.keys(actuals).length === 0 && Object.keys(budget).length === 0;
+        const wasCleared = !!localStorage.getItem(CLEARED_KEY);
+        if (isEmpty && !wasCleared) {
+          // First-time: seed with sample data so the UI isn't blank
+          setActualsValues(SAMPLE_ACTUALS);
+          setBudgetValues(SAMPLE_BUDGET);
+          const seedYear = new Date().getFullYear();
+          lsSave(SAMPLE_ACTUALS, SAMPLE_BUDGET, seedYear);
+          apiClient.put("/portco/data", { actuals: SAMPLE_ACTUALS, budget: SAMPLE_BUDGET, year: seedYear });
+        } else {
+          setActualsValues(actuals);
+          setBudgetValues(budget);
+          setSelectedYear(year);
+          lsSave(actuals, budget, year);
+        }
       })
       .catch(() => {
-        // Server unreachable — silently fall back to localStorage data already loaded
+        // Server unreachable — fall back to localStorage data already loaded
       });
   }, []);
 
@@ -225,13 +240,27 @@ export function PortcoProvider({ children }: { children: ReactNode }) {
     [actualsValues, budgetValues, scheduleSave]
   );
 
-  const clearAll = useCallback(() => {
-    setActualsValues({});
-    setBudgetValues({});
+  const clearMode = useCallback((mode: "actuals" | "budget") => {
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    undoStack.current = [];
+    redoStack.current = [];
+    setCanUndo(false);
+    setCanRedo(false);
     setHasEdits(false);
-    localStorage.removeItem(LS_KEY);
-    apiClient.put("/portco/data", { actuals: {}, budget: {}, year: new Date().getFullYear() });
-  }, []);
+    localStorage.setItem(CLEARED_KEY, "1");
+    if (mode === "actuals") {
+      setActualsValues({});
+      lsSave({}, budgetValues, selectedYear);
+      apiClient.put("/portco/data", { actuals: {}, budget: budgetValues, year: selectedYear });
+    } else {
+      setBudgetValues({});
+      lsSave(actualsValues, {}, selectedYear);
+      apiClient.put("/portco/data", { actuals: actualsValues, budget: {}, year: selectedYear });
+    }
+  }, [actualsValues, budgetValues, selectedYear]);
 
   return (
     <PortcoContext.Provider
@@ -252,7 +281,7 @@ export function PortcoProvider({ children }: { children: ReactNode }) {
         loadBudgetValues,
         setYear,
         setActiveTab,
-        clearAll,
+        clearMode,
         undo,
         redo,
       }}
