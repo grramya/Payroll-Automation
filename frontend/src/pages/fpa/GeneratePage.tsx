@@ -105,6 +105,13 @@ interface SummaryShape {
   total_rows?: number;
   date_range?: string;
   matched_rows?: number;
+  unmatched_rows?: number;
+  broker_unmapped_rows?: number;
+  unmatched_accounts?: { account: string; rows: number; amount: number; sources?: Record<string, number> }[];
+  partially_mapped?: {
+    pl_no_classification2?: { account: string; rows: number; amount: number }[];
+    pl_no_dept_class?:      { account: string; rows: number; amount: number }[];
+  };
 }
 
 interface MetricItem {
@@ -167,6 +174,48 @@ function SuccessOutput({ result, navigate, onRefresh }: SuccessOutputProps) {
           </div>
         ))}
       </div>
+
+      {/* Unmapped accounts warning */}
+      {(() => {
+        const unmapped = summary?.unmatched_accounts ?? [];
+        const noCls2   = summary?.partially_mapped?.pl_no_classification2 ?? [];
+        const noDept   = summary?.partially_mapped?.pl_no_dept_class ?? [];
+        const brokerUnmapped = summary?.broker_unmapped_rows ?? 0;
+        const hasIssues = unmapped.length > 0 || noCls2.length > 0 || noDept.length > 0;
+        if (!hasIssues) return null;
+
+        const lines: string[] = [];
+        if (unmapped.length > 0) {
+          lines.push(`${unmapped.length} account${unmapped.length > 1 ? "s" : ""} not in Account Map (will produce $0 in all reports)`);
+        }
+        if (noCls2.length > 0) {
+          lines.push(`${noCls2.length} P&L account${noCls2.length > 1 ? "s" : ""} missing Classification 2`);
+        }
+        if (noDept.length > 0) {
+          lines.push(`${noDept.length} P&L account${noDept.length > 1 ? "s" : ""} missing Department (Class)`);
+        }
+        if (brokerUnmapped > 0) {
+          lines.push(`${brokerUnmapped} unmapped row${brokerUnmapped > 1 ? "s" : ""} from Broker company`);
+        }
+
+        return (
+          <div style={{
+            display: "flex", alignItems: "flex-start", gap: 10,
+            padding: "10px 16px", marginBottom: 14,
+            background: "#FFFBEB", border: "1px solid #FCD34D",
+            borderRadius: 8, fontSize: 13,
+          }}>
+            <span className="material-icons-round" style={{ color: "#D97706", fontSize: 18, flexShrink: 0, marginTop: 1 }}>warning</span>
+            <div style={{ color: "#92400E", flex: 1 }}>
+              <strong>Mapping gaps detected</strong> — some accounts are unmapped and will show as $0 in reports.
+              Check the <strong>Unmapped</strong> sheet in the downloaded staging file for details.
+              <ul style={{ margin: "6px 0 0", paddingLeft: 18, lineHeight: 1.7 }}>
+                {lines.map((l) => <li key={l}>{l}</li>)}
+              </ul>
+            </div>
+          </div>
+        );
+      })()}
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 10 }}>
         {REPORT_ITEMS.map(({ path, icon, title, sub }) => (
@@ -421,7 +470,7 @@ export default function GeneratePage() {
 
   const mainConnected   = qboStatus?.main?.connected   ?? false;
   const brokerConnected = qboStatus?.broker?.connected ?? false;
-  const canQboFetch     = mainConnected && qboCompanyName.trim() && qboFetchStatus !== "loading";
+  const canQboFetch     = mainConnected && qboFetchStatus !== "loading";
   const isDone          = !!result;
 
   return (
@@ -484,12 +533,6 @@ export default function GeneratePage() {
             <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 2 }}>
               Fetches all transactions from the company's first entry through today.
             </Typography>
-            <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mb: 2 }}>
-              <TextField label="Company name" size="small" required
-                value={qboCompanyName} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQboCompanyName(e.target.value)}
-                slotProps={{ input: { startAdornment: <InputAdornment position="start"><BusinessIcon sx={{ fontSize: 16, color: "text.disabled" }} /></InputAdornment> } }}
-                sx={{ flex: "1 1 200px" }} />
-            </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
               <FormControlLabel
                 control={<Switch checked={includeBroker} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIncludeBroker(e.target.checked)} disabled={!brokerConnected} size="small" />}

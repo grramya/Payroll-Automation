@@ -227,14 +227,6 @@ export default function FpaMappingPage() {
               <span className="material-icons-round">save</span>
               Save Account Map
             </button>
-            <button className="btn btn-secondary" onClick={() => {
-              if (acctGridRef.current) {
-                acctGridRef.current.api.applyTransaction({ add: [{ ...EMPTY_ACCT }] })
-              }
-            }} disabled={loading}>
-              <span className="material-icons-round">add</span>
-              Add Row
-            </button>
           </div>
         </div>
       )}
@@ -282,14 +274,6 @@ export default function FpaMappingPage() {
             <button className="btn btn-primary" onClick={handleSaveDept} disabled={loading}>
               <span className="material-icons-round">save</span>
               Save Department Map
-            </button>
-            <button className="btn btn-secondary" onClick={() => {
-              if (deptGridRef.current) {
-                deptGridRef.current.api.applyTransaction({ add: [{ ...EMPTY_DEPT }] })
-              }
-            }} disabled={loading}>
-              <span className="material-icons-round">add</span>
-              Add Row
             </button>
           </div>
         </div>

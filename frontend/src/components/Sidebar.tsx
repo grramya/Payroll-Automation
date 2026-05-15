@@ -146,7 +146,7 @@ const Sidebar = memo(function Sidebar({ collapsed, onToggle, mobileOpen, onMobil
               <>
                 {!canFpa && <div style={{ ...styles.divider, width: '100%' }} role="separator" />}
                 <NavLink
-                  to="/portco/actuals"
+                  to="/portco"
                   aria-label="PortCo Reporting"
                   style={({ isActive }: { isActive: boolean }) => ({ ...styles.iconBtn, ...(isActive ? styles.iconBtnActive : {}) })}
                 >
@@ -232,16 +232,6 @@ const Sidebar = memo(function Sidebar({ collapsed, onToggle, mobileOpen, onMobil
                       >
                         <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">{icon}</span>
                         <span style={styles.navLabel}>{label}</span>
-                        {status === 'done' && (
-                          <span
-                            className="material-icons-round"
-                            style={{ fontSize: 13, color: '#22c55e', flexShrink: 0 }}
-                            aria-label="completed"
-                            title="Completed"
-                          >
-                            check_circle
-                          </span>
-                        )}
                       </NavLink>
                     )
                   })}
@@ -366,6 +356,14 @@ const Sidebar = memo(function Sidebar({ collapsed, onToggle, mobileOpen, onMobil
                 </button>
 
                 <div id="portco-section" hidden={!portcoOpen}>
+                  <NavLink
+                    to="/portco"
+                    end
+                    style={({ isActive }) => ({ ...styles.navItem, ...styles.nestedItem, ...(isActive ? styles.navItemActive : {}) })}
+                  >
+                    <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">dashboard</span>
+                    <span style={styles.navLabel}>Dashboard</span>
+                  </NavLink>
                   <NavLink
                     to="/portco/actuals"
                     style={({ isActive }) => ({ ...styles.navItem, ...styles.nestedItem, ...(isActive ? styles.navItemActive : {}) })}

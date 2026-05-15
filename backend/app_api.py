@@ -652,12 +652,9 @@ def _refresh_qbo_cache() -> tuple[bool, str]:
         combined = main_df
 
         if include_broker:
-            try:
-                if get_company_info("broker").get("connected"):
-                    broker_df = fetch_company_transactions("broker", "1900-01-01", today)
-                    combined  = _pd.concat([main_df, broker_df], ignore_index=True)
-            except Exception:
-                pass
+            if get_company_info("broker").get("connected"):
+                broker_df = fetch_company_transactions("broker", "1900-01-01", today)
+                combined  = _pd.concat([main_df, broker_df], ignore_index=True)
 
         (
             excel_bytes, summary, preview,

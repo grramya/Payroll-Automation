@@ -10,6 +10,7 @@ import EmployeeCostPage from "./budget/EmployeeCostPage";
 import OtherCostPage from "./budget/OtherCostPage";
 import { StepNav } from "./components/WorkflowBanner";
 import UploadZone from "./components/UploadZone";
+import PortcoLandingPage from "./PortcoLandingPage";
 
 const BRAND = "#512D6D";
 const YEARS = [2023, 2024, 2025, 2026, 2027];
@@ -263,8 +264,8 @@ export default function PortcoApp() {
               />
             }
           />
-          <Route index element={<Navigate to="/portco/actuals" replace />} />
-          <Route path="*" element={<Navigate to="/portco/actuals" replace />} />
+          <Route index element={<PortcoLandingPage />} />
+          <Route path="*" element={<Navigate to="/portco" replace />} />
         </Routes>
       </div>
     </div>

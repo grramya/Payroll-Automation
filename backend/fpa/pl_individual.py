@@ -92,74 +92,68 @@ def _sort_months(months: list[str]) -> list[str]:
 
 # ── Aggregate P&L data by month ───────────────────────────────────────────────
 
-def _aggregate(df: pd.DataFrame) -> tuple[dict, list]:
+def _aggregate_month(m: "pd.DataFrame") -> dict:
+    """Aggregate one month slice of P&L rows into a key→float dict."""
+    d: dict = {}
+    for label, _, cls2 in REVENUE_LINES:
+        d[("rev", label)] = float(m.loc[m["_Classification2"] == cls2, "Amount"].sum())
+    for label, _, cls3 in COGS_LINES:
+        mask = (m["_Classification3"] == cls3) & (m["_DeptClassOut"] == "Cost of Revenue")
+        d[("cogs", label)] = float(m.loc[mask, "Amount"].sum())
+    for dept in OPEX_DEPTS:
+        for sub, cls2 in OPEX_SUB_LINES:
+            mask = (m["_Classification2"] == cls2) & (m["_DeptClassOut"] == dept)
+            d[("opex", dept, sub)] = float(m.loc[mask, "Amount"].sum())
+    d[("da",)]        = float(m.loc[m["_Classification2"] == "Depreciation and Amortization", "Amount"].sum())
+    d[("other_inc",)] = float(m.loc[m["_Classification2"] == "Other Income",   "Amount"].sum())
+    d[("other_exp",)] = float(m.loc[m["_Classification2"] == "Other Expenses", "Amount"].sum())
+    d[("tax",)]       = float(m.loc[m["_Classification2"] == "Tax Expense",    "Amount"].sum())
+    matched_total = (
+        sum(d[("rev",  lbl)] for lbl, _, _ in REVENUE_LINES) +
+        sum(d[("cogs", lbl)] for lbl, _, _ in COGS_LINES) +
+        sum(d[("opex", dept, sub)] for dept in OPEX_DEPTS for sub, _ in OPEX_SUB_LINES) +
+        d[("da",)] + d[("other_inc",)] + d[("other_exp",)] + d[("tax",)]
+    )
+    d[("unclassified",)] = float(m["Amount"].sum()) - matched_total
+    return d
+
+
+def _aggregate(df: pd.DataFrame) -> tuple[dict, dict, list]:
     """
-    Returns agg[month][key] = float  (all data = Company A; Company B always 0).
-    Key format:
-      ("rev",  label)          – revenue lines
-      ("cogs", label)          – cogs lines
-      ("opex", dept, sub)      – opex lines
-      ("da",)                  – depreciation & amortisation
-      ("other_inc",)           – other income
-      ("other_exp",)           – other expenses
-      ("tax",)                 – tax expense
+    Returns (agg_a, agg_b, months) where agg_a = main company, agg_b = broker.
+    If df has no '_source' column, all data goes to agg_a and agg_b is empty.
     """
     pl = df[df["_Financials"] == "Profit and Loss A/c"].copy()
     pl = pl[pl["_Month"].notna() & pl["Amount"].notna()]
 
     if pl.empty:
-        return {}, []
+        return {}, {}, []
 
     months = _sort_months(pl["_Month"].unique().tolist())
-    agg: dict[str, dict] = {}
+
+    if "_source" in pl.columns:
+        pl_a = pl[pl["_source"] == "main"]
+        pl_b = pl[pl["_source"] == "broker"].copy()
+    else:
+        pl_a = pl
+        pl_b = pl.iloc[0:0]  # empty frame with same columns
+
+    # For broker: negate all intercompany amounts so they offset Concertiv Inc.'s IC revenue
+    # in the Consolidated column.  On the broker's books the management fee paid to Inc. is
+    # an expense recorded as a positive debit, but it maps to "Intercompany Revenue" here.
+    # Negating it makes cons = co_a (Inc. IC income) + co_b (broker IC expense, negated) → 0.
+    if not pl_b.empty:
+        ic_mask = pl_b["_Classification2"] == "Intercompany Revenue"
+        pl_b.loc[ic_mask, "Amount"] = -pl_b.loc[ic_mask, "Amount"]
+
+    agg_a: dict[str, dict] = {}
+    agg_b: dict[str, dict] = {}
 
     for month in months:
-        m = pl[pl["_Month"] == month]
-        d: dict = {}
+        agg_a[month] = _aggregate_month(pl_a[pl_a["_Month"] == month])
+        agg_b[month] = _aggregate_month(pl_b[pl_b["_Month"] == month]) if not pl_b.empty else {}
 
-        # Revenue
-        for label, _, cls2 in REVENUE_LINES:
-            d[("rev", label)] = float(m.loc[m["_Classification2"] == cls2, "Amount"].sum())
-
-        # COGS (Classification3 + DeptClassOut = "Cost of Revenue")
-        for label, _, cls3 in COGS_LINES:
-            mask = (m["_Classification3"] == cls3) & (m["_DeptClassOut"] == "Cost of Revenue")
-            d[("cogs", label)] = float(m.loc[mask, "Amount"].sum())
-
-        # OpEx by dept (Classification2 + DeptClassOut = dept)
-        for dept in OPEX_DEPTS:
-            for sub, cls2 in OPEX_SUB_LINES:
-                mask = (m["_Classification2"] == cls2) & (m["_DeptClassOut"] == dept)
-                d[("opex", dept, sub)] = float(m.loc[mask, "Amount"].sum())
-
-        # D&A
-        d[("da",)] = float(
-            m.loc[m["_Classification2"] == "Depreciation and Amortization", "Amount"].sum()
-        )
-        # Other Income / Expenses
-        d[("other_inc",)] = float(
-            m.loc[m["_Classification2"] == "Other Income", "Amount"].sum()
-        )
-        d[("other_exp",)] = float(
-            m.loc[m["_Classification2"] == "Other Expenses", "Amount"].sum()
-        )
-        # Tax
-        d[("tax",)] = float(
-            m.loc[m["_Classification2"] == "Tax Expense", "Amount"].sum()
-        )
-
-        # Unclassified residual — P&L amount not captured by any known bucket
-        matched_total = (
-            sum(d[("rev",  lbl)] for lbl, _, _ in REVENUE_LINES) +
-            sum(d[("cogs", lbl)] for lbl, _, _ in COGS_LINES) +
-            sum(d[("opex", dept, sub)] for dept in OPEX_DEPTS for sub, _ in OPEX_SUB_LINES) +
-            d[("da",)] + d[("other_inc",)] + d[("other_exp",)] + d[("tax",)]
-        )
-        d[("unclassified",)] = float(m["Amount"].sum()) - matched_total
-
-        agg[month] = d
-
-    return agg, months
+    return agg_a, agg_b, months
 
 
 # ── Build structured row list ─────────────────────────────────────────────────
@@ -169,7 +163,7 @@ def _co(co_a: float, co_b: float = 0.0) -> dict:
     return {"co_a": co_a, "co_b": co_b, "cons": (co_a or 0.0) + (co_b or 0.0)}
 
 
-def _build_rows(agg: dict, months: list) -> list[tuple]:
+def _build_rows(agg_a: dict, agg_b: dict, months: list) -> list[tuple]:
     """
     Returns list of (label, mapping, {month: {co_a, co_b, cons}} | None, row_type).
 
@@ -187,7 +181,7 @@ def _build_rows(agg: dict, months: list) -> list[tuple]:
 
     def va(key) -> dict:
         """Values for a raw aggregation key, company structure."""
-        return {m: _co(agg[m].get(key, 0.0)) for m in months}
+        return {m: _co(agg_a.get(m, {}).get(key, 0.0), agg_b.get(m, {}).get(key, 0.0)) for m in months}
 
     def pct(num: dict, den: dict) -> dict:
         result = {}
@@ -203,7 +197,8 @@ def _build_rows(agg: dict, months: list) -> list[tuple]:
         result = {}
         for m in months:
             co_a = sum(d[m]["co_a"] for d in dicts)
-            result[m] = _co(co_a)
+            co_b = sum(d[m].get("co_b", 0.0) for d in dicts)
+            result[m] = _co(co_a, co_b)
         return result
 
     # ── INCOME ────────────────────────────────────────────────────────────────
@@ -241,7 +236,10 @@ def _build_rows(agg: dict, months: list) -> list[tuple]:
     R.append((None, None, None, "blank"))
 
     # ── GROSS PROFIT ──────────────────────────────────────────────────────────
-    gross_profit = {m: _co(total_rev[m]["co_a"] - total_cogs[m]["co_a"]) for m in months}
+    gross_profit = {m: _co(
+        total_rev[m]["co_a"] - total_cogs[m]["co_a"],
+        total_rev[m]["co_b"] - total_cogs[m]["co_b"],
+    ) for m in months}
     R.append(("Gross Profit", None, gross_profit, "grand_total"))
     # GP% = Gross Profit / Client Recurring Revenue  (mirrors C21 = C20/C8)
     R.append(("Gross Profit (%)", None, pct(gross_profit, client_recurring), "metric"))
@@ -275,14 +273,20 @@ def _build_rows(agg: dict, months: list) -> list[tuple]:
     R.append((None, None, None, "blank"))
 
     # ── OPERATING PROFIT ──────────────────────────────────────────────────────
-    op_profit = {m: _co(gross_profit[m]["co_a"] - total_opex[m]["co_a"]) for m in months}
+    op_profit = {m: _co(
+        gross_profit[m]["co_a"] - total_opex[m]["co_a"],
+        gross_profit[m]["co_b"] - total_opex[m]["co_b"],
+    ) for m in months}
     R.append(("Operating Profit", None, op_profit, "grand_total"))
     # Op% = Operating Profit / Total Revenue  (mirrors C45 = C44/C7)
     R.append(("Operating Profit (%)", None, pct(op_profit, total_rev), "metric"))
     R.append((None, None, None, "blank"))
 
     # ── EBITDA ────────────────────────────────────────────────────────────────
-    ebitda = {m: _co(op_profit[m]["co_a"] + da_val[m]["co_a"]) for m in months}
+    ebitda = {m: _co(
+        op_profit[m]["co_a"] + da_val[m]["co_a"],
+        op_profit[m]["co_b"] + da_val[m]["co_b"],
+    ) for m in months}
     R.append(("EBITDA", None, ebitda, "grand_total"))
     # EBITDA% = EBITDA / Total Revenue  (mirrors C48 = C47/C7)
     R.append(("EBITDA (%)", None, pct(ebitda, total_rev), "metric"))
@@ -298,7 +302,10 @@ def _build_rows(agg: dict, months: list) -> list[tuple]:
     if any(abs(oe[m]["co_a"]) > 0.001 for m in months):
         R.append(("   Other Expenses", None, oe, "line"))
 
-    total_other = {m: _co(oi[m]["co_a"] + oe[m]["co_a"]) for m in months}
+    total_other = {m: _co(
+        oi[m]["co_a"] + oe[m]["co_a"],
+        oi[m]["co_b"] + oe[m]["co_b"],
+    ) for m in months}
     R.append(("   Total Other Income (Expenses)", None, total_other, "total"))
     R.append((None, None, None, "blank"))
 
@@ -309,7 +316,10 @@ def _build_rows(agg: dict, months: list) -> list[tuple]:
         R.append(("   Tax Expense", None, tax_val, "line"))
 
     # Net Income = Op Profit + Other − Tax  (mirrors C55 = C44+C50−C54)
-    net_income = {m: _co(op_profit[m]["co_a"] + total_other[m]["co_a"] - tax_val[m]["co_a"]) for m in months}
+    net_income = {m: _co(
+        op_profit[m]["co_a"] + total_other[m]["co_a"] - tax_val[m]["co_a"],
+        op_profit[m]["co_b"] + total_other[m]["co_b"] - tax_val[m]["co_b"],
+    ) for m in months}
     R.append(("Net Income", None, net_income, "grand_total"))
     # NI% = Net Income / Total Revenue  (mirrors C56 = C55/C7)
     R.append(("Net Income (%)", None, pct(net_income, total_rev), "metric"))
@@ -469,12 +479,12 @@ def _build_pli_excel(rows: list, latest: str, company_name: str) -> bytes:
 
 def run_pl_individual(df: pd.DataFrame, company_name: str) -> bytes:
     """Generate Base P&L (Individual) Excel for the latest month from a raw DataFrame."""
-    agg, months = _aggregate(df)
+    agg_a, agg_b, months = _aggregate(df)
     if not months:
         wb = Workbook(); ws = wb.active
         ws["A1"] = "No P&L data found in the uploaded file."
         buf = io.BytesIO(); wb.save(buf); return buf.getvalue()
-    rows = _build_rows(agg, months)
+    rows = _build_rows(agg_a, agg_b, months)
     return _build_pli_excel(rows, months[-1], company_name)
 
 
@@ -512,11 +522,11 @@ def get_pl_individual_preview(df: pd.DataFrame, company_name: str = "") -> dict:
         ]
       }
     """
-    agg, months = _aggregate(df)
+    agg_a, agg_b, months = _aggregate(df)
     if not months:
         return {"months": [], "company_name": company_name, "rows": []}
 
-    rows = _build_rows(agg, months)
+    rows = _build_rows(agg_a, agg_b, months)
 
     def _round_cv(cv):
         if cv is None:

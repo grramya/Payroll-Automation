@@ -1059,7 +1059,7 @@ ACCOUNT_MAP = {
         'Financial Statement': 'Profit and Loss A/c',
         'Main Grouping': 'Expenses',
         'Secondary Grouping': 'Operating Expenses',
-        'Classification (Line Item)': 'Professional fee',
+        'Classification (Line Item)': 'Expenses Others',
     },
     '611010 Contractor Fees:IT Security - Contractors': {
         'Financial Statement': 'Profit and Loss A/c',
@@ -8518,6 +8518,48 @@ DEPT_MAP = {
         'Classification 2': 'Other',
         'Classification 3': 'Office Supplies/Equipment',
         'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('610050 Implementation / Setup Expense', 'G&A'): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'G&A',
+        'Department Group (BD)': 'General & Administrative',
+    },
+    ('610050 Implementation / Setup Expense', 'Cost of Revenue'): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Cost of Revenue',
+        'Department Group (BD)': 'Cost of Goods Sold',
+    },
+    ('610050 Implementation / Setup Expense', 'Customer Success'): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Customer Success',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('610050 Implementation / Setup Expense', 'Marketing'): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Marketing',
+        'Department Group (BD)': 'Sales & Marketing',
+    },
+    ('610050 Implementation / Setup Expense', 'Product'): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Product',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('610050 Implementation / Setup Expense', 'R&D'): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'R&D',
+        'Department Group (BD)': 'Research & Development',
+    },
+    ('610050 Implementation / Setup Expense', 'Sales'): {
+        'Classification 2': 'Other',
+        'Classification 3': 'Office Supplies/Equipment',
+        'Department (Class)': 'Sales',
         'Department Group (BD)': 'Sales & Marketing',
     },
 }

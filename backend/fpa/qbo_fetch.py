@@ -30,6 +30,35 @@ _log = logging.getLogger(__name__)
 # We send no columns parameter so QBO returns its default set,
 # which includes Amount and Balance.
 
+# QBO AccountType → (_Financials, _Classification) fallback for accounts not in the DB mapping
+_QBO_TYPE_TO_FIN_CLS: dict[str, tuple[str, str | None]] = {
+    # Balance Sheet — Assets
+    "Bank":                    ("Balance Sheet", "Cash and Cash equivalents"),
+    "Accounts Receivable":     ("Balance Sheet", "Accounts Receivable"),
+    "Other Current Asset":     ("Balance Sheet", "Prepaid expenses and other current assets"),
+    "Fixed Asset":             ("Balance Sheet", "Tangible Assets, net of accumulated depreciation"),
+    "Other Asset":             ("Balance Sheet", "Intangible assets, net of accumulated amortization"),
+    # Balance Sheet — Liabilities
+    "Accounts Payable":        ("Balance Sheet", "Accounts Payable"),
+    "Credit Card":             ("Balance Sheet", "Accrued expenses"),
+    "Other Current Liability": ("Balance Sheet", "Accrued expenses"),
+    "Long Term Liability":     ("Balance Sheet", "Other Long term Liabilities"),
+    # Balance Sheet — Equity
+    "Equity":                  ("Balance Sheet", "Additional paid-in capital"),
+    # P&L (classification left to DB mapping; None = unmapped stays unmapped)
+    "Income":                  ("Profit and Loss A/c", None),
+    "Cost of Goods Sold":      ("Profit and Loss A/c", None),
+    "Expense":                 ("Profit and Loss A/c", None),
+    "Other Income":            ("Profit and Loss A/c", None),
+    "Other Expense":           ("Profit and Loss A/c", None),
+}
+
+# Subtype overrides for Other Current Asset
+_QBO_SUBTYPE_CLS_OVERRIDE: dict[str, str] = {
+    "Deposits":          "Deposit or Advances",
+    "OtherCurrentAssets": "Prepaid expenses and other current assets",
+}
+
 # QBO column title → internal DataFrame column name
 _COL_RENAME = {
     "Date":             "Date",
@@ -95,7 +124,69 @@ def fetch_company_transactions(
         )
 
     data = resp.json()
-    return _parse_gl_report(data)
+    df = _parse_gl_report(data)
+    df["_source"] = company
+
+    # Enrich with QBO account types as fallback for unmapped accounts
+    try:
+        type_map = _fetch_account_type_map(company, store, realm_id)
+        df["_qbo_fin"]      = df["Account"].map(lambda a: type_map.get(a, (None, None, None))[0])
+        df["_qbo_cls"]      = df["Account"].map(lambda a: type_map.get(a, (None, None, None))[1])
+        df["_qbo_acc_type"] = df["Account"].map(lambda a: type_map.get(a, (None, None, None))[2])
+    except Exception as e:
+        _log.warning("Could not fetch account types for '%s': %s", company, e)
+        df["_qbo_fin"]      = None
+        df["_qbo_cls"]      = None
+        df["_qbo_acc_type"] = None
+
+    return df
+
+
+def _fetch_account_type_map(company: str, store, realm_id: str) -> dict[str, tuple[str | None, str | None, str | None]]:
+    """
+    Fetch the Chart of Accounts for the given company and return a dict of
+    account_name → (_Financials, _Classification, raw_qbo_account_type).
+    """
+    url = (
+        f"{config.BASE_URL}/{config.API_VERSION}"
+        f"/company/{realm_id}/query"
+    )
+    headers = {
+        "Authorization": f"Bearer {store.access_token}",
+        "Accept":        "application/json",
+    }
+    result: dict[str, tuple] = {}
+    start = 1
+    page_size = 1000
+
+    while True:
+        query = f"SELECT * FROM Account WHERE Active = true STARTPOSITION {start} MAXRESULTS {page_size}"
+        resp  = requests.get(url, params={"query": query, "minorversion": 65},
+                             headers=headers, timeout=60)
+        if not resp.ok:
+            _log.warning("Account type fetch failed [%d]: %s", resp.status_code, resp.text[:200])
+            break
+
+        accounts = resp.json().get("QueryResponse", {}).get("Account", [])
+        for acct in accounts:
+            name     = acct.get("Name", "")
+            acc_type = acct.get("AccountType", "")
+            sub_type = acct.get("AccountSubType", "")
+
+            fin, cls = _QBO_TYPE_TO_FIN_CLS.get(acc_type, (None, None))
+            # Apply subtype override for Other Current Asset
+            if acc_type == "Other Current Asset" and sub_type in _QBO_SUBTYPE_CLS_OVERRIDE:
+                cls = _QBO_SUBTYPE_CLS_OVERRIDE[sub_type]
+
+            if name:
+                result[name] = (fin, cls, acc_type or None)
+
+        if len(accounts) < page_size:
+            break
+        start += page_size
+
+    _log.info("Fetched %d account types for '%s'", len(result), company)
+    return result
 
 
 def _get_realm_id(company: str, store) -> str:

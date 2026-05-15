@@ -322,7 +322,7 @@ export default function Step2Preview() {
             className="btn btn-secondary"
             onClick={() => setShowQboConfirm(true)}
             disabled={loading}
-            style={{ marginLeft: 'auto' }}
+            style={{ marginLeft: 'auto', marginRight: 64 }}
           >
             <span className="material-icons-round">cloud_upload</span>
             Post to QuickBooks

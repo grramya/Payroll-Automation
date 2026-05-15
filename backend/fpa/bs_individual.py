@@ -54,6 +54,16 @@ def _leaf(full_name: str) -> str:
     return n.split(":")[-1].strip() if ":" in n else n
 
 
+# ── Intercompany account detection ───────────────────────────────────────────
+
+_IC_KEYWORDS = ("intercompany receivable", "intercompany payable")
+
+
+def _is_ic_account(name: str) -> bool:
+    n = name.lower()
+    return any(kw in n for kw in _IC_KEYWORDS)
+
+
 # ── Classification → BS section mapping ──────────────────────────────────────
 
 # Maps each BS (Individual) section group to a list of Classification (Line Item) values
@@ -90,6 +100,8 @@ def _compute(df: pd.DataFrame, as_of_month: str | None = None) -> tuple[dict, fl
       net_income     – cumulative sum of P&L Amounts through as_of_month
       as_of_label    – e.g. 'Apr-26'
 
+    Operates on all rows in df regardless of _source.  Use _compute_split for
+    per-company results when df has a '_source' column.
     If as_of_month is given, only BS/P&L rows up to and including that month
     are considered, matching the Excel "As of {date}" date-picker logic.
     """
@@ -143,6 +155,31 @@ def _compute(df: pd.DataFrame, as_of_month: str | None = None) -> tuple[dict, fl
     return acct_balances, net_income, as_of_label
 
 
+def _compute_split(
+    df: pd.DataFrame, as_of_month: str | None = None
+) -> tuple[dict, float, dict, float, str]:
+    """
+    When df has a '_source' column, computes balance sheet separately for
+    'main' and 'broker' companies.
+    Returns (acct_a, net_a, acct_b, net_b, as_of_label).
+    Falls back to treating all rows as co_a if '_source' is absent.
+    """
+    if "_source" in df.columns:
+        df_a = df[df["_source"] == "main"]
+        df_b = df[df["_source"] == "broker"]
+    else:
+        df_a = df
+        df_b = df.iloc[0:0]
+
+    acct_a, net_a, as_of = _compute(df_a, as_of_month)
+    if df_b.empty:
+        empty_b = {g: {} for g in acct_a}
+        return acct_a, net_a, empty_b, 0.0, as_of
+
+    acct_b, net_b, _ = _compute(df_b, as_of_month)
+    return acct_a, net_a, acct_b, net_b, as_of
+
+
 def _group_total(acct_balances: dict, groups: list[str]) -> float:
     return sum(
         bal
@@ -153,101 +190,137 @@ def _group_total(acct_balances: dict, groups: list[str]) -> float:
 
 # ── Build row list ────────────────────────────────────────────────────────────
 
-def _build_rows(acct_balances: dict, net_income: float) -> list[tuple]:
+def _build_rows(
+    acct_balances: dict,
+    net_income: float,
+    acct_balances_b: dict | None = None,
+    net_income_b: float = 0.0,
+) -> list[tuple]:
     """
-    Returns list of (label, value, row_type) where row_type is one of:
-      'title_main' | 'title_sub' | 'section' | 'subsection' |
-      'group_header' | 'account' | 'group_total' |
-      'total' | 'grand_total' | 'equity_item' | 'check' | 'blank'
+    Returns list of (label, co_a_value, co_b_value, elim_value, row_type).
+    co_b_value and elim_value are None when acct_balances_b is not provided.
+    elim_value is non-zero only for intercompany accounts (IC Receivable / Payable).
+    row_type is one of: 'section' | 'subsection' | 'group_header' | 'account' |
+      'group_total' | 'total' | 'grand_total' | 'equity_item' | 'check' | 'blank'
     """
     R = []
+    has_b = acct_balances_b is not None
 
-    def G(key):
+    def G_a(key):
         return acct_balances.get(key, {})
 
+    def G_b(key):
+        return (acct_balances_b or {}).get(key, {})
+
     def add_group(header_label, group_keys, indent="   "):
-        """Append header + individual accounts + total. Returns group total."""
+        """Append header + accounts + total. Returns (total_a, total_b, total_elim)."""
         if isinstance(group_keys, str):
             group_keys = [group_keys]
-        total = sum(b for gk in group_keys for b in G(gk).values())
-        R.append((header_label, None, "group_header"))
+        total_a = 0.0
+        total_b = 0.0
+        total_elim = 0.0
+        R.append((header_label, None, None, None, "group_header"))
         for gk in group_keys:
-            for name, bal in sorted(G(gk).items()):
-                R.append((indent + "   " + name, bal, "account"))
-        R.append(("Total " + header_label.strip(), total, "group_total"))
-        return total
+            all_names = sorted(set(G_a(gk)) | set(G_b(gk)))
+            for name in all_names:
+                val_a = G_a(gk).get(name)
+                val_b = G_b(gk).get(name) if has_b else None
+                elim = -((val_a or 0.0) + (val_b or 0.0)) if _is_ic_account(name) else 0.0
+                total_a += (val_a or 0.0)
+                total_b += (val_b or 0.0)
+                total_elim += elim
+                R.append((indent + "   " + name, val_a, val_b, elim or None, "account"))
+        R.append(("Total " + header_label.strip(), total_a, total_b if has_b else None, total_elim or None, "group_total"))
+        return total_a, total_b, total_elim
+
+    def row(label, val_a, val_b, elim, rtype):
+        R.append((label, val_a, val_b if has_b else None, elim, rtype))
 
     # ── ASSETS ───────────────────────────────────────────────────────────────
-    R.append(("ASSETS", None, "section"))
-    R.append(("   Current Assets", None, "subsection"))
+    row("ASSETS", None, None, None, "section")
+    row("   Current Assets", None, None, None, "subsection")
 
-    bank = add_group("      Bank Accounts",       "Bank Accounts")
-    ar   = add_group("      Accounts Receivable", "Accounts Receivable")
-    oca  = add_group("      Other Current Assets",
-                     ["Other Current Assets"], indent="      ")
-    total_ca = bank + ar + oca
-    R.append(("   Total Current Assets", total_ca, "total"))
+    bank_a, bank_b, bank_e = add_group("      Bank Accounts",       "Bank Accounts")
+    ar_a,   ar_b,   ar_e   = add_group("      Accounts Receivable", "Accounts Receivable")
+    oca_a,  oca_b,  oca_e  = add_group("      Other Current Assets", ["Other Current Assets"], indent="      ")
+    total_ca_a = bank_a + ar_a + oca_a
+    total_ca_b = bank_b + ar_b + oca_b
+    total_ca_e = bank_e + ar_e + oca_e
+    row("   Total Current Assets", total_ca_a, total_ca_b, total_ca_e or None, "total")
 
-    R.append(("   Fixed Assets", None, "subsection"))
-    fa = add_group("      Fixed Assets",          "Fixed Assets")
-    R.append(("   Total Fixed Assets", fa, "total"))
+    row("   Fixed Assets", None, None, None, "subsection")
+    fa_a, fa_b, fa_e = add_group("      Fixed Assets", "Fixed Assets")
+    row("   Total Fixed Assets", fa_a, fa_b, fa_e or None, "total")
 
-    R.append(("   Other Assets", None, "subsection"))
-    gw     = add_group("      Goodwill",              "Goodwill")
-    ia     = add_group("      Intangible Assets",     "Intangible Assets")
-    rou_op = add_group("      ROU - Operating Leases","ROU Operating Leases")
-    rou_fi = add_group("      ROU - Finance Leases",  "ROU Finance Leases")
-    total_oa = gw + ia + rou_op + rou_fi
-    R.append(("   Total Other Assets", total_oa, "total"))
+    row("   Other Assets", None, None, None, "subsection")
+    gw_a,     gw_b,     gw_e     = add_group("      Goodwill",               "Goodwill")
+    ia_a,     ia_b,     ia_e     = add_group("      Intangible Assets",      "Intangible Assets")
+    rou_op_a, rou_op_b, rou_op_e = add_group("      ROU - Operating Leases", "ROU Operating Leases")
+    rou_fi_a, rou_fi_b, rou_fi_e = add_group("      ROU - Finance Leases",   "ROU Finance Leases")
+    total_oa_a = gw_a + ia_a + rou_op_a + rou_fi_a
+    total_oa_b = gw_b + ia_b + rou_op_b + rou_fi_b
+    total_oa_e = gw_e + ia_e + rou_op_e + rou_fi_e
+    row("   Total Other Assets", total_oa_a, total_oa_b, total_oa_e or None, "total")
 
-    total_assets = total_ca + fa + total_oa
-    R.append(("TOTAL ASSETS", total_assets, "grand_total"))
+    total_assets_a = total_ca_a + fa_a + total_oa_a
+    total_assets_b = total_ca_b + fa_b + total_oa_b
+    total_assets_e = total_ca_e + fa_e + total_oa_e
+    row("TOTAL ASSETS", total_assets_a, total_assets_b, total_assets_e or None, "grand_total")
 
-    R.append((None, None, "blank"))
+    row(None, None, None, None, "blank")
 
     # ── LIABILITIES AND EQUITY ────────────────────────────────────────────────
-    R.append(("LIABILITIES AND EQUITY", None, "section"))
-    R.append(("   Liabilities", None, "subsection"))
-    R.append(("      Current Liabilities", None, "subsection"))
+    row("LIABILITIES AND EQUITY", None, None, None, "section")
+    row("   Liabilities", None, None, None, "subsection")
+    row("      Current Liabilities", None, None, None, "subsection")
 
-    ap  = add_group("         Accounts Payable",   "Accounts Payable",  indent="         ")
-    R.append(("         Other Current Liabilities", None, "subsection"))
-    ae  = add_group("            Accrued Expenses", "Accrued Expenses",  indent="            ")
-    dr  = add_group("            Deferred Revenue", "Deferred Revenue",  indent="            ")
-    dte = add_group("            Due to Employees", "Due to Employees",  indent="            ")
-    lcl = add_group("            Lease Payable - Current",
-                    "Lease - Current",               indent="            ")
-    std = add_group("            Statutory Dues",   "Statutory Dues",    indent="            ")
+    ap_a,  ap_b,  ap_e  = add_group("         Accounts Payable",           "Accounts Payable",   indent="         ")
+    row("         Other Current Liabilities", None, None, None, "subsection")
+    ae_a,  ae_b,  ae_e  = add_group("            Accrued Expenses",        "Accrued Expenses",   indent="            ")
+    dr_a,  dr_b,  dr_e  = add_group("            Deferred Revenue",        "Deferred Revenue",   indent="            ")
+    dte_a, dte_b, dte_e = add_group("            Due to Employees",        "Due to Employees",   indent="            ")
+    lcl_a, lcl_b, lcl_e = add_group("            Lease Payable - Current", "Lease - Current",    indent="            ")
+    std_a, std_b, std_e = add_group("            Statutory Dues",          "Statutory Dues",     indent="            ")
 
-    total_ocl = ae + dr + dte + lcl + std
-    R.append(("         Total Other Current Liabilities", total_ocl, "total"))
-    total_cl = ap + total_ocl
-    R.append(("      Total Current Liabilities", total_cl, "total"))
+    total_ocl_a = ae_a + dr_a + dte_a + lcl_a + std_a
+    total_ocl_b = ae_b + dr_b + dte_b + lcl_b + std_b
+    total_ocl_e = ae_e + dr_e + dte_e + lcl_e + std_e
+    row("         Total Other Current Liabilities", total_ocl_a, total_ocl_b, total_ocl_e or None, "total")
+    total_cl_a = ap_a + total_ocl_a
+    total_cl_b = ap_b + total_ocl_b
+    total_cl_e = ap_e + total_ocl_e
+    row("      Total Current Liabilities", total_cl_a, total_cl_b, total_cl_e or None, "total")
 
-    lt = add_group("      Long-Term Liabilities", "Long-Term Liabilities", indent="      ")
-    total_liab = total_cl + lt
-    R.append(("   Total Liabilities", total_liab, "total"))
+    lt_a, lt_b, lt_e = add_group("      Long-Term Liabilities", "Long-Term Liabilities", indent="      ")
+    total_liab_a = total_cl_a + lt_a
+    total_liab_b = total_cl_b + lt_b
+    total_liab_e = total_cl_e + lt_e
+    row("   Total Liabilities", total_liab_a, total_liab_b, total_liab_e or None, "total")
 
     # ── Equity ────────────────────────────────────────────────────────────────
-    R.append(("   Equity", None, "subsection"))
-    cs   = add_group("      Common Stock",          "Common Stock",  indent="      ")
-    ps   = add_group("      Preferred Stock",       "Preferred Stock", indent="      ")
-    apic_accts = add_group("      Additional Paid-In Capital",
-                           "APIC",                  indent="      ")
-    # Retained Earnings = plug so that BS ties
-    retained = total_assets - total_liab - cs - ps - apic_accts - net_income
-    R.append(("      Retained Earnings", retained, "equity_item"))
-    R.append(("      Net Income (Period)", net_income, "equity_item"))
+    row("   Equity", None, None, None, "subsection")
+    cs_a,   cs_b,   _cs_e   = add_group("      Common Stock",               "Common Stock",   indent="      ")
+    ps_a,   ps_b,   _ps_e   = add_group("      Preferred Stock",            "Preferred Stock", indent="      ")
+    apic_a, apic_b, _apic_e = add_group("      Additional Paid-In Capital", "APIC",           indent="      ")
 
-    total_equity = cs + ps + apic_accts + retained + net_income
-    R.append(("   Total Equity", total_equity, "total"))
+    retained_a = total_assets_a - total_liab_a - cs_a - ps_a - apic_a - net_income
+    retained_b = (total_assets_b - total_liab_b - cs_b - ps_b - apic_b - net_income_b) if has_b else None
+    row("      Retained Earnings", retained_a, retained_b, None, "equity_item")
+    row("      Net Income (Period)", net_income, net_income_b if has_b else None, None, "equity_item")
 
-    total_l_and_e = total_liab + total_equity
-    R.append(("TOTAL LIABILITIES AND EQUITY", total_l_and_e, "grand_total"))
+    total_equity_a = cs_a + ps_a + apic_a + retained_a + net_income
+    total_equity_b = (cs_b + ps_b + apic_b + (retained_b or 0.0) + net_income_b) if has_b else None
+    row("   Total Equity", total_equity_a, total_equity_b, None, "total")
 
-    R.append((None, None, "blank"))
-    check = total_assets - total_l_and_e
-    R.append(("Check (Assets − Liabilities & Equity)", check, "check"))
+    total_l_and_e_a = total_liab_a + total_equity_a
+    total_l_and_e_b = (total_liab_b + (total_equity_b or 0.0)) if has_b else None
+    # Equity has no IC eliminations; only liabilities carry IC payable elim
+    total_l_and_e_e = total_liab_e
+    row("TOTAL LIABILITIES AND EQUITY", total_l_and_e_a, total_l_and_e_b, total_l_and_e_e or None, "grand_total")
+
+    row(None, None, None, None, "blank")
+    check = total_assets_a - total_l_and_e_a
+    R.append(("Check (Assets − Liabilities & Equity)", check, None, None, "check"))
 
     return R
 
@@ -307,23 +380,37 @@ def _build_bsi_excel(rows: list, as_of: str, company_name: str) -> bytes:
     ws.row_dimensions[5].height = 16
 
     # ── Data rows ─────────────────────────────────────────────────────────────
-    for label, value, rtype in rows:
+    for row_tuple in rows:
+        # Support 5-tuple (label, co_a, co_b, elim, rtype), 4-tuple, or legacy 3-tuple
+        if len(row_tuple) == 5:
+            label, value, co_b_val, elim_val, rtype = row_tuple
+        elif len(row_tuple) == 4:
+            label, value, co_b_val, rtype = row_tuple
+            elim_val = None
+        else:
+            label, value, rtype = row_tuple
+            co_b_val = None
+            elim_val = None
 
         if rtype == "blank":
             ws.append([None] * 5)
             continue
 
-        # co_b (Insurance Brokers) and elim always 0; cons = value
-        # co_b (Insurance Brokers) and elim always blank; cons = value
-        ws.append([label, value, None, None, value])
+        has_any = value is not None or co_b_val is not None
+        cons = (value or 0.0) + (co_b_val or 0.0) + (elim_val or 0.0)
+        ws.append([label, value, co_b_val if co_b_val is not None else None,
+                   elim_val if elim_val is not None else None,
+                   cons if has_any else None])
         r  = ws.max_row
         ca = ws.cell(r, 1)   # Particulars
         cb = ws.cell(r, 2)   # company_name
+        cc = ws.cell(r, 3)   # broker
+        cd = ws.cell(r, 4)   # Eliminations
         ce = ws.cell(r, 5)   # Consolidated
 
         ca.alignment = AL
-        for cell in (cb, ce):
-            if value is not None:
+        for cell in (cb, cc, cd, ce):
+            if cell.value is not None:
                 cell.number_format = NUM
                 cell.alignment     = AR
 
@@ -348,9 +435,14 @@ def _build_bsi_excel(rows: list, as_of: str, company_name: str) -> bytes:
 
         elif rtype in ("account", "equity_item"):
             ca.font = F(size=9, color="334155")
-            val_color = "DC2626" if value is not None and value < 0 else "334155"
-            cb.font = F(size=9, color=val_color)
-            ce.font = F(size=9, color=val_color)
+            val_color_a = "DC2626" if value is not None and value < 0 else "334155"
+            val_color_b = "DC2626" if co_b_val is not None and co_b_val < 0 else "334155"
+            val_color_d = "DC2626" if elim_val is not None and elim_val < 0 else "334155"
+            val_color_e = "DC2626" if cons < 0 else "334155"
+            cb.font = F(size=9, color=val_color_a)
+            cc.font = F(size=9, color=val_color_b)
+            cd.font = F(size=9, color=val_color_d)
+            ce.font = F(size=9, color=val_color_e)
 
         elif rtype == "group_total":
             fill_all(MED_BLUE)
@@ -397,8 +489,8 @@ def _build_bsi_excel(rows: list, as_of: str, company_name: str) -> bytes:
 
 def run_bs_individual(df: pd.DataFrame, company_name: str) -> bytes:
     """Generate BS Individual Excel for the latest month from a raw DataFrame."""
-    acct_balances, net_income, as_of = _compute(df)
-    rows = _build_rows(acct_balances, net_income)
+    acct_a, net_a, acct_b, net_b, as_of = _compute_split(df)
+    rows = _build_rows(acct_a, net_a, acct_b, net_b)
     return _build_bsi_excel(rows, as_of, company_name)
 
 
@@ -410,8 +502,8 @@ def run_bs_individual_from_preview(preview: dict, month: str, company_name: str)
     selected = month if month in rows_by_month else (months[-1] if months else "")
     raw_rows  = rows_by_month.get(selected, [])
 
-    # Map {label, co_a, type} → (label, value, rtype)
-    rows = [(r.get("label"), r.get("co_a"), r.get("type")) for r in raw_rows]
+    # Map {label, co_a, co_b, elim, type} → (label, co_a, co_b, elim, rtype)
+    rows = [(r.get("label"), r.get("co_a"), r.get("co_b") or None, r.get("elim") or None, r.get("type")) for r in raw_rows]
     return _build_bsi_excel(rows, selected, company_name)
 
 
@@ -434,9 +526,9 @@ def get_bs_individual_preview(df: pd.DataFrame) -> dict:
         }
       }
 
-    co_b (Insurance Brokers) and elim (Eliminations) are always 0 since
-    the current upload contains only one company's data.
-    cons (Consolidated) = co_a + co_b + elim = co_a.
+    co_b (Insurance Brokers) is populated when df contains broker rows (tagged
+    with _source='broker').  elim (Eliminations) is always 0.
+    cons (Consolidated) = co_a + co_b.
     """
     bs_df = df[df["_Financials"] == "Balance Sheet"].copy()
     all_bs_months = _sort_months(bs_df["_Month"].dropna().unique().tolist())
@@ -446,18 +538,19 @@ def get_bs_individual_preview(df: pd.DataFrame) -> dict:
 
     rows_by_month: dict = {}
     for month in all_bs_months:
-        acct_balances, net_income, _ = _compute(df, as_of_month=month)
-        raw_rows = _build_rows(acct_balances, net_income)
+        acct_a, net_a, acct_b, net_b, _ = _compute_split(df, as_of_month=month)
+        raw_rows = _build_rows(acct_a, net_a, acct_b, net_b)
         rows_by_month[month] = [
             {
                 "label": lbl,
-                "co_a":  round(val, 2) if val is not None else None,
-                "co_b":  0.0,
-                "elim":  0.0,
-                "cons":  round(val, 2) if val is not None else None,
+                "co_a":  round(val_a, 2) if val_a is not None else None,
+                "co_b":  round(val_b, 2) if val_b is not None else None,
+                "elim":  round(elim, 2) if elim is not None else None,
+                "cons":  round((val_a or 0.0) + (val_b or 0.0) + (elim or 0.0), 2)
+                         if (val_a is not None or val_b is not None) else None,
                 "type":  rt,
             }
-            for lbl, val, rt in raw_rows
+            for lbl, val_a, val_b, elim, rt in raw_rows
         ]
 
     return {

@@ -290,6 +290,9 @@ def _add_unmapped_sheet(wb, df: pd.DataFrame) -> None:
         if not reasons:
             continue
 
+        source_raw = row.get("_source")
+        source = str(source_raw) if source_raw and not pd.isna(source_raw) else ""
+
         for reason in reasons:
             issues.append({
                 "account":  str(row.get("Account", "")) if not pd.isna(row.get("Account", "")) else "",
@@ -299,11 +302,12 @@ def _add_unmapped_sheet(wb, df: pd.DataFrame) -> None:
                 "cls2":     str(cls2) if cls2 and not pd.isna(cls2) else "",
                 "dept":     str(dept) if dept and not pd.isna(dept) else "",
                 "amount":   amt,
+                "source":   source,
                 "reason":   reason,
             })
 
     # Header row
-    cols = ["Account", "Date", "QB Class", "Financial Statement", "Classification 2", "Department (Class)", "Amount", "Issue / Why It Produces Zero"]
+    cols = ["Account", "Date", "QB Class", "Financial Statement", "Classification 2", "Department (Class)", "Amount", "Source", "Issue / Why It Produces Zero"]
     ws.append(cols)
     for ci, _ in enumerate(cols, 1):
         c = ws.cell(1, ci)
@@ -319,7 +323,7 @@ def _add_unmapped_sheet(wb, df: pd.DataFrame) -> None:
             ws.append([
                 issue["account"], issue["date"], issue["cls_class"],
                 issue["fin"], issue["cls2"], issue["dept"],
-                issue["amount"], issue["reason"],
+                issue["amount"], issue["source"], issue["reason"],
             ])
             r = ws.max_row
             reason = issue["reason"]
@@ -329,16 +333,16 @@ def _add_unmapped_sheet(wb, df: pd.DataFrame) -> None:
                 bg = AMBER
             else:
                 bg = PURPLE
-            for ci in range(1, 9):
+            for ci in range(1, 10):
                 c = ws.cell(r, ci)
                 c.fill = bg
-                c.font = NRM if ci != 8 else BLD
+                c.font = NRM if ci != 9 else BLD
                 c.alignment = _Align(horizontal="left", vertical="center")
             ws.cell(r, 7).number_format = NUM
             ws.cell(r, 7).alignment = _Align(horizontal="right", vertical="center")
 
     # Column widths
-    for col, width in zip("ABCDEFGH", [45, 12, 28, 22, 30, 28, 14, 70]):
+    for col, width in zip("ABCDEFGHI", [45, 12, 28, 22, 30, 28, 14, 12, 70]):
         ws.column_dimensions[col].width = width
     ws.freeze_panes = "A2"
 
@@ -437,6 +441,17 @@ def _transform_core(df: pd.DataFrame, company_name: str) -> tuple:
     df["_SecondaryGrouping"] = df["Account"].map(lambda a: _acct_lookup(a, _SEC_MAP))
     df["_Classification"]    = df["Account"].map(lambda a: _acct_lookup(a, _CLASS_MAP))
 
+    # ── QBO type fallback for accounts not in the DB mapping ─────────────────
+    # When data came from qbo_fetch.py (broker or main via API), _qbo_fin/_qbo_cls
+    # are pre-populated with QBO's native account type — use them as a fallback.
+    if "_qbo_fin" in df.columns:
+        mask_fin = df["_Financials"].isna()
+        df.loc[mask_fin, "_Financials"] = df.loc[mask_fin, "_qbo_fin"]
+    if "_qbo_cls" in df.columns:
+        mask_cls = df["_Classification"].isna()
+        df.loc[mask_cls, "_Classification"] = df.loc[mask_cls, "_qbo_cls"]
+
+
     # ── Composite (account, dept_class) lookups ───────────────────────────────
     # Single pass over rows; reverse index makes the fallback O(acct entries) not O(DEPT_MAP)
     _DEPT_FIELDS = ["Classification 2", "Classification 3", "Department (Class)", "Department Group (BD)"]
@@ -474,6 +489,25 @@ def _transform_core(df: pd.DataFrame, company_name: str) -> tuple:
     df["_DeptClassOut"]    = dept_cols[2]
     df["_DeptGroupBD"]     = dept_cols[3]
 
+    # ── Normalize income sign for QBO API data ────────────────────────────────
+    # QBO GeneralLedger API returns income accounts as negative credits
+    # (Amount = Debit − Credit).  CSV P&L report uploads already show revenue as
+    # positive.  _source is only present for QBO API rows, so use it as the guard.
+    # Use _Classification2 (set via DEPT_MAP alias lookup) rather than _MainGrouping
+    # because broker accounts may not have a _MainGrouping if not in ACCOUNT_MAP.
+    # Only flip currently-negative rows — refund/debit entries are already positive.
+    if "_source" in df.columns and df["_source"].notna().any():
+        _REVENUE_CLS2 = {
+            "Client Recurring", "Billable Expense", "Project - One Time",
+            "Supplier Commission", "Intercompany Revenue", "User Conference",
+            "Other Income",
+        }
+        _api_mask  = df["_source"].notna() & (df["_source"].astype(str) != "")
+        _rev_mask  = df["_Classification2"].isin(_REVENUE_CLS2)
+        _neg_mask  = pd.to_numeric(df["Amount"], errors="coerce") < 0
+        _flip      = _api_mask & _rev_mask & _neg_mask
+        df.loc[_flip, "Amount"] = -df.loc[_flip, "Amount"]
+
     def clean_id(v):
         if pd.isna(v): return None
         try: return int(v)
@@ -496,13 +530,22 @@ def _transform_core(df: pd.DataFrame, company_name: str) -> tuple:
                 amount = 0.0 if pd.isna(raw) else round(float(raw), 2)
             else:
                 amount = 0.0
-            unmatched_accts.append({"account": label, "rows": int(len(grp)), "amount": amount})
+            # Include source breakdown when multi-company data is present
+            source_counts: dict = {}
+            if "_source" in grp.columns:
+                for src, sgrp in grp.groupby("_source", dropna=False):
+                    src_label = str(src) if src and str(src) != "nan" else "unknown"
+                    source_counts[src_label] = int(len(sgrp))
+            entry: dict = {"account": label, "rows": int(len(grp)), "amount": amount}
+            if source_counts:
+                entry["sources"] = source_counts
+            unmatched_accts.append(entry)
 
     # Partially-mapped P&L rows: _Financials is set but key classification fields are null
     pl_mask = df["_Financials"] == "Profit and Loss A/c"
     pl_df   = df[pl_mask]
     no_cls2 = pl_df[pl_df["_Classification2"].isna()]
-    no_dept = pl_df[pl_df["_DeptClassOut"].isna()]
+    no_dept = pl_df[(pl_df["_DeptClassOut"].isna()) & (pl_df["_MainGrouping"] != "Income")]
 
     def _acct_breakdown(sub_df: pd.DataFrame) -> list:
         """Summarise by Account: [{account, rows, amount}] sorted by abs(amount) desc."""
@@ -659,10 +702,18 @@ def _transform_core(df: pd.DataFrame, company_name: str) -> tuple:
     buf = io.BytesIO()
     wb.save(buf)
 
+    # Count unmapped rows that came specifically from the broker company
+    broker_unmapped = 0
+    if "_source" in df.columns:
+        broker_unmapped = int(
+            ((df["_source"] == "broker") & df["_Financials"].isna()).sum()
+        )
+
     summary = {
         "total_rows":              total,
         "matched_rows":            matched,
         "unmatched_rows":          total - matched,
+        "broker_unmapped_rows":    broker_unmapped,
         "unmatched_accounts":      unmatched_accts,
         "partially_mapped":        partially_mapped,
         "financials_distribution": fin_dist,

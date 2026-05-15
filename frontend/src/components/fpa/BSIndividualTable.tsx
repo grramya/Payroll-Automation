@@ -127,8 +127,7 @@ export default function BSIndividualTable({ data, selectedMonth, companyName }: 
 
                 {dataVals.map((raw, ci) => {
                   const colKey    = COLS[ci];
-                  const isBlank   = ci === 1 || ci === 2;
-                  const formatted = isBlank ? null : fmtVal(raw);
+                  const formatted = fmtVal(raw);
                   const isNeg     = raw != null && raw < 0;
 
                   let valColor  = "#334155";
@@ -141,9 +140,9 @@ export default function BSIndividualTable({ data, selectedMonth, companyName }: 
 
                   return (
                     <TableCell key={colKey} align="right" aria-label={`${row.label ?? ""} ${colKey}: ${formatted ?? "—"}`}
-                      sx={{ fontFamily: "monospace", fontSize: "0.78rem", fontWeight: valWeight, color: isBlank ? "#CBD5E1" : valColor, py: isHeader || isGrandT ? 1 : 0.65, borderBottom: "1px solid #F1F5F9", bgcolor: s.bg, ...(s.borderTop ? { borderTop: s.borderTop } : {}), whiteSpace: "nowrap" }}
+                      sx={{ fontFamily: "monospace", fontSize: "0.78rem", fontWeight: valWeight, color: raw == null ? "#CBD5E1" : valColor, py: isHeader || isGrandT ? 1 : 0.65, borderBottom: "1px solid #F1F5F9", bgcolor: s.bg, ...(s.borderTop ? { borderTop: s.borderTop } : {}), whiteSpace: "nowrap" }}
                     >
-                      {isHeader ? null : isBlank ? <Box component="span" sx={{ color: "#E2E8F0" }}>—</Box> : (formatted ?? <Box component="span" sx={{ color: "#CBD5E1" }}>—</Box>)}
+                      {isHeader ? null : (formatted ?? <Box component="span" sx={{ color: "#E2E8F0" }}>—</Box>)}
                     </TableCell>
                   );
                 })}

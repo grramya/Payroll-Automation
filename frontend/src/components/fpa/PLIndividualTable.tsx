@@ -94,8 +94,7 @@ export default function PLIndividualTable({ data, selectedMonth, companyName }: 
 
 {dataVals.map((raw, ci) => {
                   const colKey    = COLS[ci];
-                  const isZeroCol = ci === 1;
-                  const formatted = isZeroCol ? null : fmtVal(raw, isMetric);
+                  const formatted = fmtVal(raw, isMetric);
                   const isNeg     = raw != null && raw < 0;
                   const valSx     = s.val as Record<string, unknown> | null;
 
@@ -108,9 +107,9 @@ export default function PLIndividualTable({ data, selectedMonth, companyName }: 
 
                   return (
                     <TableCell key={colKey} align="right" aria-label={`${row.label ?? ""} ${colKey}: ${formatted ?? "—"}`}
-                      sx={{ fontFamily: "monospace", fontSize: isMetric ? "0.73rem" : "0.78rem", fontWeight: valWeight, fontStyle: isMetric ? "italic" : "normal", color: isZeroCol ? "#CBD5E1" : valColor, py: isHeader || isGrandT ? 1 : 0.65, borderBottom: "1px solid #F1F5F9", bgcolor: s.bg, ...(s.borderTop ? { borderTop: s.borderTop } : {}), whiteSpace: "nowrap" }}
+                      sx={{ fontFamily: "monospace", fontSize: isMetric ? "0.73rem" : "0.78rem", fontWeight: valWeight, fontStyle: isMetric ? "italic" : "normal", color: valColor, py: isHeader || isGrandT ? 1 : 0.65, borderBottom: "1px solid #F1F5F9", bgcolor: s.bg, ...(s.borderTop ? { borderTop: s.borderTop } : {}), whiteSpace: "nowrap" }}
                     >
-                      {isHeader ? null : isZeroCol ? <Box component="span" sx={{ color: "#E2E8F0" }}>—</Box> : (formatted ?? <Box component="span" sx={{ color: "#CBD5E1" }}>—</Box>)}
+                      {isHeader ? null : (formatted ?? <Box component="span" sx={{ color: "#CBD5E1" }}>—</Box>)}
                     </TableCell>
                   );
                 })}
