@@ -1,6 +1,14 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { AgGridReact } from 'ag-grid-react'
 import type { ColDef } from 'ag-grid-community'
+import {
+  FormControl, InputLabel, Select, MenuItem,
+  TextField, Button, Box,
+} from '@mui/material'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'
+import type { Dayjs } from 'dayjs'
+import SearchIcon from '@mui/icons-material/Search'
+import ClearIcon from '@mui/icons-material/Clear'
 import PageHeader from '../components/PageHeader'
 import Spinner from '../components/Spinner'
 import Alert from '../components/Alert'
@@ -13,6 +21,9 @@ const ACTION_OPTIONS = [
   'JE Posted to QBO', 'JE Regenerated', 'Mapping Updated',
 ]
 
+const FIELD_SX = { minWidth: 180 }
+const DATE_SX  = { minWidth: 170 }
+
 export default function Step5ActivityLog() {
   const [rows,    setRows]    = useState<JERow[]>([])
   const [columns, setColumns] = useState<string[]>([])
@@ -23,8 +34,8 @@ export default function Step5ActivityLog() {
   // Filter state
   const [actionFilter,  setActionFilter]  = useState('')
   const [journalFilter, setJournalFilter] = useState('')
-  const [dateFrom,      setDateFrom]      = useState('')
-  const [dateTo,        setDateTo]        = useState('')
+  const [dateFrom,      setDateFrom]      = useState<Dayjs | null>(null)
+  const [dateTo,        setDateTo]        = useState<Dayjs | null>(null)
 
   const fetchLog = useCallback(async (filters?: ActivityLogFilters) => {
     setLoading(true)
@@ -46,16 +57,16 @@ export default function Step5ActivityLog() {
     fetchLog({
       action:         actionFilter  || undefined,
       journal_number: journalFilter || undefined,
-      date_from:      dateFrom      || undefined,
-      date_to:        dateTo        || undefined,
+      date_from:      dateFrom?.isValid() ? dateFrom.format('YYYY-MM-DD') : undefined,
+      date_to:        dateTo?.isValid()   ? dateTo.format('YYYY-MM-DD')   : undefined,
     })
   }
 
   function handleClear() {
     setActionFilter('')
     setJournalFilter('')
-    setDateFrom('')
-    setDateTo('')
+    setDateFrom(null)
+    setDateTo(null)
     fetchLog()
   }
 
@@ -82,9 +93,6 @@ export default function Step5ActivityLog() {
   }, [columns])
 
   const defaultColDef = useMemo(() => ({ cellStyle: { fontSize: '13px' } }), [])
-
-  const getRowId = useCallback((params: { data: JERow; rowIndex?: number }) =>
-    String(params.rowIndex ?? 0), [])
 
   function onFirstDataRendered() {
     gridRef.current?.api?.autoSizeAllColumns()
@@ -126,58 +134,67 @@ export default function Step5ActivityLog() {
       {error && <Alert type="error">{error}</Alert>}
 
       {/* ── Filter bar ────────────────────────────────────────────────────── */}
-      <div className="card" style={{ padding: '12px 16px', marginBottom: 16, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 12, color: 'var(--muted)' }}>Action</label>
-          <select
-            value={actionFilter}
-            onChange={(e) => setActionFilter(e.target.value)}
-            style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13 }}
-          >
-            {ACTION_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>{opt || 'All actions'}</option>
-            ))}
-          </select>
-        </div>
+      <div className="card" style={{ padding: '16px 20px', marginBottom: 16 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+          <FormControl size="small" sx={FIELD_SX}>
+            <InputLabel id="action-filter-label" shrink>Action</InputLabel>
+            <Select
+              labelId="action-filter-label"
+              value={actionFilter}
+              label="Action"
+              displayEmpty
+              notched
+              renderValue={(val) => val || 'All actions'}
+              onChange={(e) => setActionFilter(e.target.value)}
+            >
+              {ACTION_OPTIONS.map((opt) => (
+                <MenuItem key={opt} value={opt}>{opt || 'All actions'}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 12, color: 'var(--muted)' }}>Journal #</label>
-          <input
-            type="text"
+          <TextField
+            size="small"
+            label="Journal #"
             placeholder="e.g. 2024-03"
             value={journalFilter}
             onChange={(e) => setJournalFilter(e.target.value)}
-            style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13, width: 140 }}
+            sx={FIELD_SX}
           />
-        </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 12, color: 'var(--muted)' }}>From</label>
-          <input
-            type="date"
+          <DatePicker
+            label="From"
             value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13 }}
+            onChange={setDateFrom}
+            slotProps={{ textField: { size: 'small', sx: DATE_SX } }}
           />
-        </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <label style={{ fontSize: 12, color: 'var(--muted)' }}>To</label>
-          <input
-            type="date"
+          <DatePicker
+            label="To"
             value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13 }}
+            onChange={setDateTo}
+            slotProps={{ textField: { size: 'small', sx: DATE_SX } }}
           />
-        </div>
 
-        <button className="btn btn-primary" onClick={handleFilter} style={{ height: 36 }}>
-          <span className="material-icons-round" style={{ fontSize: 16 }}>search</span>
-          Filter
-        </button>
-        <button className="btn btn-secondary" onClick={handleClear} style={{ height: 36 }}>
-          Clear
-        </button>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<SearchIcon />}
+            onClick={handleFilter}
+            sx={{ height: 40, px: 2.5, background: 'linear-gradient(135deg,#400f61,#2d0a45)', '&:hover': { background: 'linear-gradient(135deg,#5a1a85,#400f61)' } }}
+          >
+            Filter
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<ClearIcon />}
+            onClick={handleClear}
+            sx={{ height: 40, px: 2.5 }}
+          >
+            Clear
+          </Button>
+        </Box>
       </div>
 
       {rows.length === 0 && !loading && !error ? (
@@ -213,7 +230,6 @@ export default function Step5ActivityLog() {
               rowData={rows}
               columnDefs={colDefs}
               defaultColDef={defaultColDef}
-              getRowId={getRowId}
               pagination
               paginationPageSize={25}
               animateRows

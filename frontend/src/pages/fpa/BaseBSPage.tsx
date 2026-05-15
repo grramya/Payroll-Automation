@@ -1,14 +1,13 @@
 import { useMemo, useState } from "react";
-import { Box, Container, Typography, Button, Chip } from "@mui/material";
+import { Box, Container, Typography, Button } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import type { Dayjs } from "dayjs";
 import dayjs from "dayjs";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ErrorIcon from "@mui/icons-material/Error";
 import BaseBSTable     from "../../components/fpa/BaseBSTable";
 import FullScreenWrapper from "../../components/fpa/FullScreenWrapper";
 import { useFpaResult } from "../../context/FpaResultContext";
+import { fpaDownloadFilteredReport } from "../../api/api";
 
 const MONTH_ABBR: Record<string, string> = {
   Jan:"01",Feb:"02",Mar:"03",Apr:"04",May:"05",Jun:"06",
@@ -24,7 +23,7 @@ function monthStrToYYYYMM(s: string): string {
 export default function BaseBSPage() {
   const { result, pageFilters, setPageFilter } = useFpaResult();
   if (!result) return null;
-  const { bsUrl, bsPreview, companyName } = result;
+  const { bsPreview, companyName } = result;
 
   const bs      = bsPreview as Record<string, unknown> | null;
   const months  = (bs?.months as string[]) ?? [];
@@ -37,12 +36,15 @@ export default function BaseBSPage() {
   const toDate      = filters?.toDate   ?? defaultTo;
   const setFromDate = (v: Dayjs | null) => setPageFilter("baseBS", { fromDate: v, toDate } as never);
   const setToDate   = (v: Dayjs | null) => setPageFilter("baseBS", { fromDate, toDate: v } as never);
-  const [fromOpen, setFromOpen] = useState(false);
-  const [toOpen,   setToOpen]   = useState(false);
+  const [fromOpen,  setFromOpen]  = useState(false);
+  const [toOpen,    setToOpen]    = useState(false);
+  const [fromError, setFromError] = useState(false);
+  const [toError,   setToError]   = useState(false);
 
   const filteredIndices = useMemo<number[]>(() => {
-    const fromYM = fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
-    const toYM   = toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
+    const rangeOk = !(fromDate?.isValid() && toDate?.isValid() && fromDate.isAfter(toDate));
+    const fromYM = rangeOk && fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
+    const toYM   = rangeOk && toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
     return months.reduce<number[]>((acc, m, i) => {
       const ym = monthStrToYYYYMM(m);
       if (fromYM && ym < fromYM) return acc;
@@ -69,10 +71,15 @@ export default function BaseBSPage() {
   const checkRow   = rows.find((r) => r.type === "check");
   const isBalanced = (checkRow?.values as (number | null)[] | undefined)?.every((v) => Math.abs(v ?? 0) < 0.01) ?? false;
 
-  const handleDownload = () => {
-    if (!bsUrl) return;
+  const handleDownload = async () => {
+    const rangeOk = !(fromDate?.isValid() && toDate?.isValid() && fromDate.isAfter(toDate));
+    const fromYM = rangeOk && fromDate?.isValid() ? fromDate.format("YYYY-MM") : undefined;
+    const toYM   = rangeOk && toDate?.isValid()   ? toDate.format("YYYY-MM")   : undefined;
+    const blob = await fpaDownloadFilteredReport("bs", { from_ym: fromYM, to_ym: toYM });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = bsUrl; a.download = `${companyName}_base_bs.xlsx`; a.click();
+    a.href = url; a.download = `${companyName}_base_bs.xlsx`; a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -85,10 +92,25 @@ export default function BaseBSPage() {
               <Typography variant="body2" color="text.secondary">Month-end balances from staging data &mdash; <strong>{companyName}</strong></Typography>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
-              <DatePicker label="From" value={fromDate} onChange={(v: Dayjs | null) => setFromDate(v)} open={fromOpen} onOpen={() => setFromOpen(true)} onClose={() => setFromOpen(false)} slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setFromOpen(true) } }} />
-              <DatePicker label="To"   value={toDate}   onChange={(v: Dayjs | null) => setToDate(v)}   open={toOpen}   onOpen={() => setToOpen(true)}   onClose={() => setToOpen(false)}   slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setToOpen(true)   } }} />
-              <Chip icon={isBalanced ? <CheckCircleIcon sx={{ fontSize: "14px !important" }} aria-hidden="true" /> : <ErrorIcon sx={{ fontSize: "14px !important" }} aria-hidden="true" />} label={isBalanced ? "Sheet balances ✓" : "Check mismatch"} color={isBalanced ? "success" : "error"} variant="outlined" size="small" aria-label={isBalanced ? "Balance sheet is balanced" : "Balance sheet has a mismatch"} />
-              {bsUrl && (
+              <DatePicker
+                label="From"
+                value={fromDate}
+                onChange={(v: Dayjs | null) => setFromDate(v)}
+                maxDate={toDate?.isValid() ? toDate : undefined}
+                onError={(e) => setFromError(!!e)}
+                open={fromOpen} onOpen={() => setFromOpen(true)} onClose={() => setFromOpen(false)}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setFromOpen(true), error: fromError, helperText: fromError ? "Invalid date" : undefined } }}
+              />
+              <DatePicker
+                label="To"
+                value={toDate}
+                onChange={(v: Dayjs | null) => setToDate(v)}
+                minDate={fromDate?.isValid() ? fromDate : undefined}
+                onError={(e) => setToError(!!e)}
+                open={toOpen} onOpen={() => setToOpen(true)} onClose={() => setToOpen(false)}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setToOpen(true), error: toError, helperText: toError ? "Invalid date" : undefined } }}
+              />
+              {bsPreview && (
                 <Button size="small" variant="contained" startIcon={<AccountBalanceIcon aria-hidden="true" />} onClick={handleDownload} aria-label={`Download ${companyName}_base_bs.xlsx`} sx={{ background: "linear-gradient(135deg,#400f61,#2d0a45)", height: 40 }}>
                   Download .xlsx
                 </Button>

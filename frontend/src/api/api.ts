@@ -67,6 +67,19 @@ export interface QBOStatus {
   expires?: string
 }
 
+export interface QBOCompanyStatus {
+  connected: boolean
+  realm_id: string | null
+  expires_at: string | null
+  company_name: string
+}
+
+export interface FpaQBOStatus {
+  main: QBOCompanyStatus
+  broker: QBOCompanyStatus
+  sandbox: boolean
+}
+
 export interface QBOPostResult {
   id: string
   doc_number: string
@@ -248,6 +261,20 @@ export async function getQBOStatus(): Promise<QBOStatus> {
   return data
 }
 
+export async function getFpaQBOStatus(): Promise<FpaQBOStatus> {
+  const { data } = await http.get<FpaQBOStatus>('/fpa/qbo-status')
+  return data
+}
+
+export async function getFpaQBOAuthUrl(company: 'main' | 'broker'): Promise<{ auth_url: string }> {
+  const { data } = await http.get<{ auth_url: string }>(`/fpa/qbo-auth-url?company=${company}`)
+  return data
+}
+
+export async function disconnectFpaQBO(company: 'main' | 'broker'): Promise<void> {
+  await http.post('/fpa/qbo-disconnect', { company })
+}
+
 export async function startQBOAuth(): Promise<{ auth_url: string }> {
   const { data } = await http.post<{ auth_url: string }>('/qbo/auth-start')
   return data
@@ -371,7 +398,7 @@ export async function updateUserPermissions(
 
 // ── FP&A ───────────────────────────────────────────────────────────────────────
 
-export type FpaReportType = 'combined' | 'bs' | 'bsi' | 'pl' | 'comp_pl' | 'comp_pl_bd'
+export type FpaReportType = 'combined' | 'bs' | 'bsi' | 'bs_bd' | 'pl' | 'comp_pl' | 'comp_pl_bd'
 
 export interface FpaTransformResponse {
   summary: Record<string, unknown>
@@ -383,6 +410,8 @@ export interface FpaTransformResponse {
   bs_preview?: Record<string, unknown>
   bsi_excel_b64?: string
   bsi_preview?: Record<string, unknown>
+  bs_bd_excel_b64?: string
+  bs_bd_preview?: Record<string, unknown>
   pl_excel_b64?: string
   pl_preview?: Record<string, unknown>
   comp_pl_excel_b64?: string
@@ -398,6 +427,25 @@ export function fpaDownloadCachedReportUrl(reportType: FpaReportType): string {
 
 export async function fpaDownloadCachedReport(reportType: FpaReportType): Promise<Blob> {
   const res = await http.get(`/fpa/qbo-cache/report/${reportType}`, { responseType: 'blob' })
+  return res.data as Blob
+}
+
+export interface FpaFilteredDownloadParams {
+  from_ym?:          string   // "YYYY-MM" — for range-filtered reports
+  to_ym?:            string   // "YYYY-MM"
+  month?:            string   // "Mmm-yy"  — for single-month reports (bsi, pl)
+  selected_quarter?: string   // "Q2-2025" — for comp_pl / comp_pl_bd
+  selected_year?:    number   // integer year — for comp_pl / comp_pl_bd
+}
+
+export async function fpaDownloadFilteredReport(
+  reportType: 'bs' | 'bs_bd' | 'comp_pl' | 'comp_pl_bd' | 'bsi' | 'pl',
+  params: FpaFilteredDownloadParams,
+): Promise<Blob> {
+  const res = await http.get(
+    `/fpa/qbo-cache/report/${reportType}/filtered`,
+    { params, responseType: 'blob' },
+  )
   return res.data as Blob
 }
 

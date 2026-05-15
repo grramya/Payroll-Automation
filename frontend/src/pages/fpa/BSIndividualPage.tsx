@@ -7,11 +7,12 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import BSIndividualTable from "../../components/fpa/BSIndividualTable";
 import FullScreenWrapper  from "../../components/fpa/FullScreenWrapper";
 import { useFpaResult }   from "../../context/FpaResultContext";
+import { fpaDownloadFilteredReport } from "../../api/api";
 
 export default function BSIndividualPage() {
   const { result, pageFilters, setPageFilter } = useFpaResult();
   if (!result) return null;
-  const { bsiUrl, bsiPreview, companyName } = result;
+  const { bsiPreview, companyName } = result;
 
   const bsi = bsiPreview as Record<string, unknown> | null;
   const isNewShape   = !!bsi?.rows_by_month;
@@ -26,10 +27,13 @@ export default function BSIndividualPage() {
   const checkVal   = isNewShape ? (checkRow?.co_a as number ?? null) : (checkRow?.value as number ?? null);
   const isBalanced = checkVal != null && Math.abs(checkVal) < 0.01;
 
-  const handleDownload = () => {
-    if (!bsiUrl) return;
+  const handleDownload = async () => {
+    const mon = selectedMonth || defaultMonth;
+    const blob = await fpaDownloadFilteredReport("bsi", { month: mon });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = bsiUrl; a.download = `${companyName}_bs_individual.xlsx`; a.click();
+    a.href = url; a.download = `${companyName}_bs_individual.xlsx`; a.click();
+    URL.revokeObjectURL(url);
   };
 
   const displayMonth = selectedMonth || defaultMonth;
@@ -52,7 +56,7 @@ export default function BSIndividualPage() {
                   </Select>
                 </FormControl>
               )}
-              {bsiUrl && (
+              {bsiPreview && (
                 <Button size="small" variant="contained" startIcon={<AccountBalanceWalletIcon aria-hidden="true" />} onClick={handleDownload} aria-label={`Download ${companyName}_bs_individual.xlsx`} sx={{ background: "linear-gradient(135deg,#400f61,#2d0a45)", height: 40 }}>
                   Download .xlsx
                 </Button>

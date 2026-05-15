@@ -429,13 +429,16 @@ export default function DashboardPage() {
   const toDate: Dayjs   = pageFilters.dashboard?.toDate   ?? defaultTo;
   const setFromDate = (v: Dayjs | null): void => setPageFilter("dashboard", { fromDate: v, toDate });
   const setToDate   = (v: Dayjs | null): void => setPageFilter("dashboard", { fromDate, toDate: v });
-  const [fromOpen, setFromOpen] = useState(false);
-  const [toOpen,   setToOpen]   = useState(false);
+  const [fromOpen,  setFromOpen]  = useState(false);
+  const [toOpen,    setToOpen]    = useState(false);
+  const [fromError, setFromError] = useState(false);
+  const [toError,   setToError]   = useState(false);
 
   // ── Filtered P&L months ───────────────────────────────────────────────────
   const filteredPlMonths = useMemo((): string[] => {
-    const fromYM = fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
-    const toYM_  = toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
+    const rangeOk = !(fromDate?.isValid() && toDate?.isValid() && fromDate.isAfter(toDate));
+    const fromYM = rangeOk && fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
+    const toYM_  = rangeOk && toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
     return plMonths.filter((m: string) => {
       const ym = toYM(m);
       if (fromYM && ym < fromYM) return false;
@@ -447,8 +450,9 @@ export default function DashboardPage() {
   // ── Filtered BS months (with their original indices for value lookup) ─────
   interface BsEntry { m: string; i: number; }
   const filteredBsEntries = useMemo((): BsEntry[] => {
-    const fromYM = fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
-    const toYM_  = toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
+    const rangeOk = !(fromDate?.isValid() && toDate?.isValid() && fromDate.isAfter(toDate));
+    const fromYM = rangeOk && fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
+    const toYM_  = rangeOk && toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
     return bsMonths
       .map((m: string, i: number) => ({ m, i }))
       .filter(({ m }: BsEntry) => {
@@ -599,15 +603,19 @@ export default function DashboardPage() {
             label="From"
             value={fromDate}
             onChange={(v: Dayjs | null) => setFromDate(v)}
+            maxDate={toDate?.isValid() ? toDate : undefined}
+            onError={(e) => setFromError(!!e)}
             open={fromOpen} onOpen={() => setFromOpen(true)} onClose={() => setFromOpen(false)}
-            slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setFromOpen(true) } }}
+            slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setFromOpen(true), error: fromError, helperText: fromError ? "Invalid date" : undefined } }}
           />
           <DatePicker
             label="To"
             value={toDate}
             onChange={(v: Dayjs | null) => setToDate(v)}
+            minDate={fromDate?.isValid() ? fromDate : undefined}
+            onError={(e) => setToError(!!e)}
             open={toOpen} onOpen={() => setToOpen(true)} onClose={() => setToOpen(false)}
-            slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setToOpen(true) } }}
+            slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setToOpen(true), error: toError, helperText: toError ? "Invalid date" : undefined } }}
           />
         </Box>
       </Box>

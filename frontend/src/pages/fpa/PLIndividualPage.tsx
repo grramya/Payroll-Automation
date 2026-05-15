@@ -7,11 +7,12 @@ import DownloadIcon from "@mui/icons-material/Download";
 import PLIndividualTable from "../../components/fpa/PLIndividualTable";
 import FullScreenWrapper from "../../components/fpa/FullScreenWrapper";
 import { useFpaResult } from "../../context/FpaResultContext";
+import { fpaDownloadFilteredReport } from "../../api/api";
 
 export default function PLIndividualPage() {
   const { result, pageFilters, setPageFilter } = useFpaResult();
   if (!result) return null;
-  const { plUrl, plPreview, companyName } = result;
+  const { plPreview, companyName } = result;
 
   const months       = (plPreview as Record<string, unknown> | null)?.months as string[] ?? [];
   const defaultMonth = months[months.length - 1] ?? "";
@@ -19,10 +20,13 @@ export default function PLIndividualPage() {
   const selectedMonth    = (pageFilters.plIndividual as Record<string, unknown> | undefined)?.selectedMonth as string ?? defaultMonth;
   const setSelectedMonth = (v: string) => setPageFilter("plIndividual", { selectedMonth: v } as never);
 
-  const handleDownload = () => {
-    if (!plUrl) return;
+  const handleDownload = async () => {
+    const mon = selectedMonth || defaultMonth;
+    const blob = await fpaDownloadFilteredReport("pl", { month: mon });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = plUrl; a.download = `${companyName}_pl_individual.xlsx`; a.click();
+    a.href = url; a.download = `${companyName}_pl_individual.xlsx`; a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -47,7 +51,7 @@ export default function PLIndividualPage() {
                   </Select>
                 </FormControl>
               )}
-              {plUrl && (
+              {plPreview && (
                 <Button size="small" variant="contained" startIcon={<DownloadIcon aria-hidden="true" />} onClick={handleDownload} aria-label={`Download ${companyName}_pl_individual.xlsx`} sx={{ background: "linear-gradient(135deg,#400f61,#2d0a45)", height: 40 }}>
                   Download .xlsx
                 </Button>

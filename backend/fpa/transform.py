@@ -9,6 +9,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 from .base_bs import run_base_bs, get_bs_preview
 from .bs_individual import run_bs_individual, get_bs_individual_preview
+from .bs_bd import run_bs_bd, get_bs_bd_preview
 from .pl_individual import run_pl_individual, get_pl_individual_preview
 from .comparative_pl import run_comparative_pl, get_comparative_pl_preview
 from .comparative_pl_bd import run_comparative_pl_bd, get_comparative_pl_bd_preview
@@ -115,19 +116,19 @@ def _load_mapping_state() -> None:
             if acct_rows:
                 account_map = {
                     r.account_name: {
-                        "Financial Statement":       r.financial_statement,
-                        "Main Grouping":             r.main_grouping,
-                        "Secondary Grouping":        r.secondary_grouping,
+                        "Financial Statement":        r.financial_statement,
+                        "Main Grouping":              r.main_grouping,
+                        "Secondary Grouping":         r.secondary_grouping,
                         "Classification (Line Item)": r.classification,
                     }
                     for r in acct_rows
                 }
                 dept_map = {
                     (r.account_name, r.dept_class): {
-                        "Classification 2":       r.classification_2,
-                        "Classification 3":       r.classification_3,
-                        "Department (Class)":     r.department,
-                        "Department Group (BD)":  r.dept_group_bd,
+                        "Classification 2":      r.classification_2,
+                        "Classification 3":      r.classification_3,
+                        "Department (Class)":    r.department,
+                        "Department Group (BD)": r.dept_group_bd,
                     }
                     for r in db.query(FpaDeptMap).all()
                 }
@@ -668,12 +669,14 @@ def _transform_core(df: pd.DataFrame, company_name: str) -> tuple:
         "date_range":              date_range,
     }
 
-    # ── Generate all 5 reports in parallel (none depend on each other) ───────
-    with ThreadPoolExecutor(max_workers=10) as ex:
+    # ── Generate all reports in parallel (none depend on each other) ─────────
+    with ThreadPoolExecutor(max_workers=12) as ex:
         f_bs        = ex.submit(run_base_bs,                   df, company_name)
         f_bs_p      = ex.submit(get_bs_preview,                df)
         f_bsi       = ex.submit(run_bs_individual,             df, company_name)
         f_bsi_p     = ex.submit(get_bs_individual_preview,     df)
+        f_bs_bd     = ex.submit(run_bs_bd,                     df, company_name)
+        f_bs_bd_p   = ex.submit(get_bs_bd_preview,             df, company_name)
         f_pl        = ex.submit(run_pl_individual,             df, company_name)
         f_pl_p      = ex.submit(get_pl_individual_preview,     df, company_name)
         f_comp      = ex.submit(run_comparative_pl,            df, company_name)
@@ -683,6 +686,7 @@ def _transform_core(df: pd.DataFrame, company_name: str) -> tuple:
 
     bs_bytes,         bs_preview         = f_bs.result(),      f_bs_p.result()
     bsi_bytes,        bsi_preview        = f_bsi.result(),     f_bsi_p.result()
+    bs_bd_bytes,      bs_bd_preview      = f_bs_bd.result(),   f_bs_bd_p.result()
     pl_bytes,         pl_preview         = f_pl.result(),      f_pl_p.result()
     comp_pl_bytes,    comp_pl_preview    = f_comp.result(),    f_comp_p.result()
     comp_pl_bd_bytes, comp_pl_bd_preview = f_comp_bd.result(), f_comp_bd_p.result()
@@ -691,6 +695,7 @@ def _transform_core(df: pd.DataFrame, company_name: str) -> tuple:
         buf.getvalue(), summary, preview,
         bs_bytes, bs_preview,
         bsi_bytes, bsi_preview,
+        bs_bd_bytes, bs_bd_preview,
         pl_bytes, pl_preview,
         comp_pl_bytes, comp_pl_preview,
         comp_pl_bd_bytes, comp_pl_bd_preview,

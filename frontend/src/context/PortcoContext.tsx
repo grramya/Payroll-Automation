@@ -43,6 +43,8 @@ interface PortcoCtx {
   clearMode:         (mode: "actuals" | "budget") => void;
   undo:              () => void;
   redo:              () => void;
+  reloadFromServer:  () => void;
+  loadAll: (actuals: MetricMap, budget: MetricMap, year: number) => void;
 }
 
 const PortcoContext = createContext<PortcoCtx>({} as PortcoCtx);
@@ -262,6 +264,28 @@ export function PortcoProvider({ children }: { children: ReactNode }) {
     }
   }, [actualsValues, budgetValues, selectedYear]);
 
+  const loadAll = useCallback((actuals: MetricMap, budget: MetricMap, year: number) => {
+    setActualsValues(actuals);
+    setBudgetValues(budget);
+    setSelectedYear(year);
+    scheduleSave(actuals, budget, year);
+  }, [scheduleSave]);
+
+  const reloadFromServer = useCallback(() => {
+    apiClient
+      .get<{ actuals: MetricMap; budget: MetricMap; year: number }>("/portco/data")
+      .then(({ data }) => {
+        const actuals = data.actuals ?? {};
+        const budget  = data.budget  ?? {};
+        const year    = data.year    ?? new Date().getFullYear();
+        setActualsValues(actuals);
+        setBudgetValues(budget);
+        setSelectedYear(year);
+        lsSave(actuals, budget, year);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <PortcoContext.Provider
       value={{
@@ -284,6 +308,8 @@ export function PortcoProvider({ children }: { children: ReactNode }) {
         clearMode,
         undo,
         redo,
+        reloadFromServer,
+        loadAll,
       }}
     >
       {children}

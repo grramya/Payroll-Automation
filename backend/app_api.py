@@ -20,7 +20,7 @@ import threading
 import time
 from collections import defaultdict
 
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Body, Depends, Request
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Body, Depends, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.security import OAuth2PasswordRequestForm
@@ -560,12 +560,14 @@ def _save_fpa_cache(data: dict) -> None:
         row.preview                = data.get("preview")
         row.bs_preview             = data.get("bs_preview")
         row.bsi_preview            = data.get("bsi_preview")
+        row.bs_bd_preview          = data.get("bs_bd_preview")
         row.pl_preview             = data.get("pl_preview")
         row.comp_pl_preview        = data.get("comp_pl_preview")
         row.comp_pl_bd_preview     = data.get("comp_pl_bd_preview")
         row.excel_bytes            = _decode("excel_b64")
         row.bs_excel_bytes         = _decode("bs_excel_b64")
         row.bsi_excel_bytes        = _decode("bsi_excel_b64")
+        row.bs_bd_excel_bytes      = _decode("bs_bd_excel_b64")
         row.pl_excel_bytes         = _decode("pl_excel_b64")
         row.comp_pl_excel_bytes    = _decode("comp_pl_excel_b64")
         row.comp_pl_bd_excel_bytes = _decode("comp_pl_bd_excel_b64")
@@ -598,6 +600,8 @@ def _load_fpa_cache() -> dict | None:
             "bs_preview":           row.bs_preview,
             "bsi_excel_b64":        _enc(row.bsi_excel_bytes),
             "bsi_preview":          row.bsi_preview,
+            "bs_bd_excel_b64":      _enc(row.bs_bd_excel_bytes),
+            "bs_bd_preview":        row.bs_bd_preview,
             "pl_excel_b64":         _enc(row.pl_excel_bytes),
             "pl_preview":           row.pl_preview,
             "comp_pl_excel_b64":    _enc(row.comp_pl_excel_bytes),
@@ -610,7 +614,13 @@ def _load_fpa_cache() -> dict | None:
 def _fpa_cache_exists() -> bool:
     from database import FpaCache, get_db
     with get_db() as db:
-        return db.query(FpaCache.id).filter_by(id=1).first() is not None
+        row = db.query(FpaCache).filter_by(id=1).first()
+        if row is None:
+            return False
+        # Treat as missing if any new column added after initial schema is still NULL
+        if row.bs_bd_preview is None:
+            return False
+        return True
 
 
 def _refresh_qbo_cache() -> tuple[bool, str]:
@@ -653,6 +663,7 @@ def _refresh_qbo_cache() -> tuple[bool, str]:
             excel_bytes, summary, preview,
             bs_bytes, bs_preview,
             bsi_bytes, bsi_preview,
+            bs_bd_bytes, bs_bd_preview,
             pl_bytes, pl_preview,
             comp_pl_bytes, comp_pl_preview,
             comp_pl_bd_bytes, comp_pl_bd_preview,
@@ -668,6 +679,8 @@ def _refresh_qbo_cache() -> tuple[bool, str]:
             "bs_preview":           bs_preview,
             "bsi_excel_b64":        _b64.b64encode(bsi_bytes).decode(),
             "bsi_preview":          bsi_preview,
+            "bs_bd_excel_b64":      _b64.b64encode(bs_bd_bytes).decode(),
+            "bs_bd_preview":        bs_bd_preview,
             "pl_excel_b64":         _b64.b64encode(pl_bytes).decode(),
             "pl_preview":           pl_preview,
             "comp_pl_excel_b64":    _b64.b64encode(comp_pl_bytes).decode(),
@@ -920,6 +933,20 @@ async def list_users(_: dict = Depends(_require_admin)):
 
 _VALID_PORTCO_DEPTS = {None, "proddev", "sales", "marketing", "cs", "finance"}
 
+_DEPT_LABELS = {
+    "proddev":   "Product Development",
+    "sales":     "Sales",
+    "marketing": "Marketing",
+    "cs":        "Customer Success",
+    "finance":   "Finance",
+}
+
+def _dept_label(key: str | None) -> str | None:
+    """Convert short portco_dept key to the full label stored in the DB."""
+    if key is None:
+        return None
+    return _DEPT_LABELS.get(key, key)
+
 @app.post("/api/auth/users")
 async def create_user(body: dict = Body(...), _: dict = Depends(_require_admin)):
     username = body.get("username", "").strip()
@@ -1019,6 +1046,7 @@ async def fpa_transform(
             excel_bytes, summary, preview,
             bs_bytes, bs_preview,
             bsi_bytes, bsi_preview,
+            bs_bd_bytes, bs_bd_preview,
             pl_bytes, pl_preview,
             comp_pl_bytes, comp_pl_preview,
             comp_pl_bd_bytes, comp_pl_bd_preview,
@@ -1035,6 +1063,8 @@ async def fpa_transform(
         "bs_preview":           bs_preview,
         "bsi_excel_b64":        _b64.b64encode(bsi_bytes).decode(),
         "bsi_preview":          bsi_preview,
+        "bs_bd_excel_b64":      _b64.b64encode(bs_bd_bytes).decode(),
+        "bs_bd_preview":        bs_bd_preview,
         "pl_excel_b64":         _b64.b64encode(pl_bytes).decode(),
         "pl_preview":           pl_preview,
         "comp_pl_excel_b64":    _b64.b64encode(comp_pl_bytes).decode(),
@@ -1273,6 +1303,7 @@ async def fpa_qbo_fetch(
                 excel_bytes, summary, preview,
                 bs_bytes, bs_preview,
                 bsi_bytes, bsi_preview,
+                bs_bd_bytes, bs_bd_preview,
                 pl_bytes, pl_preview,
                 comp_pl_bytes, comp_pl_preview,
                 comp_pl_bd_bytes, comp_pl_bd_preview,
@@ -1290,6 +1321,8 @@ async def fpa_qbo_fetch(
                 "bs_preview":           bs_preview,
                 "bsi_excel_b64":        _b64.b64encode(bsi_bytes).decode(),
                 "bsi_preview":          bsi_preview,
+                "bs_bd_excel_b64":      _b64.b64encode(bs_bd_bytes).decode(),
+                "bs_bd_preview":        bs_bd_preview,
                 "pl_excel_b64":         _b64.b64encode(pl_bytes).decode(),
                 "pl_preview":           pl_preview,
                 "comp_pl_excel_b64":    _b64.b64encode(comp_pl_bytes).decode(),
@@ -1352,12 +1385,12 @@ async def fpa_qbo_cache(_: dict = Depends(get_current_user)):
         data = _load_fpa_cache()
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
-    if data is None:
+    if data is None or not _fpa_cache_exists():
         raise HTTPException(status_code=404, detail="No cache available yet — QBO fetch has not run")
     # Strip the Excel blobs from the metadata response — callers should use
     # /report/{type} to download individual files rather than loading 60 MB at once.
     _BLOB_KEYS = {
-        "excel_b64", "bs_excel_b64", "bsi_excel_b64",
+        "excel_b64", "bs_excel_b64", "bsi_excel_b64", "bs_bd_excel_b64",
         "pl_excel_b64", "comp_pl_excel_b64", "comp_pl_bd_excel_b64",
     }
     return {k: v for k, v in data.items() if k not in _BLOB_KEYS}
@@ -1368,6 +1401,7 @@ _FPA_REPORT_MAP: dict[str, tuple[str, str]] = {
     "combined":    ("excel_bytes",            "FPA_Combined.xlsx"),
     "bs":          ("bs_excel_bytes",         "FPA_BalanceSheet.xlsx"),
     "bsi":         ("bsi_excel_bytes",        "FPA_BS_Individual.xlsx"),
+    "bs_bd":       ("bs_bd_excel_bytes",      "FPA_BalanceSheet_BD.xlsx"),
     "pl":          ("pl_excel_bytes",         "FPA_PL.xlsx"),
     "comp_pl":     ("comp_pl_excel_bytes",    "FPA_Comparative_PL.xlsx"),
     "comp_pl_bd":  ("comp_pl_bd_excel_bytes", "FPA_Comparative_PL_BD.xlsx"),
@@ -1399,6 +1433,82 @@ async def fpa_report_download(report_type: str, _: dict = Depends(get_current_us
     if row is None or row[0] is None:
         raise HTTPException(status_code=404, detail="Report not cached yet.")
     blob: bytes = row[0]
+    return StreamingResponse(
+        iter([blob]),
+        media_type=_XLSX_MIME,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@app.get("/api/fpa/qbo-cache/report/{report_type}/filtered")
+async def fpa_report_filtered_download(
+    report_type:      str,
+    from_ym:          str | None = None,
+    to_ym:            str | None = None,
+    month:            str | None = None,
+    selected_quarter: str | None = None,
+    selected_year:    int | None = None,
+    _: dict = Depends(get_current_user),
+):
+    """Return a date-filtered FP&A Excel report regenerated from the cached preview JSONB.
+
+    report_type: bs | comp_pl | comp_pl_bd | bsi | pl
+    from_ym / to_ym: YYYY-MM strings (for range-filtered reports)
+    month:           Mmm-yy string (for single-month reports: bsi, pl)
+    """
+    from database import FpaCache, get_db
+    from fpa.base_bs          import run_base_bs_from_preview
+    from fpa.comparative_pl   import run_comparative_pl_from_preview
+    from fpa.comparative_pl_bd import run_comparative_pl_bd_from_preview
+    from fpa.bs_individual    import run_bs_individual_from_preview
+    from fpa.pl_individual    import run_pl_individual_from_preview
+    from fpa.bs_bd            import run_bs_bd_from_preview
+
+    _FILTERED_MAP: dict[str, tuple[str, str]] = {
+        "bs":         ("bs_preview",          "FPA_BalanceSheet_Filtered.xlsx"),
+        "bs_bd":      ("bs_bd_preview",       "FPA_BalanceSheet_BD_Filtered.xlsx"),
+        "comp_pl":    ("comp_pl_preview",     "FPA_Comparative_PL_Filtered.xlsx"),
+        "comp_pl_bd": ("comp_pl_bd_preview",  "FPA_Comparative_PL_BD_Filtered.xlsx"),
+        "bsi":        ("bsi_preview",         "FPA_BS_Individual_Filtered.xlsx"),
+        "pl":         ("pl_preview",          "FPA_PL_Filtered.xlsx"),
+    }
+
+    if report_type not in _FILTERED_MAP:
+        raise _err(
+            "INVALID_REPORT_TYPE",
+            f"Unknown report type '{report_type}'. Valid: {', '.join(_FILTERED_MAP)}",
+        )
+
+    preview_col, filename = _FILTERED_MAP[report_type]
+
+    try:
+        with get_db() as db:
+            row = db.query(FpaCache).filter_by(id=1).first()
+            if row is None:
+                raise HTTPException(status_code=404, detail="No FP&A cache found.")
+            preview  = getattr(row, preview_col) or {}
+            co_name  = row.company_name or ""
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
+
+    try:
+        if report_type == "bs":
+            blob = run_base_bs_from_preview(preview, from_ym, to_ym, co_name)
+        elif report_type == "bs_bd":
+            blob = run_bs_bd_from_preview(preview, selected_quarter, co_name)
+        elif report_type == "comp_pl":
+            blob = run_comparative_pl_from_preview(preview, from_ym, to_ym, selected_quarter, selected_year, co_name)
+        elif report_type == "comp_pl_bd":
+            blob = run_comparative_pl_bd_from_preview(preview, from_ym, to_ym, selected_quarter, selected_year, co_name)
+        elif report_type == "bsi":
+            blob = run_bs_individual_from_preview(preview, month or "", co_name)
+        else:  # pl
+            blob = run_pl_individual_from_preview(preview, month or "", co_name)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Report generation failed: {exc}")
+
     return StreamingResponse(
         iter([blob]),
         media_type=_XLSX_MIME,
@@ -1502,13 +1612,87 @@ async def portco_upload(
     file: UploadFile = File(...),
     _: dict = Depends(_require_portco),
 ):
-    """Upload an MBR Excel file and return structured dashboard JSON."""
+    """Upload an MBR Excel file and return actuals + budget as MetricMaps."""
     try:
-        from portco.parser import parse_mbr_file
+        from portco.parser import parse_mbr_to_metric_map
         file_bytes = await _read_and_validate_excel(file)
-        return parse_mbr_file(file_bytes)
+        return parse_mbr_to_metric_map(file_bytes)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to parse file: {exc}")
+
+
+@app.post("/api/portco/upload-and-save")
+async def portco_upload_and_save(
+    file: UploadFile = File(...),
+    sheet: str = Query("actuals", regex="^(actuals|budget)$"),
+    _: dict = Depends(_require_portco),
+):
+    """Parse an Excel file, save the chosen sheet directly to DB, return refreshed data."""
+    try:
+        from portco.parser import parse_mbr_to_metric_map
+        file_bytes = await _read_and_validate_excel(file)
+        result = parse_mbr_to_metric_map(file_bytes)
+        data = result.get(sheet, {})
+        if not data:
+            raise HTTPException(status_code=422, detail="No data found in the uploaded file. Check that the file has Sheet1 with an ID column or Actuals/Budget sheets.")
+
+        uploaded_at = datetime.now(tz=timezone.utc)
+        with get_db() as db:
+            db.query(PortcoMetric).filter(PortcoMetric.sheet == sheet).delete()
+            for metric_id, months in data.items():
+                for month, value in months.items():
+                    if isinstance(value, (int, float)):
+                        db.add(PortcoMetric(
+                            metric_id=str(metric_id),
+                            month=str(month),
+                            sheet=sheet,
+                            value=float(value),
+                            uploaded_at=uploaded_at,
+                        ))
+
+        # Return full refreshed dataset so frontend can update in one shot
+        actuals: dict[str, dict[str, float]] = {}
+        budget:  dict[str, dict[str, float]] = {}
+        with get_db() as db:
+            for row in db.query(PortcoMetric).all():
+                target = actuals if row.sheet == "actuals" else budget
+                target.setdefault(row.metric_id, {})[row.month] = row.value
+
+        all_months = [m for d in (*actuals.values(), *budget.values()) for m in d]
+        year = max(int(m[:4]) for m in all_months) if all_months else datetime.now(tz=timezone.utc).year
+        return {"actuals": actuals, "budget": budget, "year": year, "imported_count": len(data)}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Import failed: {exc}")
+
+
+@app.post("/api/portco/upload/debug")
+async def portco_upload_debug(
+    file: UploadFile = File(...),
+    _: dict = Depends(_require_portco),
+):
+    """Debug: return sheet names and first few parsed rows to diagnose empty imports."""
+    import openpyxl
+    from io import BytesIO
+    file_bytes = await _read_and_validate_excel(file)
+    wb = openpyxl.load_workbook(BytesIO(file_bytes), data_only=True)
+    sheet_names = wb.sheetnames
+    preview: dict = {}
+    for sn in sheet_names:
+        ws = wb[sn]
+        rows = list(ws.iter_rows(values_only=True))[:10]
+        preview[sn] = [[str(c) for c in row] for row in rows]
+    from portco.parser import parse_mbr_to_metric_map
+    result = parse_mbr_to_metric_map(file_bytes)
+    return {
+        "sheet_names": sheet_names,
+        "actuals_keys": list(result["actuals"].keys())[:20],
+        "budget_keys":  list(result["budget"].keys())[:20],
+        "actuals_count": len(result["actuals"]),
+        "budget_count":  len(result["budget"]),
+        "sheet_preview": preview,
+    }
 
 
 # Resolve the sample MBR file path (one level up from backend/)
@@ -1625,7 +1809,7 @@ async def budget_emp_list(
     current_user: dict = Depends(_require_portco),
 ):
     is_admin  = current_user.get("role") == "admin"
-    user_dept = current_user.get("portco_dept")
+    user_dept = _dept_label(current_user.get("portco_dept"))
     with get_db() as db:
         q = db.query(BudgetEmployeeCost).filter(BudgetEmployeeCost.year == year)
         if not is_admin and user_dept:
@@ -1641,7 +1825,7 @@ async def budget_emp_create(
     body: dict = Body(...),
     current_user: dict = Depends(_require_portco),
 ):
-    dept = body.get("department") or current_user.get("portco_dept")
+    dept = body.get("department") or _dept_label(current_user.get("portco_dept"))
     if not dept:
         raise HTTPException(status_code=422, detail="department is required")
     now = datetime.now(tz=timezone.utc)
@@ -1753,7 +1937,7 @@ async def budget_other_list(
     current_user: dict = Depends(_require_portco),
 ):
     is_admin  = current_user.get("role") == "admin"
-    user_dept = current_user.get("portco_dept")
+    user_dept = _dept_label(current_user.get("portco_dept"))
     with get_db() as db:
         q = db.query(BudgetOtherCost).filter(BudgetOtherCost.year == year)
         if not is_admin and user_dept:
@@ -1769,7 +1953,7 @@ async def budget_other_create(
     body: dict = Body(...),
     current_user: dict = Depends(_require_portco),
 ):
-    dept = body.get("department") or current_user.get("portco_dept")
+    dept = body.get("department") or _dept_label(current_user.get("portco_dept"))
     if not dept:
         raise HTTPException(status_code=422, detail="department is required")
     now = datetime.now(tz=timezone.utc)
@@ -2213,6 +2397,33 @@ async def qbo_disconnect(_: dict = _auth):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/api/fpa/qbo-disconnect")
+async def fpa_qbo_disconnect(body: dict = Body(...), _: dict = Depends(get_current_user)):
+    """Revoke tokens for a specific company ('main' or 'broker')."""
+    company = body.get("company", "main")
+    if company not in ("main", "broker"):
+        raise HTTPException(status_code=400, detail="company must be 'main' or 'broker'")
+    try:
+        from qbo import config as _cfg
+        from qbo.auth import TokenStore
+        token_file = _cfg.get_token_file(company)
+        store = TokenStore.load_from(token_file)
+        if store and store.access_token:
+            import requests as _req
+            from requests.auth import HTTPBasicAuth as _BA
+            _req.post(
+                _cfg.REVOKE_URL,
+                data={"token": store.refresh_token or store.access_token},
+                auth=_BA(_cfg.CLIENT_ID, _cfg.CLIENT_SECRET),
+                timeout=10,
+            )
+        if token_file.exists():
+            token_file.unlink()
+        return {"ok": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 def _read_qbo_override(override_type: str) -> dict:
     """Read a QBO override (accounts/vendors/classes) from the DB."""
     with get_db() as db:
@@ -2416,21 +2627,22 @@ async def get_activity_log(
             except ValueError:
                 pass
         rows = q.order_by(ActivityLogEntry.id.desc()).all()
-    records = [
-        {
-            "Timestamp":      r.timestamp.isoformat() if r.timestamp else "",
-            "User":           r.username or "",
-            "IP Address":     r.ip_address or "",
-            "Hostname":       r.hostname or "",
-            "Action":         r.action,
-            "Input File":     r.input_file or "",
-            "Output File":    r.output_file or "",
-            "Journal Number": r.journal_number or "",
-            "Details":        r.details or "",
-            "Changes Made":   _fmt_changes(r.changes_made),
-        }
-        for r in rows
-    ]
+        records = [
+            {
+                "_id":            r.id,
+                "Timestamp":      r.timestamp.isoformat() if r.timestamp else "",
+                "User":           r.username or "",
+                "IP Address":     r.ip_address or "",
+                "Hostname":       r.hostname or "",
+                "Action":         r.action,
+                "Input File":     r.input_file or "",
+                "Output File":    r.output_file or "",
+                "Journal Number": r.journal_number or "",
+                "Details":        r.details or "",
+                "Changes Made":   _fmt_changes(r.changes_made),
+            }
+            for r in rows
+        ]
     cols = ["Timestamp", "User", "IP Address", "Hostname", "Action",
             "Input File", "Output File", "Journal Number", "Details", "Changes Made"]
     return {"rows": records, "columns": cols}
@@ -2440,23 +2652,23 @@ async def get_activity_log(
 async def download_activity_log(_: dict = _auth):
     with get_db() as db:
         rows = db.query(ActivityLogEntry).order_by(ActivityLogEntry.id).all()
-    if not rows:
-        raise HTTPException(status_code=404, detail="No activity log entries found")
-    records = [
-        {
-            "Timestamp":      r.timestamp.isoformat() if r.timestamp else "",
-            "User":           r.username or "",
-            "IP Address":     r.ip_address or "",
-            "Hostname":       r.hostname or "",
-            "Action":         r.action,
-            "Input File":     r.input_file or "",
-            "Output File":    r.output_file or "",
-            "Journal Number": r.journal_number or "",
-            "Details":        r.details or "",
-            "Changes Made":   _fmt_changes(r.changes_made),
-        }
-        for r in rows
-    ]
+        if not rows:
+            raise HTTPException(status_code=404, detail="No activity log entries found")
+        records = [
+            {
+                "Timestamp":      r.timestamp.isoformat() if r.timestamp else "",
+                "User":           r.username or "",
+                "IP Address":     r.ip_address or "",
+                "Hostname":       r.hostname or "",
+                "Action":         r.action,
+                "Input File":     r.input_file or "",
+                "Output File":    r.output_file or "",
+                "Journal Number": r.journal_number or "",
+                "Details":        r.details or "",
+                "Changes Made":   _fmt_changes(r.changes_made),
+            }
+            for r in rows
+        ]
     buf = BytesIO()
     with pd.ExcelWriter(buf, engine="openpyxl") as writer:
         pd.DataFrame(records).to_excel(writer, index=False, sheet_name="Activity Log")

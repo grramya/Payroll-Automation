@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback } f
 import type { ReactNode } from 'react'
 import type { Dayjs } from 'dayjs'
 import { apiClient as http } from '../api/api'
+import { parseResult } from './fpaResultUtils'
 
 export interface FpaResult {
   summary: Record<string, unknown>
@@ -20,6 +21,8 @@ export interface FpaResult {
   compPlPreview: Record<string, unknown> | null
   compPlBdUrl: string | null
   compPlBdPreview: Record<string, unknown> | null
+  bsBdUrl: string | null
+  bsBdPreview: Record<string, unknown> | null
 }
 
 export interface PageFilters {
@@ -29,6 +32,7 @@ export interface PageFilters {
   compPLBD?: { fromDate: Dayjs | null; toDate: Dayjs | null; selectedQuarter: string; selectedYear: number }
   bsIndividual?: { selectedMonth: string }
   plIndividual?: { selectedMonth: string }
+  bsBD?: { selectedYear: number; selectedQuarter: string }
 }
 
 export type CacheStatus = 'loading' | 'loaded' | 'none'
@@ -41,48 +45,14 @@ interface FpaResultContextValue {
   cacheStatus: CacheStatus
 }
 
-const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-
-function b64ToObjectUrl(b64: string): string {
-  const bin = atob(b64)
-  const buf = new Uint8Array(bin.length)
-  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i)
-  const blob = new Blob([buf], { type: XLSX_MIME })
-  return URL.createObjectURL(blob)
-}
-
 function revokeUrls(result: FpaResult | null) {
   if (!result) return
   const urlFields: (keyof FpaResult)[] = [
-    'downloadUrl', 'bsUrl', 'bsiUrl', 'plUrl', 'compPlUrl', 'compPlBdUrl',
+    'downloadUrl', 'bsUrl', 'bsiUrl', 'bsBdUrl', 'plUrl', 'compPlUrl', 'compPlBdUrl',
   ]
   for (const field of urlFields) {
     const url = result[field] as string | null
     if (url) URL.revokeObjectURL(url)
-  }
-}
-
-function parseResult(d: Record<string, unknown>): FpaResult {
-  const toUrl = (key: string): string | null => {
-    const val = d[key]
-    return typeof val === 'string' && val ? b64ToObjectUrl(val) : null
-  }
-  return {
-    summary:         (d.summary as Record<string, unknown>) ?? {},
-    previewRows:     (d.preview as Record<string, unknown>[]) ?? [],
-    companyName:     (d.company_name as string) ?? '',
-    cachedAt:        (d.cached_at as string) ?? null,
-    downloadUrl:     toUrl('excel_b64'),
-    bsUrl:           toUrl('bs_excel_b64'),
-    bsPreview:       (d.bs_preview as Record<string, unknown>) ?? null,
-    bsiUrl:          toUrl('bsi_excel_b64'),
-    bsiPreview:      (d.bsi_preview as Record<string, unknown>) ?? null,
-    plUrl:           toUrl('pl_excel_b64'),
-    plPreview:       (d.pl_preview as Record<string, unknown>) ?? null,
-    compPlUrl:       toUrl('comp_pl_excel_b64'),
-    compPlPreview:   (d.comp_pl_preview as Record<string, unknown>) ?? null,
-    compPlBdUrl:     toUrl('comp_pl_bd_excel_b64'),
-    compPlBdPreview: (d.comp_pl_bd_preview as Record<string, unknown>) ?? null,
   }
 }
 
@@ -135,7 +105,3 @@ export function useFpaResult(): FpaResultContextValue {
   return ctx
 }
 
-// ── Helper: build FpaResult from the SSE 'done' event data payload ────────────
-export function fpaResultFromEventData(data: Record<string, unknown>, companyName: string): FpaResult {
-  return parseResult({ ...data, company_name: companyName })
-}

@@ -25,7 +25,8 @@ const Step2Preview    = lazy(() => import('./pages/Step2Preview'))
 const Step3Mapping    = lazy(() => import('./pages/Step3Mapping'))
 const Step4QuickBooks = lazy(() => import('./pages/Step4QuickBooks'))
 const Step5ActivityLog = lazy(() => import('./pages/Step5ActivityLog'))
-const UserManagement  = lazy(() => import('./pages/UserManagement'))
+const UserManagement       = lazy(() => import('./pages/UserManagement'))
+const IntegrationsConfig   = lazy(() => import('./pages/IntegrationsConfigPage'))
 
 const FpaGenerate        = lazy(() => import('./pages/fpa/GeneratePage'))
 const FpaDashboard       = lazy(() => import('./pages/fpa/DashboardPage'))
@@ -35,6 +36,7 @@ const FpaBSIndividual    = lazy(() => import('./pages/fpa/BSIndividualPage'))
 const FpaPLIndividual    = lazy(() => import('./pages/fpa/PLIndividualPage'))
 const FpaComparativePL   = lazy(() => import('./pages/fpa/ComparativePLPage'))
 const FpaComparativePLBD = lazy(() => import('./pages/fpa/ComparativePLBDPage'))
+const FpaBSBD            = lazy(() => import('./pages/fpa/BSBDPage'))
 const FpaMapping         = lazy(() => import('./pages/fpa/MappingPage'))
 
 const PortcoApp = lazy(() => import('./pages/portco/index'))
@@ -192,6 +194,7 @@ function ProtectedApp() {
                 <Route path="/fpa/pl-individual"   element={<FpaRoute user={user}><PageSuspense label="fpa-pli"><FpaPLIndividual /></PageSuspense></FpaRoute>} />
                 <Route path="/fpa/comparative-pl"  element={<FpaRoute user={user}><PageSuspense label="fpa-comp-pl"><FpaComparativePL /></PageSuspense></FpaRoute>} />
                 <Route path="/fpa/comparative-pl-bd" element={<FpaRoute user={user}><PageSuspense label="fpa-comp-pl-bd"><FpaComparativePLBD /></PageSuspense></FpaRoute>} />
+                <Route path="/fpa/bs-bd"           element={<FpaRoute user={user}><PageSuspense label="fpa-bs-bd"><FpaBSBD /></PageSuspense></FpaRoute>} />
                 <Route path="/fpa/mapping"         element={<FpaRoute user={user}><PageSuspense label="fpa-mapping"><FpaMapping /></PageSuspense></FpaRoute>} />
 
                 {/* PortCo */}
@@ -199,6 +202,7 @@ function ProtectedApp() {
 
                 {/* Admin */}
                 <Route path="/users" element={<AdminRoute user={user}><PageSuspense label="user-mgmt"><UserManagement /></PageSuspense></AdminRoute>} />
+                <Route path="/integrations" element={<AdminRoute user={user}><PageSuspense label="integrations"><IntegrationsConfig /></PageSuspense></AdminRoute>} />
               </Routes>
             </main>
           </div>

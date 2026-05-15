@@ -14,8 +14,9 @@ import LinkIcon from "@mui/icons-material/Link";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
-import { useFpaResult, fpaResultFromEventData } from "../../context/FpaResultContext";
+import { useFpaResult } from "../../context/FpaResultContext";
 import type { FpaResult } from "../../context/FpaResultContext";
+import { fpaResultFromEventData } from "../../context/fpaResultUtils";
 
 function formatAge(isoStr: string): string {
   const mins = Math.round((Date.now() - new Date(isoStr).getTime()) / 60000);
@@ -42,6 +43,7 @@ const REPORT_ITEMS: ReportItem[] = [
   { path: "/fpa/pl-individual",     icon: "trending_up",     title: "Base P&L",                   sub: (r) => `${(r.plPreview as { months?: unknown[] } | null)?.months?.length ?? 0} months · class-level detail` },
   { path: "/fpa/comparative-pl",    icon: "show_chart",      title: "Comparative P&L (Class)",    sub: (r) => `${(r.compPlPreview as { available_months?: unknown[] } | null)?.available_months?.length ?? 0} months` },
   { path: "/fpa/comparative-pl-bd", icon: "bar_chart",       title: "Comparative P&L (BD)",       sub: (r) => `${(r.compPlBdPreview as { available_months?: unknown[] } | null)?.available_months?.length ?? 0} months` },
+  { path: "/fpa/bs-bd",            icon: "account_balance", title: "Balance Sheet (BD)",          sub: (r) => `${(r.bsBdPreview as { available_quarters?: unknown[] } | null)?.available_quarters?.length ?? 0} quarters` },
 ];
 
 // ── ReportCard ─────────────────────────────────────────────────────────────────

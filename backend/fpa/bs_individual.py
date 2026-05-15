@@ -254,11 +254,8 @@ def _build_rows(acct_balances: dict, net_income: float) -> list[tuple]:
 
 # ── Excel writer ──────────────────────────────────────────────────────────────
 
-def run_bs_individual(df: pd.DataFrame, company_name: str) -> bytes:
-    """Write Excel for latest month with 5 columns (Particulars + 4 company cols)."""
-    acct_balances, net_income, as_of = _compute(df)
-    rows = _build_rows(acct_balances, net_income)
-
+def _build_bsi_excel(rows: list, as_of: str, company_name: str) -> bytes:
+    """Render BS (Individual) Excel from a list of (label, value, rtype) tuples."""
     wb = Workbook()
     ws = wb.active
     ws.title = "BS (Individual)"
@@ -396,6 +393,26 @@ def run_bs_individual(df: pd.DataFrame, company_name: str) -> bytes:
     buf = io.BytesIO()
     wb.save(buf)
     return buf.getvalue()
+
+
+def run_bs_individual(df: pd.DataFrame, company_name: str) -> bytes:
+    """Generate BS Individual Excel for the latest month from a raw DataFrame."""
+    acct_balances, net_income, as_of = _compute(df)
+    rows = _build_rows(acct_balances, net_income)
+    return _build_bsi_excel(rows, as_of, company_name)
+
+
+def run_bs_individual_from_preview(preview: dict, month: str, company_name: str) -> bytes:
+    """Generate BS Individual Excel for a specific month from the cached preview JSONB."""
+    rows_by_month = preview.get("rows_by_month", {})
+    months        = preview.get("months", [])
+
+    selected = month if month in rows_by_month else (months[-1] if months else "")
+    raw_rows  = rows_by_month.get(selected, [])
+
+    # Map {label, co_a, type} → (label, value, rtype)
+    rows = [(r.get("label"), r.get("co_a"), r.get("type")) for r in raw_rows]
+    return _build_bsi_excel(rows, selected, company_name)
 
 
 # ── Preview payload ───────────────────────────────────────────────────────────

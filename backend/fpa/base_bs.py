@@ -206,12 +206,33 @@ def _build_values(df: pd.DataFrame) -> tuple[dict, list]:
     return rv, all_months
 
 
+# ── Month helpers ─────────────────────────────────────────────────────────────
+
+_MONTH_ABB = {"Jan":"01","Feb":"02","Mar":"03","Apr":"04","May":"05","Jun":"06",
+              "Jul":"07","Aug":"08","Sep":"09","Oct":"10","Nov":"11","Dec":"12"}
+
+def _month_to_ym(m: str) -> str:
+    """Convert 'Jan-24' → '2024-01' for date-range comparison."""
+    try:
+        mon, yr = m.split("-")
+        full_yr = f"20{yr}" if len(yr) == 2 else yr
+        return f"{full_yr}-{_MONTH_ABB[mon]}"
+    except Exception:
+        return "0000-00"
+
+def _month_in_range(m: str, from_ym: str | None, to_ym: str | None) -> bool:
+    ym = _month_to_ym(m)
+    if from_ym and ym < from_ym:
+        return False
+    if to_ym and ym > to_ym:
+        return False
+    return True
+
+
 # ── Excel builder ─────────────────────────────────────────────────────────────
 
-def run_base_bs(df: pd.DataFrame, company_name: str) -> bytes:
-    """Generate Base BS Excel. Returns raw bytes of the .xlsx file."""
-
-    rv, all_months = _build_values(df)
+def _build_bs_excel(rv: dict, all_months: list, company_name: str) -> bytes:
+    """Render the Base BS Excel from pre-computed rv / all_months."""
     n = len(all_months)
 
     wb = Workbook()
@@ -359,6 +380,38 @@ def run_base_bs(df: pd.DataFrame, company_name: str) -> bytes:
     buf = io.BytesIO()
     wb.save(buf)
     return buf.getvalue()
+
+
+def run_base_bs(df: pd.DataFrame, company_name: str) -> bytes:
+    """Generate Base BS Excel from a raw DataFrame."""
+    rv, all_months = _build_values(df)
+    return _build_bs_excel(rv, all_months, company_name)
+
+
+def run_base_bs_from_preview(
+    preview: dict, from_ym: str | None, to_ym: str | None, company_name: str
+) -> bytes:
+    """Generate a date-filtered Base BS Excel from the cached preview JSONB."""
+    all_months: list[str] = preview.get("months", [])
+    rows_data:  list[dict] = preview.get("rows", [])
+
+    filtered = [m for m in all_months if _month_in_range(m, from_ym, to_ym)]
+    if not filtered:
+        filtered = all_months
+
+    filtered_set = set(filtered)
+    rv: dict[str, dict[str, float]] = {}
+    for row in rows_data:
+        label = row.get("label")
+        vals  = row.get("values")
+        if label and vals:
+            rv[label] = {
+                m: (v if v is not None else 0.0)
+                for m, v in zip(all_months, vals)
+                if m in filtered_set
+            }
+
+    return _build_bs_excel(rv, filtered, company_name)
 
 
 # ── Preview payload (JSON-serialisable) ──────────────────────────────────────

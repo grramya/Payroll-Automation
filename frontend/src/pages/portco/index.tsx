@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import type { MetricMap } from "./types";
 import { usePortco } from "../../context/PortcoContext";
 import { useAuth } from "../../context/AuthContext";
 import { METRIC_DEFS } from "./constants/metricDefs";
@@ -8,6 +9,7 @@ import DeptTab from "./tabs/DeptTab";
 import EmployeeCostPage from "./budget/EmployeeCostPage";
 import OtherCostPage from "./budget/OtherCostPage";
 import { StepNav } from "./components/WorkflowBanner";
+import UploadZone from "./components/UploadZone";
 
 const BRAND = "#512D6D";
 const YEARS = [2023, 2024, 2025, 2026, 2027];
@@ -31,10 +33,14 @@ function exportCSV(
     ? METRIC_DEFS.filter((r) => r.department === dept)
     : METRIC_DEFS;
   const months = monthsForYear(year);
-  const header = ["Department", "Category", "Metric", "Units", ...months].join(",");
+  const header = ["Department", "Category", "Metric", "Units", "Type", ...months].join(",");
   const lines  = rows.map((row) => {
-    const vals = months.map((m) => data[row.id]?.[m] ?? "").join(",");
-    return `"${row.department}","${row.category}","${row.lineItem}","${row.units}",${vals}`;
+    const type = row.isEditable ? "input" : "computed";
+    const vals = months.map((m) => {
+      const v = data[row.id]?.[m];
+      return v != null ? v : "";
+    }).join(",");
+    return `"${row.department}","${row.category}","${row.lineItem}","${row.units}","${type}",${vals}`;
   });
   const blob = new Blob([[header, ...lines].join("\n")], { type: "text/csv" });
   const url  = URL.createObjectURL(blob);
@@ -54,7 +60,10 @@ function ModeRoute({
   userDept:     string | null | undefined;
   isAdmin:      boolean;
 }) {
-  const { derivedActuals, derivedBudget, updateActuals, updateBudget } = usePortco();
+  const {
+    derivedActuals, derivedBudget, updateActuals, updateBudget,
+    loadAll,
+  } = usePortco();
 
   const modeData = mode === "actuals" ? derivedActuals : derivedBudget;
   const deptLabel = userDept ? (DEPT_LABELS[userDept] ?? userDept) : null;
@@ -62,6 +71,11 @@ function ModeRoute({
   const handleEdit = (id: string, month: string, value: number | null) => {
     if (mode === "actuals") updateActuals(id, month, value);
     else                    updateBudget(id, month, value);
+  };
+
+  // Server returns a full refresh (both sides) after upload — load all atomically.
+  const handleImported = (actuals: MetricMap, budget: MetricMap, year: number) => {
+    loadAll(actuals, budget, year);
   };
 
   return (
@@ -89,18 +103,24 @@ function ModeRoute({
           {!isAdmin && <StepNav currentStep={mode === "actuals" ? 1 : 2} />}
         </div>
 
-        <button
-          onClick={() => exportCSV(modeData, selectedYear, deptLabel, mode)}
-          style={{
-            display: "flex", alignItems: "center", gap: 5,
-            padding: "4px 12px", borderRadius: 6, cursor: "pointer",
-            background: "#fff", border: "1px solid #CBD5E1",
-            fontSize: "0.75rem", fontWeight: 600, color: "#475569",
-          }}
-        >
-          <span className="material-icons-round" style={{ fontSize: 14 }}>download</span>
-          Export CSV
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <UploadZone
+            singleMode={mode}
+            onImported={handleImported}
+          />
+          <button
+            onClick={() => exportCSV(modeData, selectedYear, deptLabel, mode)}
+            style={{
+              display: "flex", alignItems: "center", gap: 5,
+              padding: "4px 12px", borderRadius: 6, cursor: "pointer",
+              background: "#fff", border: "1px solid #CBD5E1",
+              fontSize: "0.75rem", fontWeight: 600, color: "#475569",
+            }}
+          >
+            <span className="material-icons-round" style={{ fontSize: 14 }}>download</span>
+            Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Table — all depts for admin, own dept for dept user */}

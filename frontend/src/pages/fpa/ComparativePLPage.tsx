@@ -11,6 +11,7 @@ import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 
 import { useFpaResult } from "../../context/FpaResultContext";
 import FullScreenWrapper from "../../components/fpa/FullScreenWrapper";
+import { fpaDownloadFilteredReport } from "../../api/api";
 
 // ── Formatting helpers ────────────────────────────────────────────────────────
 
@@ -140,7 +141,7 @@ export default function ComparativePLPage() {
   const [collapsedSubsections, setCollapsedSubsections] = useState<Set<number>>(new Set());
   if (!result) return null;
 
-  const { compPlUrl, compPlPreview, companyName } = result;
+  const { compPlPreview, companyName } = result;
   if (!compPlPreview) return null;
 
   const {
@@ -170,8 +171,10 @@ export default function ComparativePLPage() {
   const setToDate          = (v: Dayjs | null) => setPageFilter("compPL", { fromDate, toDate: v, selectedQuarter, selectedYear });
   const setSelectedQuarter = (v: string)       => setPageFilter("compPL", { fromDate, toDate, selectedQuarter: v, selectedYear });
   const setSelectedYear    = (v: number)       => setPageFilter("compPL", { fromDate, toDate, selectedQuarter, selectedYear: v });
-  const [fromOpen, setFromOpen] = useState(false);
-  const [toOpen,   setToOpen]   = useState(false);
+  const [fromOpen,  setFromOpen]  = useState(false);
+  const [toOpen,    setToOpen]    = useState(false);
+  const [fromError, setFromError] = useState(false);
+  const [toError,   setToError]   = useState(false);
 
   // ── Expand / collapse helpers ─────────────────────────────────────────────
   const rowMeta = useMemo(() => {
@@ -197,8 +200,9 @@ export default function ComparativePLPage() {
 
   // ── Filter quarters by date range ────────────────────────────────────────
   const filteredQuarters = useMemo<string[]>(() => {
-    const fromYM = fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
-    const toYM   = toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
+    const rangeOk = !(fromDate?.isValid() && toDate?.isValid() && fromDate.isAfter(toDate));
+    const fromYM = rangeOk && fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
+    const toYM   = rangeOk && toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
     return quarters.filter((q) => {
       const [qPart, yr] = q.split("-");
       const qNum   = parseInt(qPart.slice(1));
@@ -210,14 +214,13 @@ export default function ComparativePLPage() {
     });
   }, [quarters, fromDate, toDate]);
 
-  const effectiveQuarter = filteredQuarters.includes(selectedQuarter)
-    ? selectedQuarter
-    : (filteredQuarters[filteredQuarters.length - 1] ?? "");
+  const effectiveQuarter = selectedQuarter || (quarters[quarters.length - 1] ?? "");
 
   // ── Filter months by date range ───────────────────────────────────────────
   const filteredMonths = useMemo<string[]>(() => {
-    const fromYM = fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
-    const toYM   = toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
+    const rangeOk = !(fromDate?.isValid() && toDate?.isValid() && fromDate.isAfter(toDate));
+    const fromYM = rangeOk && fromDate?.isValid() ? fromDate.format("YYYY-MM") : null;
+    const toYM   = rangeOk && toDate?.isValid()   ? toDate.format("YYYY-MM")   : null;
     return months.filter((m) => {
       const ym = monthStrToYYYYMM(m);
       if (fromYM && ym < fromYM) return false;
@@ -243,10 +246,19 @@ export default function ComparativePLPage() {
   );
 
   // ── Download handler ──────────────────────────────────────────────────────
-  const handleDownload = () => {
-    if (!compPlUrl) return;
+  const handleDownload = async () => {
+    const fromYM = fromDate?.isValid() ? fromDate.format("YYYY-MM") : undefined;
+    const toYM   = toDate?.isValid()   ? toDate.format("YYYY-MM")   : undefined;
+    const blob = await fpaDownloadFilteredReport("comp_pl", {
+      from_ym: fromYM,
+      to_ym:   toYM,
+      selected_quarter: effectiveQuarter || undefined,
+      selected_year:    selectedYear,
+    });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = compPlUrl; a.download = `${companyName}_comparative_pl.xlsx`; a.click();
+    a.href = url; a.download = `${companyName}_comparative_pl.xlsx`; a.click();
+    URL.revokeObjectURL(url);
   };
 
   // ── Table layout constants ────────────────────────────────────────────────
@@ -283,18 +295,22 @@ export default function ComparativePLPage() {
                 label="From"
                 value={fromDate}
                 onChange={(v: Dayjs | null) => setFromDate(v)}
+                maxDate={toDate?.isValid() ? toDate : undefined}
+                onError={(e) => setFromError(!!e)}
                 open={fromOpen} onOpen={() => setFromOpen(true)} onClose={() => setFromOpen(false)}
-                slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setFromOpen(true) } }}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setFromOpen(true), error: fromError, helperText: fromError ? "Invalid date" : undefined } }}
               />
               <DatePicker
                 label="To"
                 value={toDate}
                 onChange={(v: Dayjs | null) => setToDate(v)}
+                minDate={fromDate?.isValid() ? fromDate : undefined}
+                onError={(e) => setToError(!!e)}
                 open={toOpen} onOpen={() => setToOpen(true)} onClose={() => setToOpen(false)}
-                slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setToOpen(true) } }}
+                slotProps={{ textField: { size: "small", sx: { minWidth: 160 }, onClick: () => setToOpen(true), error: toError, helperText: toError ? "Invalid date" : undefined } }}
               />
 
-              {filteredQuarters.length > 0 && (
+              {quarters.length > 0 && (
                 <FormControl size="small" sx={{ minWidth: 130 }}>
                   <InputLabel id="comp-pl-quarter-label">Quarter</InputLabel>
                   <Select
@@ -303,7 +319,7 @@ export default function ComparativePLPage() {
                     label="Quarter"
                     onChange={(e: { target: { value: string } }) => setSelectedQuarter(e.target.value)}
                   >
-                    {filteredQuarters.map((q) => (
+                    {quarters.map((q) => (
                       <MenuItem key={q} value={q}>{q}</MenuItem>
                     ))}
                   </Select>
@@ -326,7 +342,7 @@ export default function ComparativePLPage() {
                 </FormControl>
               )}
 
-              {compPlUrl && (
+              {compPlPreview && (
                 <Button
                   size="small"
                   variant="contained"

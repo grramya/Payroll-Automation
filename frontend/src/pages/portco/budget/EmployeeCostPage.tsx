@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { CSSProperties } from 'react';
 import {
-  Button, TextField, MenuItem, Alert,
-  CircularProgress, IconButton, Tooltip,
+  Alert, CircularProgress, IconButton, Tooltip,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -24,14 +22,13 @@ const DEPARTMENTS = [
   'Product Development', 'Sales', 'Marketing', 'Customer Success', 'Finance',
 ];
 
-// ── table cell styles ─────────────────────────────────────────────────────────
 const TH: CSSProperties = {
   padding: '7px 10px', background: '#F1F5F9', fontWeight: 700,
   fontSize: '0.72rem', whiteSpace: 'nowrap', borderBottom: '1px solid #E2E8F0',
   color: '#334155', position: 'sticky', top: 0, zIndex: 2,
 };
 const TD: CSSProperties = {
-  padding: '6px 10px', fontSize: '0.78rem', borderBottom: '1px solid #F1F5F9',
+  padding: '8px 10px', fontSize: '0.82rem', borderBottom: '1px solid #F1F5F9',
   whiteSpace: 'nowrap',
 };
 const TD_NUM: CSSProperties = { ...TD, textAlign: 'right', fontFamily: 'monospace' };
@@ -41,12 +38,74 @@ const TD_TOTAL: CSSProperties = {
 const TR_SUM: CSSProperties = { background: '#F0FDF4' };
 const TR_COST: CSSProperties = { background: '#FEF9C3' };
 
-// ── form field type ───────────────────────────────────────────────────────────
+const TH_DARK: CSSProperties = {
+  padding: '9px 10px',
+  background: '#1E293B',
+  color: '#CBD5E1',
+  fontWeight: 700,
+  fontSize: '0.7rem',
+  whiteSpace: 'nowrap',
+  letterSpacing: '0.04em',
+  textTransform: 'uppercase',
+  borderRight: '1px solid #334155',
+};
+
+const INPUT_STYLE: CSSProperties = {
+  width: '100%',
+  height: '34px',
+  padding: '0 10px',
+  fontSize: '0.85rem',
+  border: '1px solid #E2E8F0',
+  borderRadius: 4,
+  outline: 'none',
+  background: '#fff',
+  boxSizing: 'border-box',
+  fontFamily: 'inherit',
+};
+
+// Shared sx for DatePicker — forces exact match with native INPUT_STYLE
+const DATE_PICKER_SX = {
+  width: '100%',
+  // Lock root to same height as native inputs (padding 4px + ~13px line-height + 4px + 2px border)
+  '& .MuiInputBase-root': {
+    height: '34px',
+    minHeight: 'unset',
+    fontSize: '0.85rem',
+    fontFamily: 'inherit',
+    background: '#fff',
+    borderRadius: '4px',
+    paddingRight: '2px',
+    paddingLeft: 0,
+    boxSizing: 'border-box',
+  },
+  // The date-section spans live inside this; zero out default MUI padding
+  '& .MuiPickersOutlinedInput-input, & .MuiInputBase-input': {
+    padding: '0 0 0 10px',
+    fontSize: '0.85rem',
+    fontFamily: 'inherit',
+    height: '100%',
+    boxSizing: 'border-box',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  '& .MuiOutlinedInput-notchedOutline': {
+    borderColor: '#E2E8F0',
+    borderRadius: '4px',
+  },
+  // Remove the notch so border looks like a plain rectangle (no label gap)
+  '& .MuiOutlinedInput-notchedOutline legend': { width: '0 !important', padding: 0 },
+  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#CBD5E1' },
+  '& .MuiInputLabel-root': { display: 'none' },
+  '& .MuiInputAdornment-root': { height: 'auto', maxHeight: 'none', marginLeft: 0 },
+  '& .MuiIconButton-root': { padding: '1px 3px' },
+  '& .MuiSvgIcon-root': { fontSize: '0.9rem', color: '#94A3B8' },
+} as const;
+
 interface FormState {
   geography: string;
   name: string;
   title: string;
-  start_date: string | null;
+  start_date: string;
   base_salary: string;
   bonus_pct: string;
   bonus_amount: string;
@@ -57,10 +116,17 @@ interface FormState {
 }
 
 const EMPTY_FORM: FormState = {
-  geography: '', name: '', title: '', start_date: null,
+  geography: '', name: '', title: '', start_date: '',
   base_salary: '', bonus_pct: '', bonus_amount: '',
   taxes_benefits_pct: '', hike_cycle_pct: '', payroll_expenses: '', tech_stipend: '',
 };
+
+const LS_KEY_EMP = 'portco_employee_cost_draft';
+
+function loadEmpDraft(): FormState {
+  try { return { ...EMPTY_FORM, ...JSON.parse(localStorage.getItem(LS_KEY_EMP) || '{}') }; }
+  catch { return EMPTY_FORM; }
+}
 
 interface Props {
   year: number;
@@ -69,24 +135,21 @@ interface Props {
 }
 
 export default function EmployeeCostPage({ year, userDept, isAdmin }: Props) {
-  const navigate = useNavigate();
-  const [rows, setRows] = useState<EmployeeRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hasLoaded, setHasLoaded] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // 'idle' | 'submitted' | 'updated'
-  const [submitState, setSubmitState] = useState<'idle' | 'submitted' | 'updated'>('idle');
-  const [lastSubmittedId, setLastSubmittedId] = useState<number | null>(null);
-  const [editId, setEditId] = useState<number | null>(null);
-  const [form, setForm] = useState<FormState>(EMPTY_FORM);
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+  const [rows, setRows]               = useState<EmployeeRecord[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [hasLoaded, setHasLoaded]     = useState(false);
+  const [saving, setSaving]           = useState(false);
+  const [error, setError]             = useState<string | null>(null);
+  const [editId, setEditId]           = useState<number | null>(null);
+  const [editForm, setEditFormState]  = useState<FormState>(EMPTY_FORM);
+  const [form, setForm]               = useState<FormState>(() => isAdmin ? EMPTY_FORM : loadEmpDraft());
+  const [formErrors, setFormErrors]   = useState<Partial<Record<keyof FormState, string>>>({});
+  const [filterDept, setFilterDept]       = useState('');
+  const [datePickerOpenNew, setDatePickerOpenNew] = useState(false);
+  const [datePickerOpenEdit, setDatePickerOpenEdit] = useState(false);
+  const [dateErrorNew, setDateErrorNew] = useState(false);
+  const [dateErrorEdit, setDateErrorEdit] = useState(false);
 
-  // Admin: optional dept filter for the report
-  const [filterDept, setFilterDept] = useState('');
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
-
-  // Prevent bonus % ↔ amount infinite update loops
   const bonusPctChanging = useRef(false);
   const bonusAmtChanging = useRef(false);
 
@@ -98,7 +161,7 @@ export default function EmployeeCostPage({ year, userDept, isAdmin }: Props) {
       const { data } = await apiClient.get<EmployeeRecord[]>('/portco/budget/employee-cost', { params });
       setRows(data);
     } catch (e: any) {
-      if (isAdmin) setError(e?.response?.data?.detail ?? 'Failed to load data');
+      setError(e?.response?.data?.detail ?? 'Failed to load data');
     } finally {
       setLoading(false);
       setHasLoaded(true);
@@ -107,12 +170,21 @@ export default function EmployeeCostPage({ year, userDept, isAdmin }: Props) {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  // ── form helpers ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!isAdmin && editId === null) {
+      localStorage.setItem(LS_KEY_EMP, JSON.stringify(form));
+    }
+  }, [form, editId, isAdmin]);
+
   const isConcer = form.geography === 'Concertiv';
 
-  function setField(k: keyof FormState, v: string | null) {
-    setForm(prev => ({ ...prev, [k]: v ?? '' }));
+  function setField(k: keyof FormState, v: string) {
+    setForm(prev => ({ ...prev, [k]: v }));
     setFormErrors(prev => ({ ...prev, [k]: undefined }));
+  }
+
+  function setEditField(k: keyof FormState, v: string) {
+    setEditFormState(prev => ({ ...prev, [k]: v }));
   }
 
   function handleBonusPctChange(raw: string) {
@@ -145,6 +217,7 @@ export default function EmployeeCostPage({ year, userDept, isAdmin }: Props) {
     if (!form.base_salary || isNaN(Number(form.base_salary))) errs.base_salary = 'Required numeric';
     if (form.taxes_benefits_pct === '' || isNaN(Number(form.taxes_benefits_pct)))
       errs.taxes_benefits_pct = 'Required numeric';
+    if (dateErrorNew) errs.start_date = 'Invalid date';
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -152,11 +225,33 @@ export default function EmployeeCostPage({ year, userDept, isAdmin }: Props) {
   function startEdit(emp: EmployeeRecord) {
     setEditId(emp.id);
     const bonus = resolveBonus(emp.base_salary, emp.bonus_pct, emp.bonus_amount);
+    setEditFormState({
+      geography:          emp.geography,
+      name:               emp.name,
+      title:              emp.title,
+      start_date:         emp.start_date ?? '',
+      base_salary:        String(emp.base_salary),
+      bonus_pct:          emp.bonus_pct != null ? String(emp.bonus_pct * 100) : String((bonus.pct * 100).toFixed(4)),
+      bonus_amount:       emp.bonus_amount != null ? String(emp.bonus_amount) : String(bonus.amount.toFixed(2)),
+      taxes_benefits_pct: String((emp.taxes_benefits_pct ?? 0) * 100),
+      hike_cycle_pct:     emp.hike_cycle_pct != null ? String(emp.hike_cycle_pct * 100) : '',
+      payroll_expenses:   emp.payroll_expenses != null ? String(emp.payroll_expenses) : '',
+      tech_stipend:       emp.tech_stipend != null ? String(emp.tech_stipend) : '',
+    });
+  }
+
+  function cancelEdit() {
+    setEditId(null);
+    setEditFormState(EMPTY_FORM);
+  }
+
+  function copyEmp(emp: EmployeeRecord) {
+    const bonus = resolveBonus(emp.base_salary, emp.bonus_pct, emp.bonus_amount);
     setForm({
       geography:          emp.geography,
       name:               emp.name,
       title:              emp.title,
-      start_date:         emp.start_date,
+      start_date:         emp.start_date ?? '',
       base_salary:        String(emp.base_salary),
       bonus_pct:          emp.bonus_pct != null ? String(emp.bonus_pct * 100) : String((bonus.pct * 100).toFixed(4)),
       bonus_amount:       emp.bonus_amount != null ? String(emp.bonus_amount) : String(bonus.amount.toFixed(2)),
@@ -166,21 +261,6 @@ export default function EmployeeCostPage({ year, userDept, isAdmin }: Props) {
       tech_stipend:       emp.tech_stipend != null ? String(emp.tech_stipend) : '',
     });
     setFormErrors({});
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function cancelEdit() {
-    setEditId(null);
-    setForm(EMPTY_FORM);
-    setFormErrors({});
-    setSubmitState('idle');
-  }
-
-  function submitAnother() {
-    setEditId(null);
-    setForm(EMPTY_FORM);
-    setFormErrors({});
-    setSubmitState('idle');
   }
 
   async function handleSubmit() {
@@ -204,19 +284,53 @@ export default function EmployeeCostPage({ year, userDept, isAdmin }: Props) {
       tech_stipend:        isConcer && form.tech_stipend     ? parseFloat(form.tech_stipend)     : null,
     };
     try {
-      if (editId != null) {
-        const { data: updated } = await apiClient.put<EmployeeRecord>(`/portco/budget/employee-cost/${editId}`, payload);
-        setRows(prev => prev.map(r => r.id === editId ? updated : r));
-        setLastSubmittedId(editId);
-        setSubmitState('updated');
-      } else {
-        const { data: created } = await apiClient.post<EmployeeRecord>('/portco/budget/employee-cost', payload);
-        setRows(prev => [...prev, created]);
-        setLastSubmittedId(created.id);
-        setSubmitState('submitted');
-      }
-      setEditId(null);
+      const { data: created } = await apiClient.post<EmployeeRecord>('/portco/budget/employee-cost', payload);
+      setRows(prev => [...prev, created]);
       setForm(EMPTY_FORM);
+      setFormErrors({});
+      localStorage.removeItem(LS_KEY_EMP);
+    } catch (e: any) {
+      setError(e?.response?.data?.detail ?? 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveEdit() {
+    const ef = editForm;
+    const errs: Partial<Record<keyof FormState, string>> = {};
+    if (!ef.geography) errs.geography = 'Required';
+    if (!ef.name.trim()) errs.name = 'Required';
+    if (!ef.title.trim()) errs.title = 'Required';
+    if (!ef.base_salary || isNaN(Number(ef.base_salary))) errs.base_salary = 'Required';
+    if (ef.taxes_benefits_pct === '' || isNaN(Number(ef.taxes_benefits_pct))) errs.taxes_benefits_pct = 'Required';
+    if (dateErrorEdit) errs.start_date = 'Invalid date';
+    if (Object.keys(errs).length > 0) { setFormErrors(errs); return; }
+
+    setSaving(true);
+    setError(null);
+    const pctToDecimal = (s: string) => s ? parseFloat(s) / 100 : null;
+    const isC = ef.geography === 'Concertiv';
+    const payload = {
+      department:          userDept,
+      year,
+      geography:           ef.geography,
+      name:                ef.name.trim(),
+      title:               ef.title.trim(),
+      start_date:          ef.start_date || null,
+      base_salary:         parseFloat(ef.base_salary),
+      bonus_pct:           ef.bonus_pct   ? pctToDecimal(ef.bonus_pct) : null,
+      bonus_amount:        ef.bonus_amount ? parseFloat(ef.bonus_amount) : null,
+      taxes_benefits_pct:  pctToDecimal(ef.taxes_benefits_pct) ?? 0,
+      hike_cycle_pct:      isC && ef.hike_cycle_pct   ? pctToDecimal(ef.hike_cycle_pct)   : null,
+      payroll_expenses:    isC && ef.payroll_expenses ? parseFloat(ef.payroll_expenses) : null,
+      tech_stipend:        isC && ef.tech_stipend     ? parseFloat(ef.tech_stipend)     : null,
+    };
+    try {
+      const { data: updated } = await apiClient.put<EmployeeRecord>(`/portco/budget/employee-cost/${editId}`, payload);
+      setRows(prev => prev.map(r => r.id === editId ? updated : r));
+      setEditId(null);
+      setEditFormState(EMPTY_FORM);
     } catch (e: any) {
       setError(e?.response?.data?.detail ?? 'Save failed');
     } finally {
@@ -272,112 +386,18 @@ export default function EmployeeCostPage({ year, userDept, isAdmin }: Props) {
               <CircularProgress size={32} />
             </div>
           ) : (
-            <EmployeeCostReport report={report} />
+            <EmployeeCostReport report={report} onDelete={handleDelete} />
           )}
         </div>
       </div>
     );
   }
 
-  // ── user: confirmation screen ────────────────────────────────────────────
-  if (submitState === 'submitted' || submitState === 'updated') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <PageHeader title="Employee Cost" badge="Budget Entry"><StepNav currentStep={3} /></PageHeader>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-          <div style={{
-            background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12,
-            padding: '48px 40px', maxWidth: 440, width: '100%', textAlign: 'center',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-          }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: '50%', background: '#DCFCE7',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 20px',
-            }}>
-              <span className="material-icons-round" style={{ fontSize: 30, color: '#16A34A' }}>check</span>
-            </div>
-            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', marginBottom: 8 }}>
-              {submitState === 'updated' ? 'Changes Saved' : 'Submitted Successfully'}
-            </div>
-            <div style={{ fontSize: '0.85rem', color: '#6B7280', marginBottom: 32 }}>
-              {submitState === 'updated'
-                ? 'Your entry has been updated.'
-                : 'Your employee cost entry has been recorded.'}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <Button
-                variant="contained"
-                onClick={() => {
-                  const emp = rows.find(r => r.id === lastSubmittedId);
-                  setSubmitState('idle');
-                  if (emp) startEdit(emp);
-                }}
-                fullWidth
-                sx={{ background: BRAND, '&:hover': { background: '#3D1F57' }, py: 1.1, fontWeight: 700 }}
-              >
-                Edit Response
-              </Button>
-            </div>
-
-            {/* Next step nudge */}
-            <div style={{
-              marginTop: 24, paddingTop: 20,
-              borderTop: '1px solid #E2E8F0',
-            }}>
-              <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginBottom: 10, fontWeight: 500 }}>
-                NEXT STEP
-              </div>
-              <button
-                onClick={() => navigate('/portco/budget/other-cost')}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '12px 14px', borderRadius: 10,
-                  background: '#F8FAFC', border: '1.5px solid #E2E8F0',
-                  cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = '#EDE9F7';
-                  e.currentTarget.style.borderColor = '#C4B5D9';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = '#F8FAFC';
-                  e.currentTarget.style.borderColor = '#E2E8F0';
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{
-                    width: 32, height: 32, borderRadius: '50%',
-                    background: '#EDE9F7',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <span className="material-icons-round" style={{ fontSize: 16, color: BRAND }}>receipt_long</span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#1E293B' }}>
-                      Step 4 — Other Cost
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748B', marginTop: 1 }}>
-                      Add non-headcount budget items
-                    </div>
-                  </div>
-                </div>
-                <span className="material-icons-round" style={{ fontSize: 18, color: BRAND, flexShrink: 0 }}>
-                  arrow_forward
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── user: loading state ──────────────────────────────────────────────────
+  // ── user: loading state ───────────────────────────────────────────────────
   if (!hasLoaded) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <PageHeader title="Employee Cost — Add Entry" badge="Budget Entry"><StepNav currentStep={3} /></PageHeader>
+        <PageHeader title="Employee Cost" badge="Budget Entry"><StepNav currentStep={3} /></PageHeader>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <CircularProgress size={32} />
         </div>
@@ -385,261 +405,339 @@ export default function EmployeeCostPage({ year, userDept, isAdmin }: Props) {
     );
   }
 
-  // ── user: already submitted (read-only view) ─────────────────────────────
-  if (hasLoaded && rows.length > 0 && editId === null) {
-    const existing = rows[0];
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <PageHeader title="Employee Cost" badge="Budget Entry"><StepNav currentStep={3} /></PageHeader>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
-          <div style={{
-            background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12,
-            padding: '48px 40px', maxWidth: 440, width: '100%', textAlign: 'center',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-          }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: '50%', background: '#EDE9F7',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 20px',
-            }}>
-              <span className="material-icons-round" style={{ fontSize: 30, color: BRAND }}>info</span>
-            </div>
-            <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111827', marginBottom: 8 }}>
-              Already Submitted
-            </div>
-            <div style={{ fontSize: '0.85rem', color: '#6B7280', marginBottom: 4 }}>
-              You have already submitted an entry for <strong>{existing.name}</strong>.
-            </div>
-            <div style={{ fontSize: '0.8rem', color: '#94A3B8', marginBottom: 32 }}>
-              Only one response is allowed per user. You can edit your existing entry below.
-            </div>
-
-            <Button
-              variant="contained"
-              onClick={() => startEdit(existing)}
-              fullWidth
-              sx={{ background: BRAND, '&:hover': { background: '#3D1F57' }, py: 1.1, fontWeight: 700, mb: 3 }}
-            >
-              Edit Response
-            </Button>
-
-            {/* Next step nudge */}
-            <div style={{ paddingTop: 20, borderTop: '1px solid #E2E8F0' }}>
-              <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginBottom: 10, fontWeight: 500 }}>
-                NEXT STEP
-              </div>
-              <button
-                onClick={() => navigate('/portco/budget/other-cost')}
-                style={{
-                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '12px 14px', borderRadius: 10,
-                  background: '#F8FAFC', border: '1.5px solid #E2E8F0',
-                  cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = '#EDE9F7';
-                  e.currentTarget.style.borderColor = '#C4B5D9';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = '#F8FAFC';
-                  e.currentTarget.style.borderColor = '#E2E8F0';
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{
-                    width: 32, height: 32, borderRadius: '50%', background: '#EDE9F7',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  }}>
-                    <span className="material-icons-round" style={{ fontSize: 16, color: BRAND }}>receipt_long</span>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#1E293B' }}>Step 4 — Other Cost</div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748B', marginTop: 1 }}>Add non-headcount budget items</div>
-                  </div>
-                </div>
-                <span className="material-icons-round" style={{ fontSize: 18, color: BRAND, flexShrink: 0 }}>arrow_forward</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── user: inline input form ───────────────────────────────────────────────
+  // ── user: inline row table ────────────────────────────────────────────────
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <PageHeader
-        title={editId != null ? 'Employee Cost — Edit Entry' : 'Employee Cost — Add Entry'}
-        badge="Budget Entry"
-      ><StepNav currentStep={3} /></PageHeader>
+      <PageHeader title="Employee Cost" badge="Budget Entry">
+        <StepNav currentStep={3} />
+      </PageHeader>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
         {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>{error}</Alert>}
 
-        {/* ── Inline form ─────────────────────────────────────────────────── */}
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <div style={{
-              background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12,
-              padding: '32px 36px', marginBottom: 28,
-              boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-              width: '100%', maxWidth: 480,
-            }}>
-              <div style={{ fontSize: '1rem', fontWeight: 700, color: '#1E293B', marginBottom: 24, textAlign: 'center' }}>
-                {editId != null ? 'Edit Employee Details' : 'Employee Details'}
-              </div>
+        <div style={{ overflowX: 'auto', border: '1px solid #334155', borderRadius: 8, boxShadow: '0 1px 6px rgba(0,0,0,0.07)' }}>
+          <table style={{ borderCollapse: 'collapse', fontSize: '0.78rem', minWidth: 1100 }}>
+            <thead>
+              <tr>
+                <th style={{ ...TH_DARK, width: 44, textAlign: 'center' }}>#</th>
+                <th style={{ ...TH_DARK, minWidth: 130 }}>GEOGRAPHY</th>
+                <th style={{ ...TH_DARK, minWidth: 170 }}>NAME</th>
+                <th style={{ ...TH_DARK, minWidth: 170 }}>TITLE</th>
+                <th style={{ ...TH_DARK, minWidth: 145 }}>START DATE</th>
+                <th style={{ ...TH_DARK, textAlign: 'right', minWidth: 130 }}>BASE ($)</th>
+                <th style={{ ...TH_DARK, textAlign: 'right', minWidth: 100 }}>BONUS %</th>
+                <th style={{ ...TH_DARK, textAlign: 'right', minWidth: 120 }}>BONUS ($)</th>
+                <th style={{ ...TH_DARK, textAlign: 'right', minWidth: 110 }}>TAX/BEN %</th>
+                <th style={{ ...TH_DARK, textAlign: 'right', minWidth: 100 }}>HIKE %</th>
+                <th style={{ ...TH_DARK, textAlign: 'right', minWidth: 120 }}>PAY. EXP</th>
+                <th style={{ ...TH_DARK, textAlign: 'right', minWidth: 115 }}>TECH STIP</th>
+                <th style={{ ...TH_DARK, width: 100, borderRight: 'none' }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((emp, idx) => {
+                const isEditing = editId === emp.id;
+                const bonus = resolveBonus(emp.base_salary, emp.bonus_pct, emp.bonus_amount);
+                const isEditConcer = editForm.geography === 'Concertiv';
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                return (
+                  <tr
+                    key={emp.id}
+                    style={{
+                      background: isEditing ? '#F5F3FF' : '#fff',
+                      borderBottom: '1px solid #F1F5F9',
+                    }}
+                  >
+                    <td style={{ ...TD, textAlign: 'center', color: '#94A3B8', fontWeight: 600 }}>
+                      {idx + 1}
+                    </td>
 
-                {/* Geography */}
-                <TextField
-                  select label="Geography" size="small" required fullWidth
-                  value={form.geography}
-                  onChange={e => {
-                    setField('geography', e.target.value);
-                    if (e.target.value !== 'Concertiv') {
-                      setField('hike_cycle_pct', '');
-                      setField('payroll_expenses', '');
-                      setField('tech_stipend', '');
-                    }
-                  }}
-                  error={!!formErrors.geography} helperText={formErrors.geography}
-                >
-                  {GEOGRAPHIES.map(g => <MenuItem key={g} value={g}>{g}</MenuItem>)}
-                </TextField>
+                    {isEditing ? (
+                      <>
+                        <td style={TD}>
+                          <select value={editForm.geography} onChange={e => setEditField('geography', e.target.value)} style={INPUT_STYLE}>
+                            <option value="">Select...</option>
+                            {GEOGRAPHIES.map(g => <option key={g} value={g}>{g}</option>)}
+                          </select>
+                        </td>
+                        <td style={TD}><input value={editForm.name} onChange={e => setEditField('name', e.target.value)} style={INPUT_STYLE} /></td>
+                        <td style={TD}><input value={editForm.title} onChange={e => setEditField('title', e.target.value)} style={INPUT_STYLE} /></td>
+                        <td style={TD}>
+                          <DatePicker
+                            value={editForm.start_date ? dayjs(editForm.start_date) : null}
+                            onChange={val => setEditField('start_date', val?.isValid() ? val.format('YYYY-MM-DD') : '')}
+                            onError={(e) => setDateErrorEdit(!!e)}
+                            open={datePickerOpenEdit}
+                            onOpen={() => setDatePickerOpenEdit(true)}
+                            onClose={() => setDatePickerOpenEdit(false)}
+                            slotProps={{
+                              textField: {
+                                size: 'small',
+                                onClick: () => setDatePickerOpenEdit(true),
+                                sx: DATE_PICKER_SX,
+                                error: dateErrorEdit,
+                                helperText: dateErrorEdit ? "Invalid date" : undefined,
+                              },
+                            }}
+                          />
+                        </td>
+                        <td style={TD}><input type="number" value={editForm.base_salary} onChange={e => setEditField('base_salary', e.target.value)} style={{ ...INPUT_STYLE, textAlign: 'right' }} /></td>
+                        <td style={TD}><input type="number" value={editForm.bonus_pct} onChange={e => setEditField('bonus_pct', e.target.value)} style={{ ...INPUT_STYLE, textAlign: 'right' }} /></td>
+                        <td style={TD}><input type="number" value={editForm.bonus_amount} onChange={e => setEditField('bonus_amount', e.target.value)} style={{ ...INPUT_STYLE, textAlign: 'right' }} /></td>
+                        <td style={TD}><input type="number" value={editForm.taxes_benefits_pct} onChange={e => setEditField('taxes_benefits_pct', e.target.value)} style={{ ...INPUT_STYLE, textAlign: 'right' }} /></td>
+                        <td style={TD}>{isEditConcer ? <input type="number" value={editForm.hike_cycle_pct} onChange={e => setEditField('hike_cycle_pct', e.target.value)} style={{ ...INPUT_STYLE, textAlign: 'right' }} /> : <span style={{ color: '#CBD5E1' }}>—</span>}</td>
+                        <td style={TD}>{isEditConcer ? <input type="number" value={editForm.payroll_expenses} onChange={e => setEditField('payroll_expenses', e.target.value)} style={{ ...INPUT_STYLE, textAlign: 'right' }} /> : <span style={{ color: '#CBD5E1' }}>—</span>}</td>
+                        <td style={TD}>{isEditConcer ? <input type="number" value={editForm.tech_stipend} onChange={e => setEditField('tech_stipend', e.target.value)} style={{ ...INPUT_STYLE, textAlign: 'right' }} /> : <span style={{ color: '#CBD5E1' }}>—</span>}</td>
+                        <td style={{ ...TD, textAlign: 'right' }}>
+                          <div style={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                            <button
+                              onClick={saveEdit}
+                              disabled={saving}
+                              style={{
+                                padding: '3px 10px', fontSize: '0.72rem', fontWeight: 700,
+                                background: BRAND, color: '#fff', border: 'none',
+                                borderRadius: 4, cursor: saving ? 'default' : 'pointer',
+                                opacity: saving ? 0.6 : 1,
+                              }}
+                            >
+                              {saving ? '...' : 'Save'}
+                            </button>
+                            <button
+                              onClick={cancelEdit}
+                              style={{
+                                padding: '3px 8px', fontSize: '0.72rem', fontWeight: 700,
+                                background: '#F1F5F9', color: '#64748B', border: 'none',
+                                borderRadius: 4, cursor: 'pointer',
+                              }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td style={TD}>
+                          <span style={{
+                            display: 'inline-block', padding: '2px 8px', borderRadius: 10,
+                            fontSize: '0.7rem', fontWeight: 600,
+                            background: emp.geography === 'Concertiv' ? '#EDE9F7' : '#E0F2FE',
+                            color:      emp.geography === 'Concertiv' ? '#6D28D9' : '#0369A1',
+                          }}>
+                            {emp.geography}
+                          </span>
+                        </td>
+                        <td style={TD}>{emp.name}</td>
+                        <td style={TD}>{emp.title}</td>
+                        <td style={TD}>{emp.start_date ?? '—'}</td>
+                        <td style={TD_NUM}>{fmt(emp.base_salary)}</td>
+                        <td style={TD_NUM}>{fmtPct(bonus.pct)}</td>
+                        <td style={TD_NUM}>{fmt(bonus.amount)}</td>
+                        <td style={TD_NUM}>{fmtPct(emp.taxes_benefits_pct ?? 0)}</td>
+                        <td style={TD_NUM}>{emp.hike_cycle_pct != null ? fmtPct(emp.hike_cycle_pct) : <span style={{ color: '#CBD5E1' }}>—</span>}</td>
+                        <td style={TD_NUM}>{emp.payroll_expenses != null ? fmt(emp.payroll_expenses) : <span style={{ color: '#CBD5E1' }}>—</span>}</td>
+                        <td style={TD_NUM}>{emp.tech_stipend != null ? fmt(emp.tech_stipend) : <span style={{ color: '#CBD5E1' }}>—</span>}</td>
+                        <td style={{ ...TD, textAlign: 'right' }}>
+                          <Tooltip title="Edit">
+                            <IconButton size="small" onClick={() => startEdit(emp)}>
+                              <span className="material-icons-round" style={{ fontSize: 15, color: '#6366F1' }}>edit</span>
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Copy to new row">
+                            <IconButton size="small" onClick={() => copyEmp(emp)}>
+                              <span className="material-icons-round" style={{ fontSize: 15, color: '#64748B' }}>content_copy</span>
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Delete">
+                            <IconButton size="small" onClick={() => handleDelete(emp.id)}>
+                              <span className="material-icons-round" style={{ fontSize: 15, color: '#EF4444' }}>delete</span>
+                            </IconButton>
+                          </Tooltip>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                );
+              })}
 
-                {/* Name */}
-                <TextField
-                  label="Employee Name" size="small" required fullWidth
-                  value={form.name}
-                  onChange={e => setField('name', e.target.value)}
-                  error={!!formErrors.name} helperText={formErrors.name}
-                />
-
-                {/* Title */}
-                <TextField
-                  label="Title / Role" size="small" required fullWidth
-                  value={form.title}
-                  onChange={e => setField('title', e.target.value)}
-                  error={!!formErrors.title} helperText={formErrors.title}
-                />
-
-                {/* Start Date */}
-                <DatePicker
-                  label="Start Date"
-                  value={form.start_date ? dayjs(form.start_date) : null}
-                  onChange={val => setField('start_date', val ? val.format('YYYY-MM-DD') : null)}
-                  open={datePickerOpen}
-                  onOpen={() => setDatePickerOpen(true)}
-                  onClose={() => setDatePickerOpen(false)}
-                  slotProps={{
-                    textField: {
-                      size: 'small', fullWidth: true,
-                      onClick: () => setDatePickerOpen(true),
-                      sx: { cursor: 'pointer' },
-                    },
-                  }}
-                />
-
-                {/* Base Salary */}
-                <TextField
-                  label="Base Salary ($)" size="small" required fullWidth
-                  slotProps={{ htmlInput: { inputMode: 'numeric', pattern: '[0-9]*' } }}
-                  value={form.base_salary}
-                  onChange={e => {
-                    setField('base_salary', e.target.value);
-                    if (form.bonus_pct) {
-                      const pct = parseFloat(form.bonus_pct) / 100;
-                      setField('bonus_amount', String((parseFloat(e.target.value || '0') * pct).toFixed(2)));
-                    }
-                  }}
-                  error={!!formErrors.base_salary} helperText={formErrors.base_salary}
-                />
-
-                {/* Bonus % */}
-                <TextField
-                  label="Bonus %" size="small" fullWidth
-                  type="number" slotProps={{ htmlInput: { min: 0, max: 100, step: 0.1 } }}
-                  value={form.bonus_pct}
-                  onChange={e => handleBonusPctChange(e.target.value)}
-                />
-
-                {/* Bonus Amount */}
-                <TextField
-                  label="Bonus Amount ($)" size="small" fullWidth
-                  type="number" slotProps={{ htmlInput: { min: 0 } }}
-                  value={form.bonus_amount}
-                  onChange={e => handleBonusAmtChange(e.target.value)}
-                />
-
-                {/* Taxes / Benefits % */}
-                <TextField
-                  label="Taxes / Benefits %" size="small" required fullWidth
-                  type="number" slotProps={{ htmlInput: { min: 0, max: 100, step: 0.1 } }}
-                  value={form.taxes_benefits_pct}
-                  onChange={e => setField('taxes_benefits_pct', e.target.value)}
-                  error={!!formErrors.taxes_benefits_pct}
-                  helperText={formErrors.taxes_benefits_pct}
-                />
-
-                {/* Concertiv-only fields */}
-                {isConcer && (
-                  <>
-                    <TextField
-                      label="Hike Cycle %" size="small" fullWidth
-                      type="number" slotProps={{ htmlInput: { min: 0, max: 100, step: 0.1 } }}
+              {/* New entry row */}
+              <tr style={{ background: '#FAFBFC', borderBottom: '1px solid #F1F5F9' }}>
+                <td style={{ ...TD, textAlign: 'center', color: '#CBD5E1', fontWeight: 600 }}>
+                  {rows.length + 1}
+                </td>
+                <td style={TD}>
+                  <select
+                    value={form.geography}
+                    onChange={e => {
+                      setField('geography', e.target.value);
+                      if (e.target.value !== 'Concertiv') {
+                        setField('hike_cycle_pct', '');
+                        setField('payroll_expenses', '');
+                        setField('tech_stipend', '');
+                      }
+                    }}
+                    style={{ ...INPUT_STYLE, borderColor: formErrors.geography ? '#EF4444' : '#E2E8F0' }}
+                  >
+                    <option value="">Select...</option>
+                    {GEOGRAPHIES.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </td>
+                <td style={TD}>
+                  <input
+                    value={form.name}
+                    onChange={e => setField('name', e.target.value)}
+                    placeholder="Employee name"
+                    style={{ ...INPUT_STYLE, borderColor: formErrors.name ? '#EF4444' : '#E2E8F0' }}
+                  />
+                </td>
+                <td style={TD}>
+                  <input
+                    value={form.title}
+                    onChange={e => setField('title', e.target.value)}
+                    placeholder="Title / Role"
+                    style={{ ...INPUT_STYLE, borderColor: formErrors.title ? '#EF4444' : '#E2E8F0' }}
+                  />
+                </td>
+                <td style={TD}>
+                  <DatePicker
+                    value={form.start_date ? dayjs(form.start_date) : null}
+                    onChange={val => setField('start_date', val?.isValid() ? val.format('YYYY-MM-DD') : '')}
+                    onError={(e) => setDateErrorNew(!!e)}
+                    open={datePickerOpenNew}
+                    onOpen={() => setDatePickerOpenNew(true)}
+                    onClose={() => setDatePickerOpenNew(false)}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        onClick: () => setDatePickerOpenNew(true),
+                        sx: DATE_PICKER_SX,
+                        error: dateErrorNew,
+                        helperText: dateErrorNew ? "Invalid date" : undefined,
+                      },
+                    }}
+                  />
+                </td>
+                <td style={TD}>
+                  <input
+                    type="number"
+                    value={form.base_salary}
+                    onChange={e => {
+                      setField('base_salary', e.target.value);
+                      if (form.bonus_pct) {
+                        const pct = parseFloat(form.bonus_pct) / 100;
+                        setField('bonus_amount', String((parseFloat(e.target.value || '0') * pct).toFixed(2)));
+                      }
+                    }}
+                    placeholder="0"
+                    style={{ ...INPUT_STYLE, textAlign: 'right', borderColor: formErrors.base_salary ? '#EF4444' : '#E2E8F0' }}
+                  />
+                </td>
+                <td style={TD}>
+                  <input
+                    type="number"
+                    value={form.bonus_pct}
+                    onChange={e => handleBonusPctChange(e.target.value)}
+                    placeholder="0"
+                    style={{ ...INPUT_STYLE, textAlign: 'right' }}
+                  />
+                </td>
+                <td style={TD}>
+                  <input
+                    type="number"
+                    value={form.bonus_amount}
+                    onChange={e => handleBonusAmtChange(e.target.value)}
+                    placeholder="0"
+                    style={{ ...INPUT_STYLE, textAlign: 'right' }}
+                  />
+                </td>
+                <td style={TD}>
+                  <input
+                    type="number"
+                    value={form.taxes_benefits_pct}
+                    onChange={e => setField('taxes_benefits_pct', e.target.value)}
+                    placeholder="0"
+                    style={{ ...INPUT_STYLE, textAlign: 'right', borderColor: formErrors.taxes_benefits_pct ? '#EF4444' : '#E2E8F0' }}
+                  />
+                </td>
+                <td style={TD}>
+                  {isConcer ? (
+                    <input
+                      type="number"
                       value={form.hike_cycle_pct}
                       onChange={e => setField('hike_cycle_pct', e.target.value)}
+                      placeholder="0"
+                      style={{ ...INPUT_STYLE, textAlign: 'right' }}
                     />
-                    <TextField
-                      label="Payroll Expenses ($/mo)" size="small" fullWidth
-                      type="number" slotProps={{ htmlInput: { min: 0 } }}
+                  ) : (
+                    <span style={{ color: '#CBD5E1', fontSize: '0.75rem', paddingLeft: 7 }}>—</span>
+                  )}
+                </td>
+                <td style={TD}>
+                  {isConcer ? (
+                    <input
+                      type="number"
                       value={form.payroll_expenses}
                       onChange={e => setField('payroll_expenses', e.target.value)}
+                      placeholder="0"
+                      style={{ ...INPUT_STYLE, textAlign: 'right' }}
                     />
-                    <TextField
-                      label="Tech Stipend ($/mo)" size="small" fullWidth
-                      type="number" slotProps={{ htmlInput: { min: 0 } }}
+                  ) : (
+                    <span style={{ color: '#CBD5E1', fontSize: '0.75rem', paddingLeft: 7 }}>—</span>
+                  )}
+                </td>
+                <td style={TD}>
+                  {isConcer ? (
+                    <input
+                      type="number"
                       value={form.tech_stipend}
                       onChange={e => setField('tech_stipend', e.target.value)}
+                      placeholder="0"
+                      style={{ ...INPUT_STYLE, textAlign: 'right' }}
                     />
-                  </>
-                )}
-
-                {/* Action buttons */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 6 }}>
-                  <Button
-                    variant="contained"
-                    onClick={handleSubmit}
-                    disabled={saving}
-                    fullWidth
-                    sx={{ background: BRAND, '&:hover': { background: '#3D1F57' }, py: 1.2, fontWeight: 700 }}
-                  >
-                    {saving
-                      ? <CircularProgress size={18} color="inherit" />
-                      : editId != null ? 'Save Changes' : 'Submit'
-                    }
-                  </Button>
-                  {editId != null && (
-                    <Button variant="outlined" onClick={cancelEdit} disabled={saving} fullWidth>
-                      Cancel
-                    </Button>
+                  ) : (
+                    <span style={{ color: '#CBD5E1', fontSize: '0.75rem', paddingLeft: 7 }}>—</span>
                   )}
-                </div>
+                </td>
+                <td style={{ ...TD, textAlign: 'right' }}>
+                  <Tooltip title="Add row">
+                    <IconButton size="small" onClick={handleSubmit} disabled={saving}>
+                      <span className="material-icons-round" style={{ fontSize: 20, color: saving ? '#CBD5E1' : BRAND }}>
+                        add_circle
+                      </span>
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Clear">
+                    <IconButton
+                      size="small"
+                      onClick={() => { setForm(EMPTY_FORM); setFormErrors({}); }}
+                      disabled={saving}
+                    >
+                      <span className="material-icons-round" style={{ fontSize: 15, color: '#CBD5E1' }}>clear</span>
+                    </IconButton>
+                  </Tooltip>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-              </div>
-            </div>
+        {rows.length > 0 && (
+          <div style={{ marginTop: 10, fontSize: '0.75rem', color: '#94A3B8', textAlign: 'right' }}>
+            {rows.length} {rows.length === 1 ? 'employee' : 'employees'} · Total annual:{' '}
+            <strong style={{ color: '#1D4ED8' }}>
+              {fmt(rows.reduce((s, emp) => s + computeTotal(emp), 0))}
+            </strong>
           </div>
+        )}
         </LocalizationProvider>
-
       </div>
     </div>
   );
 }
 
 // ── Admin Report ──────────────────────────────────────────────────────────────
-function EmployeeCostReport({ report }: { report: ReturnType<typeof buildReport> }) {
+function EmployeeCostReport({ report, onDelete }: { report: ReturnType<typeof buildReport>; onDelete?: (id: number) => void }) {
   const { rows, totalStaffCosts, geoCounts, payrollExpensesLine, techStipendLine } = report;
   const hasPayroll = payrollExpensesLine.some(v => v > 0);
   const hasTech    = techStipendLine.some(v => v > 0);
@@ -673,6 +771,7 @@ function EmployeeCostReport({ report }: { report: ReturnType<typeof buildReport>
               <th key={m} style={{ ...TH, textAlign: 'right', minWidth: 72 }}>{m}</th>
             ))}
             <th style={{ ...TH, textAlign: 'right', minWidth: 90, background: '#DBEAFE' }}>Annual Total</th>
+            {onDelete && <th style={{ ...TH, minWidth: 60 }} />}
           </tr>
         </thead>
         <tbody>
@@ -702,10 +801,18 @@ function EmployeeCostReport({ report }: { report: ReturnType<typeof buildReport>
                 </td>
               ))}
               <td style={TD_TOTAL}>{fmt(annualTotal)}</td>
+              {onDelete && (
+                <td style={TD}>
+                  <Tooltip title="Delete">
+                    <IconButton size="small" onClick={() => onDelete(emp.id)}>
+                      <span className="material-icons-round" style={{ fontSize: 15, color: '#EF4444' }}>delete</span>
+                    </IconButton>
+                  </Tooltip>
+                </td>
+              )}
             </tr>
           ))}
 
-          {/* Total Staff Costs */}
           <tr style={TR_SUM}>
             <td colSpan={11} style={{ ...TD, fontWeight: 700, color: '#166534' }}>Total Staff Costs</td>
             {totalStaffCosts.map((v, i) => (
@@ -718,10 +825,8 @@ function EmployeeCostReport({ report }: { report: ReturnType<typeof buildReport>
             </td>
           </tr>
 
-          {/* Spacer */}
           <tr><td colSpan={12 + 12 + 1} style={{ padding: 4 }} /></tr>
 
-          {/* Employee counts per geography */}
           {geoCounts.map(({ geo, counts }) => (
             <tr key={geo}>
               <td colSpan={2} style={{ ...TD, fontWeight: 600, color: '#475569' }}>Employees ({geo})</td>
@@ -733,7 +838,6 @@ function EmployeeCostReport({ report }: { report: ReturnType<typeof buildReport>
             </tr>
           ))}
 
-          {/* Payroll Expenses */}
           {hasPayroll && (
             <tr style={TR_COST}>
               <td colSpan={11} style={{ ...TD, fontWeight: 700, color: '#92400E' }}>Payroll Expenses (Concertiv)</td>
@@ -746,7 +850,6 @@ function EmployeeCostReport({ report }: { report: ReturnType<typeof buildReport>
             </tr>
           )}
 
-          {/* Tech Stipend */}
           {hasTech && (
             <tr style={TR_COST}>
               <td colSpan={11} style={{ ...TD, fontWeight: 700, color: '#92400E' }}>Tech Stipend (Concertiv)</td>
@@ -764,7 +867,6 @@ function EmployeeCostReport({ report }: { report: ReturnType<typeof buildReport>
   );
 }
 
-// ── Shared page header ────────────────────────────────────────────────────────
 function PageHeader({
   title, badge, children,
 }: {

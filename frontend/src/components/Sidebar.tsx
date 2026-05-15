@@ -36,6 +36,7 @@ const FPA_RESULT_ITEMS = [
   { path: '/fpa/pl-individual',     icon: 'trending_up',     label: 'Base P&L' },
   { path: '/fpa/comparative-pl',    icon: 'show_chart',      label: 'Comparative P&L' },
   { path: '/fpa/comparative-pl-bd', icon: 'bar_chart',       label: 'Comp P&L (BD)' },
+  { path: '/fpa/bs-bd',             icon: 'account_balance', label: 'BS (BD)' },
 ]
 
 // Wrapped with memo so jeRows edits in AppContext don't force Sidebar to re-render.
@@ -162,6 +163,11 @@ const Sidebar = memo(function Sidebar({ collapsed, onToggle, mobileOpen, onMobil
                 >
                   <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">manage_accounts</span>
                 </NavLink>
+                <NavLink to="/integrations" aria-label="Integrations"
+                  style={({ isActive }) => ({ ...styles.iconBtn, ...(isActive ? styles.iconBtnActive : {}) })}
+                >
+                  <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">cable</span>
+                </NavLink>
               </>
             )}
 
@@ -178,7 +184,7 @@ const Sidebar = memo(function Sidebar({ collapsed, onToggle, mobileOpen, onMobil
               <span style={styles.navLabel}>Home</span>
             </NavLink>
 
-            <div style={styles.divider} role="separator" />
+            {(canPayroll || canFpa || canPortco) && <div style={styles.divider} role="separator" />}
 
             {/* ── Payroll JE Automation ── */}
             {canPayroll && (
@@ -273,7 +279,7 @@ const Sidebar = memo(function Sidebar({ collapsed, onToggle, mobileOpen, onMobil
               </>
             )}
 
-            <div style={styles.divider} role="separator" />
+            {canPayroll && (canFpa || canPortco) && <div style={styles.divider} role="separator" />}
 
             {/* ── FP&A Automation ── */}
             {canFpa && (
@@ -342,7 +348,7 @@ const Sidebar = memo(function Sidebar({ collapsed, onToggle, mobileOpen, onMobil
               </>
             )}
 
-            <div style={styles.divider} role="separator" />
+            {canFpa && canPortco && <div style={styles.divider} role="separator" />}
 
             {/* ── PortCo Reporting ── */}
             {canPortco && (
@@ -421,6 +427,13 @@ const Sidebar = memo(function Sidebar({ collapsed, onToggle, mobileOpen, onMobil
                 >
                   <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">manage_accounts</span>
                   <span style={styles.navLabel}>Manage Users</span>
+                </NavLink>
+                <NavLink
+                  to="/integrations"
+                  style={({ isActive }) => ({ ...styles.navItem, ...(isActive ? styles.navItemActive : {}) })}
+                >
+                  <span className="material-icons-round" style={styles.navIcon} aria-hidden="true">cable</span>
+                  <span style={styles.navLabel}>Integrations</span>
                 </NavLink>
               </>
             )}

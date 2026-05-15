@@ -257,24 +257,33 @@ def _aggregate(df: pd.DataFrame) -> tuple[dict, list, list, list]:
     return data, all_months, all_quarters, all_years
 
 
+# ── Month helpers ─────────────────────────────────────────────────────────────
+
+_MONTH_ABB_BD = {"Jan":"01","Feb":"02","Mar":"03","Apr":"04","May":"05","Jun":"06",
+                 "Jul":"07","Aug":"08","Sep":"09","Oct":"10","Nov":"11","Dec":"12"}
+
+def _month_to_ym_bd(m: str) -> str:
+    try:
+        mon, yr = m.split("-")
+        full_yr = f"20{yr}" if len(yr) == 2 else yr
+        return f"{full_yr}-{_MONTH_ABB_BD[mon]}"
+    except Exception:
+        return "0000-00"
+
+def _derive_quarter_bd(m: str) -> str:
+    try:
+        dt = datetime.strptime(m, "%b-%y")
+        return f"Q{(dt.month-1)//3+1}-{dt.year}"
+    except Exception:
+        return ""
+
+
 # ── Excel writer ───────────────────────────────────────────────────────────────
 
-def run_comparative_pl_bd(df: pd.DataFrame, company_name: str) -> bytes:
-    """
-    Generate the Comparative P&L (BD) Excel workbook.
-
-    Column layout (mirrors Excel reference):
-      A         Particulars
-      B C D     3 monthly columns (latest 3 months ending at as_of)
-      E         blank separator
-      F G H I   Q1–Q4 of (quarter_year − 1)
-      J         blank separator
-      K L M N   Q1–Q4 of quarter_year
-      O         blank separator
-      P Q       (year − 1) and year
-    """
-    data, months, quarters, years = _aggregate(df)
-
+def _build_comp_pl_bd_excel(
+    data: dict, months: list, quarters: list, years: list, company_name: str
+) -> bytes:
+    """Render the Comparative P&L (BD) Excel from pre-aggregated data."""
     wb = Workbook()
     ws = wb.active
     ws.title = "Comparative P&L (BD)"
@@ -473,6 +482,241 @@ def run_comparative_pl_bd(df: pd.DataFrame, company_name: str) -> bytes:
     buf = io.BytesIO()
     wb.save(buf)
     return buf.getvalue()
+
+
+def run_comparative_pl_bd(df: pd.DataFrame, company_name: str) -> bytes:
+    """Generate the Comparative P&L (BD) Excel from a raw DataFrame."""
+    data, months, quarters, years = _aggregate(df)
+    return _build_comp_pl_bd_excel(data, months, quarters, years, company_name)
+
+
+def _quarter_in_range_bd(q: str, from_ym: str | None, to_ym: str | None) -> bool:
+    try:
+        q_num = int(q[1])
+        yr    = q[3:]
+        q_start = f"{yr}-{str((q_num - 1) * 3 + 1).zfill(2)}"
+        q_end   = f"{yr}-{str(q_num * 3).zfill(2)}"
+    except (ValueError, IndexError):
+        return True
+    if from_ym and q_end   < from_ym: return False
+    if to_ym   and q_start > to_ym:   return False
+    return True
+
+
+def _four_quarters_ending_at_bd(q: str) -> list[str]:
+    try:
+        q_num = int(q[1])
+        year  = int(q[3:])
+    except (ValueError, IndexError):
+        return []
+    result = []
+    for i in range(3, -1, -1):
+        qi = q_num - i
+        yi = year
+        while qi <= 0:
+            qi += 4; yi -= 1
+        result.append(f"Q{qi}-{yi}")
+    return result
+
+
+def _build_comp_pl_bd_ui_excel(
+    data: dict,
+    filtered_months: list,
+    four_quarters: list,
+    selected_year: int,
+    rows_def: list,
+    company_name: str,
+) -> bytes:
+    """Generate Comparative P&L (BD) Excel matching the UI column layout exactly."""
+    year_cols   = [str(selected_year - 1), str(selected_year)]
+    period_cols = filtered_months + four_quarters + year_cols
+
+    groups: list[tuple[str, list]] = [
+        ("Months",   filtered_months),
+        ("Quarters", four_quarters),
+        ("Year",     year_cols),
+    ]
+    groups = [(lbl, cols) for lbl, cols in groups if cols]
+
+    n    = len(period_cols)
+    as_of = filtered_months[-1] if filtered_months else (four_quarters[-1] if four_quarters else "")
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Comparative P&L (BD)"
+
+    if not period_cols:
+        ws["A1"] = "No data for the selected filters."
+        buf = io.BytesIO(); wb.save(buf); return buf.getvalue()
+
+    def F(bold=False, size=9, color="000000", italic=False):
+        return Font(name="Calibri", bold=bold, size=size, color=color, italic=italic)
+
+    DARK_NAVY  = PatternFill("solid", fgColor="0F172A")
+    DARK_BLUE  = PatternFill("solid", fgColor="1E3A5F")
+    MED_BLUE   = PatternFill("solid", fgColor="EBF2FB")
+    LIGHT_GRAY = PatternFill("solid", fgColor="F1F5F9")
+    SUBSEC_BG  = PatternFill("solid", fgColor="F8FAFC")
+    METRIC_BG  = PatternFill("solid", fgColor="F0F9FF")
+
+    AL = Alignment(horizontal="left",   vertical="center")
+    AR = Alignment(horizontal="right",  vertical="center")
+    AC = Alignment(horizontal="center", vertical="center")
+
+    thin  = Side(border_style="thin",   color="CBD5E1")
+    NUM   = "#,##0.00"
+    PCTF  = "0.00%"
+
+    ws.append([company_name] + [None] * n)
+    ws["A1"].font = F(bold=True, size=14, color="0F172A"); ws.row_dimensions[1].height = 22
+    ws.append(["Comparative P&L (BD)"] + [None] * n)
+    ws["A2"].font = F(bold=True, size=11, color="1E3A5F")
+    ws.append([f"As of {as_of}"] + [None] * n)
+    ws["A3"].font = F(size=9, color="64748B", italic=True)
+    ws.append([None] * (n + 1))
+
+    group_row = [None] * (n + 1)
+    ws.append(group_row)
+    gr = ws.max_row
+    ws.row_dimensions[gr].height = 14
+    col_offset = 2
+    for lbl, cols in groups:
+        if not cols: continue
+        end_col = col_offset + len(cols) - 1
+        if end_col > col_offset:
+            ws.merge_cells(start_row=gr, start_column=col_offset,
+                           end_row=gr, end_column=end_col)
+        c = ws.cell(gr, col_offset)
+        c.value = lbl
+        c.font  = F(bold=True, size=8, color="FFFFFF")
+        c.fill  = DARK_NAVY
+        c.alignment = AC
+        for ci in range(col_offset, end_col + 1):
+            ws.cell(gr, ci).fill = DARK_NAVY
+        col_offset += len(cols)
+
+    ws.append(["Particulars"] + period_cols)
+    hr = ws.max_row
+    ws.row_dimensions[hr].height = 16
+    for ci in range(1, n + 2):
+        c = ws.cell(hr, ci)
+        c.font = F(bold=True, size=9, color="FFFFFF")
+        c.fill = DARK_BLUE
+        c.alignment = AL if ci == 1 else AC
+
+    for rdef in rows_def:
+        label = rdef.get("label")
+        rtype = rdef.get("type", "blank")
+        key   = rdef.get("key")
+
+        if rtype == "blank":
+            ws.append([None] * (n + 1)); continue
+
+        vals = [None] * n if key is None else [data.get(p, {}).get(key) for p in period_cols]
+
+        ws.append([label] + vals)
+        r  = ws.max_row
+        ca = ws.cell(r, 1)
+        ca.alignment = AL
+
+        def fill_row(fill):
+            for ci in range(1, n + 2): ws.cell(r, ci).fill = fill
+
+        for ci, v in enumerate(vals, 2):
+            cell = ws.cell(r, ci)
+            if v is not None:
+                if rtype == "metric":
+                    cell.number_format = PCTF
+                    cell.value = v / 100 if v else v
+                else:
+                    cell.number_format = NUM
+                cell.alignment = AR
+
+        if rtype == "section":
+            fill_row(DARK_NAVY)
+            ca.font = F(bold=True, size=9, color="FFFFFF")
+            for ci in range(2, n + 2): ws.cell(r, ci).font = F(bold=True, size=9, color="FFFFFF")
+            ws.row_dimensions[r].height = 15
+        elif rtype == "subsection":
+            fill_row(SUBSEC_BG); ca.font = F(bold=True, size=9, color="1E293B")
+        elif rtype == "line":
+            ca.font = F(size=9, color="334155")
+            for ci in range(2, n + 2):
+                c = ws.cell(r, ci)
+                if c.value is not None:
+                    c.font = F(size=9, color="DC2626" if isinstance(c.value, (int,float)) and c.value < 0 else "334155")
+        elif rtype == "subtotal":
+            fill_row(MED_BLUE)
+            for ci in range(1, n + 2):
+                c = ws.cell(r, ci)
+                c.font = F(bold=True, size=9, color="1E40AF"); c.border = Border(top=thin)
+        elif rtype == "total":
+            fill_row(LIGHT_GRAY)
+            for ci in range(1, n + 2):
+                c = ws.cell(r, ci)
+                c.font = F(bold=True, size=9); c.border = Border(top=thin)
+        elif rtype == "grand_total":
+            fill_row(DARK_BLUE)
+            for ci in range(1, n + 2):
+                c   = ws.cell(r, ci)
+                val = c.value
+                neg = isinstance(val, (int, float)) and val < 0
+                c.font   = F(bold=True, size=10, color="FCA5A5" if neg else "FFFFFF")
+                c.border = Border(top=Side(border_style="medium", color="64748B"))
+            ws.row_dimensions[r].height = 16
+        elif rtype == "metric":
+            fill_row(METRIC_BG)
+            ca.font = F(italic=True, size=8, color="0369A1")
+            for ci in range(2, n + 2):
+                c = ws.cell(r, ci)
+                if c.value is not None:
+                    c.font = F(italic=True, size=8, color="DC2626" if isinstance(c.value,(int,float)) and c.value < 0 else "0369A1")
+
+    ws.column_dimensions["A"].width = 36
+    for i in range(n):
+        ws.column_dimensions[get_column_letter(i + 2)].width = 14
+    ws.freeze_panes = "B7"
+
+    buf = io.BytesIO(); wb.save(buf); return buf.getvalue()
+
+
+def run_comparative_pl_bd_from_preview(
+    preview: dict,
+    from_ym: str | None,
+    to_ym: str | None,
+    selected_quarter: str | None,
+    selected_year: int | None,
+    company_name: str,
+) -> bytes:
+    """Generate a date-filtered Comparative P&L (BD) Excel matching the UI exactly."""
+    all_months: list[str]  = preview.get("available_months", [])
+    all_quarters: list[str] = preview.get("available_quarters", [])
+    all_years: list[int]    = preview.get("available_years", [])
+    data: dict              = preview.get("data", {})
+    rows_def: list          = preview.get("rows") or ROW_STRUCTURE
+
+    filtered_months = [
+        m for m in all_months
+        if (not from_ym or _month_to_ym_bd(m) >= from_ym)
+        and (not to_ym   or _month_to_ym_bd(m) <= to_ym)
+    ]
+    if not filtered_months:
+        filtered_months = all_months
+
+    filtered_quarters = [q for q in all_quarters if _quarter_in_range_bd(q, from_ym, to_ym)]
+    if selected_quarter:
+        effective_quarter = selected_quarter
+    else:
+        effective_quarter = filtered_quarters[-1] if filtered_quarters else (all_quarters[-1] if all_quarters else "")
+
+    four_quarters = _four_quarters_ending_at_bd(effective_quarter)
+
+    if selected_year is None:
+        selected_year = all_years[-1] if all_years else datetime.now().year
+
+    return _build_comp_pl_bd_ui_excel(
+        data, filtered_months, four_quarters, selected_year, rows_def, company_name
+    )
 
 
 # ── Preview payload ────────────────────────────────────────────────────────────

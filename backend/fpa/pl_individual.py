@@ -326,20 +326,15 @@ def _build_rows(agg: dict, months: list) -> list[tuple]:
 
 # ── Excel writer ──────────────────────────────────────────────────────────────
 
-def run_pl_individual(df: pd.DataFrame, company_name: str) -> bytes:
-    """Write Excel with the LATEST month, 5 columns (Particulars, Mapping, Co-A, Co-B, Cons)."""
-    agg, months = _aggregate(df)
-
+def _build_pli_excel(rows: list, latest: str, company_name: str) -> bytes:
+    """Render Base P&L (Individual) Excel from a list of (label, mapping, values, rtype) tuples."""
     wb = Workbook()
     ws = wb.active
     ws.title = "Base P&L (Class) (Individual)"
 
-    if not months:
-        ws["A1"] = "No P&L data found in the uploaded file."
+    if not latest:
+        ws["A1"] = "No P&L data found."
         buf = io.BytesIO(); wb.save(buf); return buf.getvalue()
-
-    rows = _build_rows(agg, months)
-    latest = months[-1]
 
     # ── Styles ────────────────────────────────────────────────────────────────
     def F(bold=False, size=9, color="000000", italic=False):
@@ -470,6 +465,31 @@ def run_pl_individual(df: pd.DataFrame, company_name: str) -> bytes:
     ws.freeze_panes = "C6"
 
     buf = io.BytesIO(); wb.save(buf); return buf.getvalue()
+
+
+def run_pl_individual(df: pd.DataFrame, company_name: str) -> bytes:
+    """Generate Base P&L (Individual) Excel for the latest month from a raw DataFrame."""
+    agg, months = _aggregate(df)
+    if not months:
+        wb = Workbook(); ws = wb.active
+        ws["A1"] = "No P&L data found in the uploaded file."
+        buf = io.BytesIO(); wb.save(buf); return buf.getvalue()
+    rows = _build_rows(agg, months)
+    return _build_pli_excel(rows, months[-1], company_name)
+
+
+def run_pl_individual_from_preview(preview: dict, month: str, company_name: str) -> bytes:
+    """Generate Base P&L (Individual) Excel for a specific month from cached preview JSONB."""
+    preview_rows: list[dict] = preview.get("rows", [])
+    months:       list[str]  = preview.get("months", [])
+
+    selected = month if month in months else (months[-1] if months else "")
+    # Map preview dict rows → (label, mapping, values, rtype) tuples
+    rows = [
+        (r.get("label"), r.get("mapping"), r.get("values"), r.get("type", "blank"))
+        for r in preview_rows
+    ]
+    return _build_pli_excel(rows, selected, company_name)
 
 
 # ── Preview payload ───────────────────────────────────────────────────────────
